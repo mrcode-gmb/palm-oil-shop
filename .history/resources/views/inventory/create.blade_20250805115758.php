@@ -1,0 +1,98 @@
+<x-shop-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Add New Product
+        </h2>
+    </x-slot>
+
+    <div class="max-w-4xl">
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="p-6">
+                <form method="POST" action="{{ route('inventory.store') }}" class="space-y-6">
+                    @csrf
+
+                    <!-- Product Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">Product Name</label>
+                        <input type="text" name="name" id="name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('name')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Unit Type -->
+                    <div>
+                        <label for="unit_type" class="block text-sm font-medium text-gray-700">Unit Type</label>
+                        <select name="unit_type" id="unit_type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                            <option value="litre">Litre</option>
+                            <option value="jerrycan">Jerrycan</option>
+                        </select>
+                        @error('unit_type')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Purchase Price -->
+                    <div>
+                        <label for="purchase_price" class="block text-sm font-medium text-gray-700">Purchase Price (₦)</label>
+                        <input type="number" name="purchase_price" id="purchase_price" step="0.01" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('purchase_price')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Selling Price -->
+                    <div>
+                        <label for="selling_price" class="block text-sm font-medium text-gray-700">Selling Price (₦)</label>
+                        <input type="number" name="selling_price" id="selling_price" step="0.01" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('selling_price')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Selling Price -->
+                    <div>
+                        <label for="selling_price" class="block text-sm font-medium text-gray-700">Selling Price (₦)</label>
+                        <input type="number" name="selling_price" id="selling_price" step="0.01" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('selling_price')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Initial Stock -->
+                    <div>
+                        <label for="current_stock" class="block text-sm font-medium text-gray-700">Initial Stock (in unit type)</label>
+                        <input type="number" name="current_stock" id="current_stock" step="0.01" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('current_stock')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Supplier Name -->
+                    <div>
+                        <label for="supplier_name" class="block text-sm font-medium text-gray-700">Supplier Name</label>
+                        <input type="text" name="supplier_name" id="supplier_name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('supplier_name')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                        <textarea name="notes" id="notes" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"></textarea>
+                        @error('notes')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-between pt-6 border-t border-gray-200">
+                        <a href="{{ route('dashboard') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md">Cancel</a>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-md">Add Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-shop-layout>

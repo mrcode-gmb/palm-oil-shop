@@ -1,0 +1,92 @@
+<x-shop-layout>
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ auth()->user()->isAdmin() ? 'All Staffs' : 'My Customer' }}
+            </h2>
+            @if (auth()->user()->isAdmin())
+                <a href="{{ route('sales.create') }}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                    Create New Staff
+                </a>
+            @endif
+        </div>
+    </x-slot>
+
+    <div class="space-y-6">
+
+
+        <!-- Sales Table -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                S/N</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email</th>
+
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($users as $key=> $user)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $key+1 }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $user->role}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex space-x-2">
+                                        {{-- <a href="{{ route('users.show', $user) }}"
+                                            class="text-blue-600 hover:text-blue-900">View</a> --}}
+                                        @if (auth()->user()->isAdmin())
+                                            {{-- <a href="{{ route('users.edit', $user) }}"
+                                                class="text-indigo-600 hover:text-indigo-900">Edit</a> --}}
+                                            {{-- <form method="POST" action="{{ route('users.destroy', $sale) }}"
+                                                class="inline"
+                                                onsubmit="return confirm('Are you sure you want to delete this sale?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="text-red-600 hover:text-red-900">Delete</button>
+                                            </form> --}}
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ auth()->user()->isAdmin() ? '9' : '8' }}"
+                                    class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No sales found.
+                                    @if (auth()->user()->isAdmin())
+                                        {{-- <a href="{{ route('sales.create') }}"
+                                            class="text-blue-600 hover:text-blue-500 ml-1">Record your first sale</a> --}}
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if ($user->hasPages())
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $sales->appends(request()->query())->links() }}
+                </div>
+            @endif
+        </div>
+    </div>
+</x-shop-layout>
