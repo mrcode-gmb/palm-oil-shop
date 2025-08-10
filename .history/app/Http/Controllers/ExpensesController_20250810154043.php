@@ -24,7 +24,7 @@ class ExpensesController extends Controller
             ->latest()
             ->paginate(10);
 
-        // return $expenses;
+        return $expenses;
 
         return view('expenses.index', compact('expenses'));
     }

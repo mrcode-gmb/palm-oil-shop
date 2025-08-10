@@ -49,10 +49,7 @@ class RegisteredUserController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
-    public function createUser()
-    {
-        return view("users.create");
-    }
+    public function admin.createUser
     public function storeUser(Request $request): RedirectResponse
     {
         $request->validate([
@@ -69,6 +66,6 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
 
-        return redirect()->route('admin.myStaff')->with('success', 'Staff created successfully!');
+        return redirect()->back()->withErrors(['']);
     }
 }

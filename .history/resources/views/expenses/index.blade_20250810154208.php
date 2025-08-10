@@ -53,8 +53,8 @@
                     <p class="text-2xl font-bold text-blue-600">₦{{ number_format($expenses->sum('amount'), 2) }}</p>
                 </div>
                 <div class="bg-white shadow-sm rounded-lg p-6 text-center">
-                    <p class="text-sm text-gray-500">Total Expenses</p>
-                    <p class="text-2xl font-bold text-green-600">{{ number_format($expenses->count(), 1) }}</p>
+                    <p class="text-sm text-gray-500">Total Expenses Quantity</p>
+                    {{-- <p class="text-2xl font-bold text-green-600">{{ number_format($expenses->sum('quantity'), 1) }}</p> --}}
                 </div>
                 <div class="bg-white shadow-sm rounded-lg p-6 text-center">
                     <p class="text-sm text-gray-500">Total Transactions</p>
@@ -71,6 +71,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier	</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expense Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Purchase Price</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expense Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Recorded By</th>
@@ -84,13 +87,22 @@
                                 {{ $expense->created_at->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                {{ $expense->user->name }}
+                                {{ $expense->user->supplier_name }}
                             </td>
                             	
                             <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                                 {{ $expense->name}}
                             </td>
-                           
+                            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                {{ $expense->purchase->product->name ?? '-' }}<br>
+                                {{-- <span class="text-sm text-gray-500">{{ $expense->supplier_phone ?? '' }}</span> --}}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                {{ number_format($expense->purchase->quantity, 1) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                ₦{{ number_format($expense->purchase->product->purchase_price * $expense->purchase->quantity, 2) }}
+                            </td>
                             <td class="px-6 py-4 text-sm text-blue-600 font-medium whitespace-nowrap">
                                 ₦{{ number_format($expense->amount, 2) }}
                             </td>
@@ -102,7 +114,6 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                 {{-- Optional action buttons --}}
-                                <a href="">Delete</a>
                             </td>
                         </tr>
                     @empty

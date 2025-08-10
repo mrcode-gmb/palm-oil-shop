@@ -49,26 +49,23 @@ class RegisteredUserController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
-    public function createUser()
-    {
-        return view("users.create");
-    }
     public function storeUser(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make("1234"),
+            'password' => Hash::make(""),
         ]);
 
         event(new Registered($user));
 
 
-        return redirect()->route('admin.myStaff')->with('success', 'Staff created successfully!');
+        return redirect()->back()->withErrors(['']);
     }
 }

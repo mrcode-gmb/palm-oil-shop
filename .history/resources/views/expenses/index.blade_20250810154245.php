@@ -53,8 +53,8 @@
                     <p class="text-2xl font-bold text-blue-600">₦{{ number_format($expenses->sum('amount'), 2) }}</p>
                 </div>
                 <div class="bg-white shadow-sm rounded-lg p-6 text-center">
-                    <p class="text-sm text-gray-500">Total Expenses</p>
-                    <p class="text-2xl font-bold text-green-600">{{ number_format($expenses->count(), 1) }}</p>
+                    <p class="text-sm text-gray-500">Total Expenses Quantity</p>
+                    {{-- <p class="text-2xl font-bold text-green-600">{{ number_format($expenses->sum('quantity'), 1) }}</p> --}}
                 </div>
                 <div class="bg-white shadow-sm rounded-lg p-6 text-center">
                     <p class="text-sm text-gray-500">Total Transactions</p>
@@ -90,7 +90,13 @@
                             <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                                 {{ $expense->name}}
                             </td>
-                           
+                            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                {{ $expense->purchase->product->name ?? '-' }}<br>
+                                {{-- <span class="text-sm text-gray-500">{{ $expense->supplier_phone ?? '' }}</span> --}}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                ₦{{ number_format($expense->purchase->product->purchase_price * $expense->purchase->quantity, 2) }}
+                            </td>
                             <td class="px-6 py-4 text-sm text-blue-600 font-medium whitespace-nowrap">
                                 ₦{{ number_format($expense->amount, 2) }}
                             </td>
@@ -102,7 +108,6 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                                 {{-- Optional action buttons --}}
-                                <a href="">Delete</a>
                             </td>
                         </tr>
                     @empty

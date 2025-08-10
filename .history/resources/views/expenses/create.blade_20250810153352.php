@@ -24,7 +24,26 @@
                     <form method="POST" action="{{ route('expenses.store') }}" class="space-y-6">
                         @csrf
 
-                       
+                        <!-- Product Selection -->
+                        <div>
+                            <label for="purchase_id" class="block text-sm font-medium text-gray-700">Purchase</label>
+                            <select id="purchase_id" name="purchase_id" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select a product</option>
+                                @foreach ($products as $product)
+                                    <option value="{{ $product->id }}" data-unit="{{ $product->product->unit_type }}"
+                                        data-current-stock="{{ $product->quantity }}"
+                                        {{ old('purchase_id') == $product->id ? 'selected' : '' }}>
+                                        {{ $product->product->name }} ({{ ucfirst($product->product->unit_type) }}) - Unit Stock:
+                                        {{ number_format($product->quantity, 1) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('purchase_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Expense Name -->
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700">Expense Title</label>

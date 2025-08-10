@@ -53,7 +53,7 @@
                     <p class="text-2xl font-bold text-blue-600">₦{{ number_format($expenses->sum('amount'), 2) }}</p>
                 </div>
                 <div class="bg-white shadow-sm rounded-lg p-6 text-center">
-                    <p class="text-sm text-gray-500">Total Expenses</p>
+                    <p class="text-sm text-gray-500">Total Expenses Quantity</p>
                     <p class="text-2xl font-bold text-green-600">{{ number_format($expenses->count(), 1) }}</p>
                 </div>
                 <div class="bg-white shadow-sm rounded-lg p-6 text-center">

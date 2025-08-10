@@ -5,7 +5,7 @@
                 {{ auth()->user()->isAdmin() ? 'All Staffs' : 'My Customer' }}
             </h2>
             @if (auth()->user()->isAdmin())
-                <a href="{{ route('admin.createUser') }}"
+                <a href="{{ route('sales.create') }}"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                     Create New Staff
                 </a>

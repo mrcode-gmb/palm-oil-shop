@@ -69,6 +69,6 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
 
-        return redirect()->route('admin.myStaff')->with('success', 'Staff created successfully!');
+        return redirect()->route('admin.createUser')->with('success', 'Staff deleted successfully!');
     }
 }

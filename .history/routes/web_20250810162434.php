@@ -42,7 +42,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     
     Route::get('/my-staffs', [DashboardController::class, 'myStaff'])->name('admin.myStaff');
     Route::get('/create/staff-account', [RegisteredUserController::class, 'createUser'])->name('admin.createUser');
-    Route::post('/store/staff-account', [RegisteredUserController::class, 'storeUser'])->name('admin.storeUser');
+    Route::post('/store/staff-account', [RegisteredUserController::class, 'createUser'])->name('admin.createUser');
     // Inventory Management (Admin only)
     Route::resource('inventory', InventoryController::class);
     Route::post('/inventory/{product}/adjust-stock', [InventoryController::class, 'adjustStock'])->name('inventory.adjust-stock');

@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
 
     public function createUser()
     {
-        return view("users.create");
+        return view("users.create")
     }
     public function storeUser(Request $request): RedirectResponse
     {
@@ -69,6 +69,6 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
 
-        return redirect()->route('admin.myStaff')->with('success', 'Staff created successfully!');
+        return redirect()->back()->withErrors(['']);
     }
 }

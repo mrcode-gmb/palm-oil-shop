@@ -24,8 +24,6 @@ class ExpensesController extends Controller
             ->latest()
             ->paginate(10);
 
-        // return $expenses;
-
         return view('expenses.index', compact('expenses'));
     }
 
@@ -47,6 +45,7 @@ class ExpensesController extends Controller
     {
         //
         $validated = $request->validate([
+            'purchase_id' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',

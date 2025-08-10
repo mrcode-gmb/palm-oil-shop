@@ -15,6 +15,7 @@ class Expenses extends Model
         'name',
         'amount',
         'notes',
+        'notes',
     ];
 
 
