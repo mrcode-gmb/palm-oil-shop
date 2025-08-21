@@ -30,19 +30,13 @@
 <body class="font-sans antialiased bg-gray-50">
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <div id="menuBtn"
-            class="hidden max-md:flex fixed w-10 h-10 bg-white rounded-lg shadow-md right-3 top-2 text-white"
-            onclick="toggleMobileMenu()">
-            <!-- Hamburger Icon -->
-            <svg id="hamburgerIcon" class="w-6 h-6 text-gray-700 m-auto" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <!-- Close Icon -->
-            <svg id="closeIcon" class="w-6 h-6 text-gray-700 m-auto hidden" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <div class="hidden max-md:flex fixed w-10 h-10 bg-black right-3 top-2 text-white" onclick="toggleMobileMenu()">
+            <i class="m-auto">M</i>
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+              
         </div>
         <div class="w-64 max-md:hidden max-md:fixed max-md:h-screen bg-white shadow-lg">
             <!-- Logo -->
@@ -239,30 +233,19 @@
 
     <!-- Mobile Menu Toggle Script -->
     <script>
+        // Add mobile responsiveness if needed
         function toggleMobileMenu() {
             const sidebar = document.querySelector('.w-64');
-            const hamburgerIcon = document.getElementById("hamburgerIcon");
-            const closeIcon = document.getElementById("closeIcon");
-
             if (sidebar.classList.contains("max-md:hidden")) {
                 sidebar.classList.remove('max-md:hidden');
                 sidebar.classList.add('max-md:block');
-
-                // Switch icons
-                hamburgerIcon.classList.add("hidden");
-                closeIcon.classList.remove("hidden");
             } else {
                 sidebar.classList.add('max-md:hidden');
                 sidebar.classList.remove('max-md:block');
-
-                // Switch icons back
-                closeIcon.classList.add("hidden");
-                hamburgerIcon.classList.remove("hidden");
             }
+
         }
     </script>
-
-
 </body>
 
 </html>

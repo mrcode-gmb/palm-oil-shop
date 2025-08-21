@@ -238,31 +238,7 @@
     </div>
 
     <!-- Mobile Menu Toggle Script -->
-    <script>
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.w-64');
-            const hamburgerIcon = document.getElementById("hamburgerIcon");
-            const closeIcon = document.getElementById("closeIcon");
-
-            if (sidebar.classList.contains("max-md:hidden")) {
-                sidebar.classList.remove('max-md:hidden');
-                sidebar.classList.add('max-md:block');
-
-                // Switch icons
-                hamburgerIcon.classList.add("hidden");
-                closeIcon.classList.remove("hidden");
-            } else {
-                sidebar.classList.add('max-md:hidden');
-                sidebar.classList.remove('max-md:block');
-
-                // Switch icons back
-                closeIcon.classList.add("hidden");
-                hamburgerIcon.classList.remove("hidden");
-            }
-        }
-    </script>
-
-
+    <
 </body>
 
 </html>
