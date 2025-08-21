@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('gender')->unique();
             $table->string('state')->unique();
             $table->string('lga')->unique();
-            $table->string('home_address')->unique();
+            $table->string('lga')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

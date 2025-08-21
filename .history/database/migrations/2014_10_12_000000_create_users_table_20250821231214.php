@@ -18,8 +18,7 @@ return new class extends Migration
             $table->string('mobile_number')->unique();
             $table->string('gender')->unique();
             $table->string('state')->unique();
-            $table->string('lga')->unique();
-            $table->string('home_address')->unique();
+            $table->string('state')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
