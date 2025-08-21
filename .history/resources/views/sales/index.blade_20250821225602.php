@@ -65,7 +65,7 @@
 
         <!-- Sales Summary -->
         @if($sales->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6 text-center">
                         <p class="text-sm text-gray-500">Total Sales</p>
@@ -74,14 +74,8 @@
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Sellers Commission</p>
-                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format($sales->sum('seller_profit_per_unit'), 2) }}</p>
-                    </div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Net Profit</p>
-                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format($sales->sum('profit') - $sales->sum('seller_profit_per_unit'), 2) }}</p>
+                        <p class="text-sm text-gray-500">Total Profit</p>
+                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format($sales->sum('profit'), 2) }}</p>
                     </div>
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -133,10 +127,10 @@
                                     ₦{{ number_format($sale->total_amount, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    ₦{{ number_format($sale->seller_profit_per_unit, 2) }}
+                                    ₦{{ number_format($sale->profit, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    ₦{{ number_format($sale->profit - $sale->seller_profit_per_unit, 2) }}
+                                    ₦{{ number_format($sale->seller_profit_per_unit, 2) }}
                                 </td>
                                 
                                 @if(auth()->user()->isAdmin())
