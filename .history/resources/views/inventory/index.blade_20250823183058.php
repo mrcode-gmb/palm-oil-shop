@@ -70,8 +70,8 @@
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Inventory Cost</p>
-                        <p class="text-2xl font-bold text-green-600">₦{{ number_format($products->sum(fn($p) => $p->purchase_price * $p->quantity), 2) }}</p>
+                        <p class="text-sm text-gray-500">Total Cost</p>
+                        <p class="text-2xl font-bold text-green-600">₦{{ number_format($products->sum(""), 2) }}</p>
                     </div>
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
