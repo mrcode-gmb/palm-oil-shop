@@ -34,7 +34,7 @@
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Unit Type</dt>
-                                <dd class="text-sm text-gray-900 capitalize">{{ $product->product->unit_type }}</dd>
+                                <dd class="text-sm text-gray-900 capitalize">{{ $product->unit_type }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Purchase Price</dt>

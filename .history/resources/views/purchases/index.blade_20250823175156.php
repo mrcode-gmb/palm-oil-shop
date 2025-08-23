@@ -115,7 +115,7 @@
                                     {{ number_format($purchase->quantity, 1) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    ₦{{ number_format($purchase->purchase_price, 2) }}
+                                    ₦{{ number_format($purchase->cost_price_per_unit, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                     ₦{{ number_format($purchase->total_cost, 2) }}

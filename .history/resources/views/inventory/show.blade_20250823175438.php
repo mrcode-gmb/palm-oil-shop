@@ -30,16 +30,16 @@
                         <dl class="space-y-3">
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Product Name</dt>
-                                <dd class="text-lg font-semibold text-gray-900">{{ $product->product->name }}</dd>
+                                <dd class="text-lg font-semibold text-gray-900">{{ $product->name }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Unit Type</dt>
-                                <dd class="text-sm text-gray-900 capitalize">{{ $product->product->unit_type }}</dd>
+                                <dd class="text-sm text-gray-900 capitalize">{{ $product->unit_type }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Purchase Price</dt>
+                                <dt class="text-sm font-medium text-gray-500">Selling Price</dt>
                                 <dd class="text-lg font-semibold text-green-600">
-                                    ₦{{ number_format($product->purchase_price, 2) }}</dd>
+                                    ₦{{ number_format($product->selling_price, 2) }}</dd>
                             </div>
                             @if ($product->description)
                                 <div>
@@ -99,11 +99,9 @@
                                 $stockValue = $product->quantity * $averageCostPrice;
 
                                 // Potential revenue = current stock * selling price
-                                $potentialRevenue = $product->quantity * $product->selling_price;
 
                                 // Potential profit = revenue - stock value
-                                $potentialProfit = 0;
-                                // $potentialProfit = $potentialRevenue - $stockValue;
+                                $potentialProfit = $potentialRevenue - $stockValue;
                             @endphp
 
 
