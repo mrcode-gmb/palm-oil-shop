@@ -9,8 +9,7 @@ class SoftNews extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name_title',
-        'new_content',
+    protected $fillable [
+
     ];
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('soft_news', function (Blueprint $table) {
             $table->id();
-            $table->string("name_title");
+            $table->string("name");
             $table->string("new_content");
             $table->timestamps();
         });
