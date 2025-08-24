@@ -18,13 +18,6 @@ class AppSettingController extends Controller
         return view("appSettings.index", compact('galleries'));
     }
 
-    public function indexNews()
-    {
-        //
-        $news = SoftNews::orderByDesc("id")->paginate(20);
-        return view("appSettings.index-news", compact('news'));
-    }
-
     /**
      * Show the form for creating a new resource.
      */
@@ -34,13 +27,7 @@ class AppSettingController extends Controller
         return view("appSettings.create");
     }
 
-    public function createNew()
-    {
-        //
-        return view("appSettings.create-news");
-    }
-
-    
+    createNew
 
     /**
      * Store a newly created resource in storage.
@@ -68,24 +55,6 @@ class AppSettingController extends Controller
         return to_route("appSetting.index")->with('success', 'Image uploaded successfully!')->with('path', $path);
     }
 
-    public function storeNews(Request $request)
-    {
-        // Validate file
-        $request->validate([
-            'name' => 'required',
-            'notes' => 'required',
-        ]);
-
-        // Store the image in "storage/app/public/images"
-
-        SoftNews::create([
-            'name_title' => $request->name,
-            'new_content' => $request->notes,
-        ]);
-        return to_route("appSetting.indexNews")->with('success', 'News Recorded successfully!');
-    }
-    
-
     /**
      * Display the specified resource.
      */
@@ -94,12 +63,6 @@ class AppSettingController extends Controller
     {
 
         return SoftImage::orderByDesc("id")->limit(8)->get();
-    }
-
-    public function fetchNewApi()
-    {
-        
-        return SoftNews::orderByDesc("id")->limit(8)->get();
     }
     public function show(string $id)
     {

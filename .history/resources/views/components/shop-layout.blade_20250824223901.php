@@ -137,7 +137,7 @@
                         Reports
                     </a>
 
-                    <a href="{{ route('appSetting.index') }}"
+                    <a href="{{ route('a') }}"
                         class="sidebar-link flex py-3 px-5 {{ request()->routeIs('gallery.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -146,7 +146,7 @@
                         Gallery
                     </a>
 
-                    <a href="{{ route("appSetting.indexNews") }}"
+                    <a href="{{ route('reports.index') }}"
                         class="sidebar-link flex py-3 px-5 {{ request()->routeIs('news.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

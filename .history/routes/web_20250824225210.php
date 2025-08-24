@@ -114,5 +114,5 @@ Route::middleware(['auth', 'role:admin,salesperson'])->group(function () {
 
 
 Route::get('/app-setting/fetch/api', [AppSettingController::class, 'fetchApi'])->name('appSetting.fetchApi');
-Route::get('/app-setting/fetch/api/news', [AppSettingController::class, 'fetchNewApi'])->name('appSetting.fetchNewApi');
+Route::get('/app-setting/fetch/api/news', [AppSettingController::class, 'fetchApi'])->name('appSetting.fetchApi');
 require __DIR__.'/auth.php';

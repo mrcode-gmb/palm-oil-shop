@@ -73,11 +73,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // app settings (Admin only)
 
     Route::get('/gallery/app-settings', [AppSettingController::class, 'index'])->name('appSetting.index');
-    Route::get('/gallery/app-settings/news', [AppSettingController::class, 'indexNews'])->name('appSetting.indexNews');
     Route::get('/app-setting/create', [AppSettingController::class, 'create'])->name('appSetting.create');
     Route::get('/app-setting/create/new', [AppSettingController::class, 'createNew'])->name('appSetting.createNew');
     Route::post('/app-setting/store', [AppSettingController::class, 'store'])->name('appSetting.store');
-    Route::post('/app-setting/store/news', [AppSettingController::class, 'storeNews'])->name('appSetting.storeNews');
     // Route::get('/reports/expensive/pdf', [ReportController::class, 'exportExpensivePDF'])->name('reports.expensive.pdf');
 
 });
@@ -114,5 +112,4 @@ Route::middleware(['auth', 'role:admin,salesperson'])->group(function () {
 
 
 Route::get('/app-setting/fetch/api', [AppSettingController::class, 'fetchApi'])->name('appSetting.fetchApi');
-Route::get('/app-setting/fetch/api/news', [AppSettingController::class, 'fetchNewApi'])->name('appSetting.fetchNewApi');
 require __DIR__.'/auth.php';

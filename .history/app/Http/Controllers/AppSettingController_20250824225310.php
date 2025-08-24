@@ -99,11 +99,11 @@ class AppSettingController extends Controller
     public function fetchNewApi()
     {
         
-        return SoftNews::orderByDesc("id")->limit(8)->get();
     }
     public function show(string $id)
     {
         //
+        return SoftImage::orderByDesc("id")->limit(8)->get();
     }
 
     /**

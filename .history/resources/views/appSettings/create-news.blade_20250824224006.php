@@ -1,7 +1,7 @@
 <x-shop-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Add Software Gallery
+            Add Software News
         </h2>
     </x-slot>
 
@@ -17,7 +17,7 @@
                    
                     <!-- Expense Name -->
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Image Title</label>
+                        <label for="name" class="block text-sm font-medium text-gray-700">News Title</label>
                         <input type="text" id="name" name="name" value="{{ old('name') }}" required
                             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                         @error('name')
@@ -45,7 +45,7 @@
                         </a>
                         <button type="submit"
                             class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition">
-                            Save Image
+                            Save Expense
                         </button>
                     </div>
                 </form>
