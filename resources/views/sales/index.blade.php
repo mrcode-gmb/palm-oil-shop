@@ -104,6 +104,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">seller Commission</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Profit</th>
                             @if(auth()->user()->isAdmin())
@@ -131,6 +132,19 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                                     ₦{{ number_format($sale->total_amount, 2) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                        @switch($sale->payment_type ?? 'cash')
+                                            @case('cash') bg-green-100 text-green-800 @break
+                                            @case('bank_transfer') bg-blue-100 text-blue-800 @break
+                                            @case('pos') bg-purple-100 text-purple-800 @break
+                                            @case('mobile_money') bg-yellow-100 text-yellow-800 @break
+                                            @case('credit') bg-red-100 text-red-800 @break
+                                            @default bg-gray-100 text-gray-800
+                                        @endswitch">
+                                        {{ ucfirst(str_replace('_', ' ', $sale->payment_type ?? 'cash')) }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                     ₦{{ number_format($sale->seller_profit_per_unit, 2) }}

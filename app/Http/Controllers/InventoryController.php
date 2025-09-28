@@ -6,6 +6,7 @@ use App\Models\AdjustmentProduct;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\ProductAssignment;
 
 class InventoryController extends Controller
 {
@@ -14,33 +15,56 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Purchase::query()->with('product');
+        $user = auth()->user();
+        
+        if ($user->isAdmin()) {
+            // Admin sees all inventory
+            $query = Purchase::query()->with('product');
 
-        // Filter by unit type
-        if ($request->filled('unit_type')) {
-            $query->whereHas('product', function ($q) use ($request) {
-                $q->where('unit_type', $request->unit_type);
-            });
-        }
-
-        // Filter by stock level
-        if ($request->filled('stock_filter')) {
-            switch ($request->stock_filter) {
-                case 'low':
-                    $query->where('quantity', '<', 10);
-                    break;
-                case 'out':
-                    $query->where('quantity', '=', 0);
-                    break;
-                case 'available':
-                    $query->where('quantity', '>', 0);
-                    break;
+            // Filter by unit type
+            if ($request->filled('unit_type')) {
+                $query->whereHas('product', function ($q) use ($request) {
+                    $q->where('unit_type', $request->unit_type);
+                });
             }
+
+            // Filter by stock level
+            if ($request->filled('stock_filter')) {
+                switch ($request->stock_filter) {
+                    case 'low':
+                        $query->where('quantity', '<', 10);
+                        break;
+                    case 'out':
+                        $query->where('quantity', '=', 0);
+                        break;
+                    case 'available':
+                        $query->where('quantity', '>', 0);
+                        break;
+                }
+            }
+
+            $products = $query->orderBy('id')->paginate(20);
+            $assignments = collect(); // Empty for admin
+            
+        } else {
+            // Staff sees their assigned products
+            $query = ProductAssignment::query()
+                ->with(['purchase.product', 'user'])
+                ->where('user_id', $user->id);
+
+            // Filter by status
+            if ($request->filled('status_filter')) {
+                $query->where('status', $request->status_filter);
+            } else {
+                // Default to active assignments
+                $query->whereIn('status', ['assigned', 'in_progress']);
+            }
+
+            $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
+            $products = collect(); // Empty for staff
         }
 
-        $products = $query->orderBy('id')->paginate(20);
-
-        return view('inventory.index', compact('products'));
+        return view('inventory.index', compact('products', 'assignments'));
     }
 
     /**

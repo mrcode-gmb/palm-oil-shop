@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\User;
+use App\Models\ProductAssignment;
 use Carbon\Carbon;
 
 class SalesController extends Controller
@@ -16,7 +17,7 @@ class SalesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Sale::with(['purchase.product', 'user']);
+        $query = Sale::with(['purchase.product', 'user', 'assignment']);
 
         // Filter by date range
         if ($request->filled('start_date')) {
@@ -46,7 +47,7 @@ class SalesController extends Controller
 
     public function mySale(Request $request)
     {
-        $query = Sale::with(['product', 'user']);
+        $query = Sale::with(['purchase.product', 'user', 'assignment']);
 
         // Filter by date range
         if ($request->filled('start_date')) {
@@ -71,8 +72,19 @@ class SalesController extends Controller
      */
     public function create()
     {
-        $products = Purchase::with("product")->where('quantity', '>', 0)->get();
-        return view('sales.create', compact('products'));
+        $user = auth()->user();
+        
+        if ($user->isAdmin()) {
+            // Admin can sell from any available inventory
+            $products = Purchase::with("product")->where('quantity', '>', 0)->get();
+            $assignments = collect(); // Empty collection for admin
+        } else {
+            // Staff can only sell from their assigned products
+            $assignments = $user->activeAssignments()->with(['purchase.product'])->get();
+            $products = collect(); // Empty collection for staff
+        }
+        
+        return view('sales.create', compact('products', 'assignments'));
     }
 
     /**
@@ -82,21 +94,48 @@ class SalesController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:purchases,id',
+            'assignment_id' => 'nullable|exists:product_assignments,id',
             'quantity' => 'required|numeric|min:0.01',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
-            'selling_price' => 'nullable|string|max:20',
+            'selling_price' => 'required|numeric|min:0.01',
+            'payment_type' => 'required|in:cash,bank_transfer,pos,mobile_money,credit',
             'notes' => 'nullable|string',
         ]);
 
+        $user = auth()->user();
+        $assignment = null;
+        
+        // If staff member, validate they can sell this product
+        if ($user->isSalesperson()) {
+            if (!$request->assignment_id) {
+                return back()->withErrors(['assignment_id' => 'Staff must select from assigned products.']);
+            }
+            
+            $assignment = ProductAssignment::where('id', $request->assignment_id)
+                ->where('user_id', $user->id)
+                ->where('purchase_id', $request->product_id)
+                ->whereIn('status', ['assigned', 'in_progress'])
+                ->first();
+                
+            if (!$assignment) {
+                return back()->withErrors(['assignment_id' => 'Invalid assignment or product not assigned to you.']);
+            }
+            
+            // Check if enough assigned quantity is available
+            if ($assignment->remaining_quantity < $request->quantity) {
+                return back()->withErrors(['quantity' => 'Insufficient assigned quantity. Available: ' . $assignment->remaining_quantity]);
+            }
+        }
+
         $product = Purchase::with("product")->findOrFail($request->product_id);
-        // return $product;
-        // Check if enough stock is available
-        if ($product->quantity < $request->quantity) {
+        
+        // For admin, check inventory stock
+        if ($user->isAdmin() && $product->quantity < $request->quantity) {
             return back()->withErrors(['quantity' => 'Insufficient stock available.']);
         }
 
-        // Check if enough stock is available
+        // Check if selling price is reasonable
         if ($product->purchase_price > $request->selling_price) {
             return back()->withErrors(['selling_price' => 'Selling price cannot be less than the purchase price.']);
         }
@@ -123,6 +162,7 @@ class SalesController extends Controller
         $sale = Sale::create([
             'purchase_id' => $request->product_id,
             'user_id' => auth()->id(),
+            'assignment_id' => $request->assignment_id,
             'quantity' => $request->quantity,
             'selling_price_per_unit' => $sellingPricePerUnit,
             'cost_price_per_unit' => $costPricePerUnit,
@@ -133,12 +173,25 @@ class SalesController extends Controller
             'net_profit_per_unit' => $net_profit_per_unit,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
+            'payment_type' => $request->payment_type,
+            'sale_status' => 'completed',
             'sale_date' => Carbon::today(),
             'notes' => $request->notes,
         ]);
 
-        // Update product stock
-        $product->reduceStock($request->quantity);
+        // Update assignment if this is a staff sale
+        if ($assignment) {
+            $assignment->increment('sold_quantity', $request->quantity);
+            $assignment->increment('actual_total_sales', $totalAmount);
+            
+            // Update assignment status to in_progress if it was assigned
+            if ($assignment->status === 'assigned') {
+                $assignment->update(['status' => 'in_progress']);
+            }
+        } else {
+            // Admin sale - update product stock directly
+            $product->decrement('quantity', $request->quantity);
+        }
 
         return redirect()->route('sales.my-sales')->with('success', 'Sale recorded successfully!');
     }
@@ -154,7 +207,7 @@ class SalesController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        $sale->load(['purchase.product', 'user']);
+        $sale->load(['purchase.product', 'user', 'assignment']);
         return view('sales.show', compact('sale'));
     }
 

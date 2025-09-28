@@ -11,25 +11,55 @@
                 <form method="POST" action="{{ route('sales.store') }}" class="space-y-6">
                     @csrf
 
-                    <!-- Product Selection -->
-                    <div>
-                        <label for="product_id" class="block text-sm font-medium text-gray-700">Product</label>
-                        <select id="product_id" name="product_id" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select a product</option>
-                            @foreach($products as $product)
-                                <option value="{{ $product->id }}" 
-                                        data-price="{{ $product->purchase_price }}" 
-                                        data-stock="{{ $product->quantity }}"
-                                        data-unit="{{ $product->product->unit_type }}"
-                                        {{ old('product_id') == $product->id ? 'selected' : '' }}>
-                                    {{ $product->product->name }} - current stock ({{ number_format($product->quantity, 1) }} {{ $product->unit_type }}s available) - ₦{{ number_format($product->purchase_price, 2) }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('product_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    @if(auth()->user()->isAdmin())
+                        <!-- Admin: Product Selection from Inventory -->
+                        <div>
+                            <label for="product_id" class="block text-sm font-medium text-gray-700">Product (From Inventory)</label>
+                            <select id="product_id" name="product_id" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select a product</option>
+                                @foreach($products as $product)
+                                    <option value="{{ $product->id }}" 
+                                            data-price="{{ $product->purchase_price }}" 
+                                            data-stock="{{ $product->quantity }}"
+                                            data-unit="{{ $product->product->unit_type }}"
+                                            {{ old('product_id') == $product->id ? 'selected' : '' }}>
+                                        {{ $product->product->name }} - Stock: {{ number_format($product->quantity, 1) }} - Cost: ₦{{ number_format($product->purchase_price, 2) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('product_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @else
+                        <!-- Staff: Assignment Selection -->
+                        <div>
+                            <label for="assignment_id" class="block text-sm font-medium text-gray-700">Select from Your Assigned Products</label>
+                            <select id="assignment_id" name="assignment_id" required onchange="updateAssignmentInfo()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select an assignment</option>
+                                @foreach($assignments as $assignment)
+                                    @if($assignment->remaining_quantity > 0)
+                                        <option value="{{ $assignment->id }}" 
+                                                data-product-id="{{ $assignment->purchase_id }}"
+                                                data-price="{{ $assignment->expected_selling_price }}" 
+                                                data-stock="{{ $assignment->remaining_quantity }}"
+                                                data-cost="{{ $assignment->purchase->cost_price_per_unit }}"
+                                                data-unit="{{ $assignment->purchase->product->unit_type }}"
+                                                {{ (old('assignment_id') == $assignment->id || request('assignment_id') == $assignment->id) ? 'selected' : '' }}>
+                                            {{ $assignment->purchase->product->name }} - Available: {{ $assignment->remaining_quantity }} - Price: ₦{{ number_format($assignment->expected_selling_price, 2) }}
+                                        </option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="product_id" name="product_id" value="{{ old('product_id') }}">
+                            @error('assignment_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            @error('product_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
 
                     <!-- Product Info Display -->
                     <div id="product-info" class="hidden bg-blue-50 p-4 rounded-md">
@@ -115,6 +145,22 @@
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
+                    </div>
+
+                    <!-- Payment Type -->
+                    <div>
+                        <label for="payment_type" class="block text-sm font-medium text-gray-700">Payment Type</label>
+                        <select id="payment_type" name="payment_type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select payment method</option>
+                            <option value="cash" {{ old('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
+                            <option value="bank_transfer" {{ old('payment_type') == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                            <option value="pos" {{ old('payment_type') == 'pos' ? 'selected' : '' }}>POS</option>
+                            <option value="mobile_money" {{ old('payment_type') == 'mobile_money' ? 'selected' : '' }}>Mobile Money</option>
+                            <option value="credit" {{ old('payment_type') == 'credit' ? 'selected' : '' }}>Credit</option>
+                        </select>
+                        @error('payment_type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Notes -->
@@ -235,6 +281,51 @@
             // Initialize if product is pre-selected
             if (productSelect.value) {
                 updateProductInfo();
+            }
+        });
+
+        // Function for staff assignment selection
+        function updateAssignmentInfo() {
+            const assignmentSelect = document.getElementById('assignment_id');
+            const productIdInput = document.getElementById('product_id');
+            const sellingPriceInput = document.getElementById('selling_price');
+            const productInfo = document.getElementById('product-info');
+            const availableStock = document.getElementById('available-stock');
+            const unitType = document.getElementById('unit-type');
+            const sellingPrice = document.getElementById('selling-price');
+            
+            const selectedOption = assignmentSelect.options[assignmentSelect.selectedIndex];
+            
+            if (selectedOption.value) {
+                const productId = selectedOption.dataset.productId;
+                const price = selectedOption.dataset.price;
+                const stock = selectedOption.dataset.stock;
+                const unit = selectedOption.dataset.unit;
+                
+                // Update hidden product ID field
+                productIdInput.value = productId;
+                
+                // Update selling price
+                sellingPriceInput.value = price;
+                
+                // Update product info display
+                availableStock.textContent = `${parseFloat(stock).toFixed(1)} ${unit}s`;
+                unitType.textContent = unit;
+                sellingPrice.textContent = `₦${parseFloat(price).toLocaleString('en-NG', {minimumFractionDigits: 2})}`;
+                
+                productInfo.classList.remove('hidden');
+            } else {
+                productIdInput.value = '';
+                sellingPriceInput.value = '';
+                productInfo.classList.add('hidden');
+            }
+        }
+
+        // Initialize assignment info if pre-selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const assignmentSelect = document.getElementById('assignment_id');
+            if (assignmentSelect && assignmentSelect.value) {
+                updateAssignmentInfo();
             }
         });
     </script>

@@ -97,6 +97,24 @@
                         Purchases
                     </a>
 
+                    <a href="{{ route('admin.assignments.index') }}"
+                        class="sidebar-link flex py-3 px-5 {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        View All Assignments
+                    </a>
+
+                    <a href="{{ route('admin.assignments.create') }}"
+                        class="sidebar-link flex py-3 px-5 {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        Assign Product to Staff
+                    </a>
+
                     <a href="{{ route('sales.index') }}"
                         class="sidebar-link flex py-3 px-5 {{ request()->routeIs('sales.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

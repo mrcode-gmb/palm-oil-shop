@@ -47,6 +47,22 @@
                                 <dd class="text-2xl font-bold text-green-600">₦{{ number_format($sale->total_amount, 2) }}</dd>
                             </div>
                             <div>
+                                <dt class="text-sm font-medium text-gray-500">Payment Method</dt>
+                                <dd>
+                                    <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
+                                        @switch($sale->payment_type ?? 'cash')
+                                            @case('cash') bg-green-100 text-green-800 @break
+                                            @case('bank_transfer') bg-blue-100 text-blue-800 @break
+                                            @case('pos') bg-purple-100 text-purple-800 @break
+                                            @case('mobile_money') bg-yellow-100 text-yellow-800 @break
+                                            @case('credit') bg-red-100 text-red-800 @break
+                                            @default bg-gray-100 text-gray-800
+                                        @endswitch">
+                                        {{ ucfirst(str_replace('_', ' ', $sale->payment_type ?? 'cash')) }}
+                                    </span>
+                                </dd>
+                            </div>
+                            <div>
                                 <dt class="text-sm font-medium text-gray-500">Profit</dt>
                                 <dd class="text-lg font-semibold text-purple-600">₦{{ number_format($sale->profit, 2) }}</dd>
                             </div>

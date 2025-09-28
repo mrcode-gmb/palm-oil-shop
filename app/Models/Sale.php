@@ -22,6 +22,9 @@ class Sale extends Model
         'net_profit_per_unit',
         'customer_name',
         'customer_phone',
+        'payment_type',
+        'assignment_id',
+        'sale_status',
         'sale_date',
         'notes',
     ];
@@ -48,5 +51,13 @@ class Sale extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the product assignment this sale belongs to
+     */
+    public function assignment()
+    {
+        return $this->belongsTo(ProductAssignment::class, 'assignment_id');
     }
 }

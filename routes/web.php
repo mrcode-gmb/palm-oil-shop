@@ -10,6 +10,7 @@ use App\Http\Controllers\ExpensesController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ProductAssignmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/my-staffs', [DashboardController::class, 'myStaff'])->name('admin.myStaff');
     Route::get('/create/staff-account', [RegisteredUserController::class, 'createUser'])->name('admin.createUser');
     Route::post('/store/staff-account', [RegisteredUserController::class, 'storeUser'])->name('admin.storeUser');
+    Route::get('/staff/{user}', [RegisteredUserController::class, 'showUser'])->name('admin.showUser');
+    Route::get('/staff/{user}/edit', [RegisteredUserController::class, 'editUser'])->name('admin.editUser');
+    Route::patch('/staff/{user}', [RegisteredUserController::class, 'updateUser'])->name('admin.updateUser');
+    Route::patch('/staff/{user}/toggle-status', [RegisteredUserController::class, 'toggleStatus'])->name('admin.toggleUserStatus');
+    
+    // Product Assignment Routes (Admin only)
+    Route::get('/assignments', [ProductAssignmentController::class, 'index'])->name('admin.assignments.index');
+    Route::get('/assignments/create', [ProductAssignmentController::class, 'create'])->name('admin.assignments.create');
+    Route::post('/assignments', [ProductAssignmentController::class, 'store'])->name('admin.assignments.store');
+    Route::get('/assignments/{assignment}', [ProductAssignmentController::class, 'show'])->name('admin.assignments.show');
+    Route::patch('/assignments/{assignment}/collect-return', [ProductAssignmentController::class, 'collectReturn'])->name('admin.assignments.collectReturn');
     // Inventory Management (Admin only)
     Route::resource('inventory', InventoryController::class);
     Route::post('/inventory/{product}/adjust-stock', [InventoryController::class, 'adjustStock'])->name('inventory.adjust-stock');
@@ -102,6 +114,9 @@ Route::middleware(['auth', 'role:salesperson'])->prefix('sales')->group(function
     // View available inventory (read-only)
     Route::get('/inventory/index', [InventoryController::class, 'index'])->name('sales.inventory');
     Route::get('/inventory/{product}', [InventoryController::class, 'show'])->name('sales.inventory.show');
+    
+    // Product Assignments for Staff
+    Route::get('/my-assignments', [ProductAssignmentController::class, 'myAssignments'])->name('sales.assignments');
 });
 
 // Shared Routes (Both Admin and Salesperson)

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'status',
     ];
 
     /**
@@ -61,6 +62,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Check if user is active
+     */
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Check if user is inactive
+     */
+    public function isInactive()
+    {
+        return $this->status === 'inactive';
+    }
+
+    /**
      * Sales made by this user
      */
     public function sales()
@@ -79,5 +96,21 @@ class User extends Authenticatable
     public function expenses()
     {
         return $this->hasMany(Expenses::class);
+    }
+
+    /**
+     * Product assignments for this user (staff member)
+     */
+    public function assignments()
+    {
+        return $this->hasMany(ProductAssignment::class);
+    }
+
+    /**
+     * Active assignments for this user
+     */
+    public function activeAssignments()
+    {
+        return $this->assignments()->whereIn('status', ['assigned', 'in_progress']);
     }
 }

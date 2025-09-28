@@ -15,6 +15,72 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if(auth()->user()->isAdmin())
+                        <!-- Admin Navigation -->
+                        <x-dropdown align="top" width="48">
+                            <x-slot name="trigger">
+                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white hover:text-gray-200 focus:outline-none transition ease-in-out duration-150">
+                                    <div>Staff Management</div>
+                                    <div class="ms-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('admin.myStaff')">
+                                    {{ __('View All Staff') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.createUser')">
+                                    {{ __('Create New Staff') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+
+                        <x-dropdown align="top" width="48">
+                            <x-slot name="trigger">
+                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white hover:text-gray-200 focus:outline-none transition ease-in-out duration-150">
+                                    <div>Product Assignments</div>
+                                    <div class="ms-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <x-dropdown-link :href="route('admin.assignments.index')">
+                                    {{ __('View All Assignments') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.assignments.create')">
+                                    {{ __('🎯 Assign Product to Staff') }}
+                                </x-dropdown-link>
+                            </x-slot>
+                        </x-dropdown>
+
+                        <x-nav-link :href="route('inventory.index')" :active="request()->routeIs('inventory.*')">
+                            {{ __('Inventory') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
+                            {{ __('Sales') }}
+                        </x-nav-link>
+                    @else
+                        <!-- Staff Navigation -->
+                        <x-nav-link :href="route('sales.assignments')" :active="request()->routeIs('sales.assignments')">
+                            {{ __('My Assignments') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('sales.create')" :active="request()->routeIs('sales.create')">
+                            {{ __('Record Sale') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('sales.my-sales')" :active="request()->routeIs('sales.my-sales')">
+                            {{ __('My Sales') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,6 +136,50 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if(auth()->user()->isAdmin())
+                <!-- Admin Mobile Navigation -->
+                <div class="border-t border-gray-200 pt-2">
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Staff Management</div>
+                    <x-responsive-nav-link :href="route('admin.myStaff')">
+                        {{ __('View All Staff') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.createUser')">
+                        {{ __('Create New Staff') }}
+                    </x-responsive-nav-link>
+                </div>
+
+                <div class="border-t border-gray-200 pt-2">
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product Assignments</div>
+                    <x-responsive-nav-link :href="route('admin.assignments.index')">
+                        {{ __('View All Assignments') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.assignments.create')">
+                        {{ __('🎯 Assign Product to Staff') }}
+                    </x-responsive-nav-link>
+                </div>
+
+                <x-responsive-nav-link :href="route('inventory.index')" :active="request()->routeIs('inventory.*')">
+                    {{ __('Inventory') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
+                    {{ __('Sales') }}
+                </x-responsive-nav-link>
+            @else
+                <!-- Staff Mobile Navigation -->
+                <x-responsive-nav-link :href="route('sales.assignments')" :active="request()->routeIs('sales.assignments')">
+                    {{ __('My Assignments') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('sales.create')" :active="request()->routeIs('sales.create')">
+                    {{ __('Record Sale') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('sales.my-sales')" :active="request()->routeIs('sales.my-sales')">
+                    {{ __('My Sales') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

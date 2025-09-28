@@ -58,17 +58,56 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'role' => ['required', 'string', 'in:admin,salesperson'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make("1234"),
+            'role' => $request->role,
         ]);
 
         event(new Registered($user));
 
+        return redirect()->route('admin.myStaff')->with('success', 'Staff created successfully! Default password is: 1234');
+    }
 
-        return redirect()->route('admin.myStaff')->with('success', 'Staff created successfully!');
+    public function showUser(User $user)
+    {
+        return view('users.show', compact('user'));
+    }
+
+    public function editUser(User $user)
+    {
+        return view('users.edit', compact('user'));
+    }
+
+    public function updateUser(Request $request, User $user): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class.',email,'.$user->id],
+            'role' => ['required', 'string', 'in:admin,salesperson'],
+            'status' => ['required', 'string', 'in:active,inactive'],
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('admin.myStaff')->with('success', 'Staff updated successfully!');
+    }
+
+    public function toggleStatus(User $user): RedirectResponse
+    {
+        $newStatus = $user->status === 'active' ? 'inactive' : 'active';
+        $user->update(['status' => $newStatus]);
+
+        $message = $newStatus === 'active' ? 'Staff activated successfully!' : 'Staff deactivated successfully!';
+        return redirect()->route('admin.myStaff')->with('success', $message);
     }
 }
