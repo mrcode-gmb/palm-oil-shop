@@ -57,15 +57,6 @@
                             {{ ucfirst(str_replace('_', ' ', $assignment->status)) }}
                         </span>
                         @if($assignment->isOverdue())
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 ml-1">
-                                Overdue
-                            </span>
-                        @endif
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Assigned Date</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $assignment->assigned_date->format('M d, Y') }}</p>
                     </div>
 
                     <div>
@@ -75,14 +66,13 @@
 
                     @if($assignment->returned_date)
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Returned Date</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $assignment->returned_date->format('M d, Y') }}</p>
+                        <label class="block text-sm font-medium text-gray-700">Expected Selling Price</label>
+                        <p class="mt-1 text-sm text-gray-900">₦{{ number_format($assignment->expected_selling_price, 2) }} per unit</p>
                     </div>
-                    @endif
-                </div>
-            </div>
-        </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Commission Rate</label>
+                        <p class="mt-1 text-sm text-gray-900">{{ number_format($assignment->commission_rate, 2) }}%</p>
         <!-- Quantity & Financial Summary -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Quantity Summary -->

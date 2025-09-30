@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\User;
+use App\Models\ProductAssignment;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -110,16 +111,32 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        // Get user's product assignments with metrics
+        $assignments = ProductAssignment::with(['purchase.product'])
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['assigned', 'in_progress'])
+            ->get()
+            ->map(function($assignment) {
+                $assignment->sold_percentage = $assignment->assigned_quantity > 0 
+                    ? ($assignment->sold_quantity / $assignment->assigned_quantity) * 100 
+                    : 0;
+                $assignment->remaining_quantity = $assignment->assigned_quantity - $assignment->sold_quantity;
+                return $assignment;
+            });
+
         // Available products with stock
-        $availableProducts = Purchase::with(['product', 'user', 'sales'])->where('quantity', '>', 0)->get();
-        // return $availableProducts;
+        $availableProducts = Purchase::with(['product', 'user', 'sales'])
+            ->where('quantity', '>', 0)
+            ->get();
+
         return view('sales.dashboard', compact(
             'todaySales',
             'todayProfit',
             'monthlySales',
             'monthlyProfit',
             'recentSales',
-            'availableProducts'
+            'availableProducts',
+            'assignments'
         ));
     }
 

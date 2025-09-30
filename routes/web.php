@@ -43,11 +43,16 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
     
+    // Staff Management
     Route::get('/my-staffs', [DashboardController::class, 'myStaff'])->name('admin.myStaff');
     Route::get('/create/staff-account', [RegisteredUserController::class, 'createUser'])->name('admin.createUser');
     Route::post('/store/staff-account', [RegisteredUserController::class, 'storeUser'])->name('admin.storeUser');
     Route::get('/staff/{user}', [RegisteredUserController::class, 'showUser'])->name('admin.showUser');
     Route::get('/staff/{user}/edit', [RegisteredUserController::class, 'editUser'])->name('admin.editUser');
+    
+    // Product Assignments Management
+    Route::resource('assignments', ProductAssignmentController::class)->names('admin.assignments');
+    Route::get('/assignments/{assignment}/complete', [ProductAssignmentController::class, 'markAsComplete'])->name('admin.assignments.complete');
     Route::patch('/staff/{user}', [RegisteredUserController::class, 'updateUser'])->name('admin.updateUser');
     Route::patch('/staff/{user}/toggle-status', [RegisteredUserController::class, 'toggleStatus'])->name('admin.toggleUserStatus');
     
@@ -97,22 +102,36 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 });
 
-Route::middleware(['auth', 'role:admin,salesperson'])->prefix('admin')->group(function () {
+// Admin and Salesperson shared sales routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    // Admin sales management
     Route::resource('sales', SalesController::class);
+    Route::get('/sales/report', [SalesController::class, 'report'])->name('admin.sales.report');
+    Route::get('/sales/export', [SalesController::class, 'export'])->name('admin.sales.export');
+    Route::get('/sales/export-pdf', [SalesController::class, 'exportPdf'])->name('admin.sales.export-pdf');
 });
 
-// Salesperson Routes
-Route::middleware(['auth', 'role:salesperson'])->prefix('sales')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'salesDashboard'])->name('sales.dashboard');
+// Sales Routes (Admin & Salesperson)
+Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(function () {
+    // Dashboard access based on role
+    Route::get('/dashboard', function () {
+        if (auth()->user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+        return app(DashboardController::class)->salesDashboard();
+    })->name('sales.dashboard');
     
-    // Sales (Salesperson can only create and view their own)
-    Route::get('/my-sales', [SalesController::class, 'index'])->name('sales.my-sales');
-    Route::get('/create', [SalesController::class, 'create'])->name('sales.create');
-    Route::post('/store', [SalesController::class, 'store'])->name('sales.store');
-    Route::get('/{sale}', [SalesController::class, 'show'])->name('sales.show');
+    // Sales management - accessible by both admin and salesperson
+    Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
+    Route::get('/sales/my-sales', [SalesController::class, 'mySales'])->name('sales.my-sales');
+    Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report');
+    Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
+    Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create');
+    Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
+    Route::get('/sales/{sale}', [SalesController::class, 'show'])->name('sales.show');
     
     // View available inventory (read-only)
-    Route::get('/inventory/index', [InventoryController::class, 'index'])->name('sales.inventory');
+    Route::get('/inventory', [InventoryController::class, 'index'])->name('sales.inventory');
     Route::get('/inventory/{product}', [InventoryController::class, 'show'])->name('sales.inventory.show');
     
     // Product Assignments for Staff

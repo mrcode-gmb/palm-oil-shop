@@ -5,26 +5,15 @@
         </h2>
     </x-slot>
 
-    @php
-        // Get current time in 24-hour format
-        $currentHour = now()->format('H');
-    @endphp
 
     <div class="max-w-3xl">
         <div class="bg-white overflow-hidden shadow-sm rounded-lg">
             <div class="p-6">
-                @if ($currentHour < 17)
-                    <!-- Locked Message -->
-                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-                        <strong class="font-bold">Access Locked!</strong>
-                        <span class="block sm:inline">You can only record expenses after <strong>5:00 PM</strong>. Please try again later.</span>
-                    </div>
-                    @else
+                   
                     <!-- Expense Form -->
                     <form method="POST" action="{{ route('expenses.store') }}" class="space-y-6">
                         @csrf
-
-                       
+                
                         <!-- Expense Name -->
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700">Expense Title</label>
@@ -79,7 +68,7 @@
                             </button>
                         </div>
                     </form>
-                @endif
+                
             </div>
         </div>
     </div>

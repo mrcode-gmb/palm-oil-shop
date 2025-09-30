@@ -65,23 +65,33 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="assigned_quantity" class="block text-sm font-medium text-gray-700">Quantity to Assign</label>
-                            <input type="number" step="0.01" name="assigned_quantity" id="assigned_quantity" required
-                                   value="{{ old('assigned_quantity') }}"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             @error('assigned_quantity')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
+                            <input type="number" step="0.01" name="assigned_quantity" id="assigned_quantity" required
+                                   value="{{ old('assigned_quantity') }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         </div>
 
                         <div>
-                            <label for="expected_selling_price" class="block text-sm font-medium text-gray-700">Expected Selling Price (₦ per unit)</label>
-                            <input type="number" step="0.01" name="expected_selling_price" id="expected_selling_price" required
-                                   value="{{ old('expected_selling_price') }}"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            @error('expected_selling_price')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
+                            <label for="expected_selling_price" class="block text-sm font-medium text-gray-700">Expected Selling Price per Unit (₦)</label>
+                        <input type="number" step="0.01" min="0.01" name="expected_selling_price" id="expected_selling_price" required
+                               value="{{ old('expected_selling_price') }}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('expected_selling_price')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Commission Rate -->
+                    <div>
+                        <label for="commission_rate" class="block text-sm font-medium text-gray-700">Commission Rate (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="commission_rate" id="commission_rate" required
+                               value="{{ old('commission_rate', 10) }}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('commission_rate')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Due Date -->

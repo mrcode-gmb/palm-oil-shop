@@ -16,6 +16,8 @@ class ProductAssignment extends Model
         'sold_quantity',
         'returned_quantity',
         'expected_selling_price',
+        'commission_rate',
+        'commission_amount',
         'actual_total_sales',
         'profit_collected',
         'status',

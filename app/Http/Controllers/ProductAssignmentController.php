@@ -43,39 +43,50 @@ class ProductAssignmentController extends Controller
             'purchase_id' => 'required|exists:purchases,id',
             'assigned_quantity' => 'required|numeric|min:0.01',
             'expected_selling_price' => 'required|numeric|min:0.01',
+            'commission_rate' => 'required|numeric|min:0|max:100',
             'due_date' => 'nullable|date|after:today',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        // Check if enough quantity is available
+        // Check if enough quantity is available in the purchase
         $purchase = Purchase::findOrFail($request->purchase_id);
+        
+        // Calculate already assigned quantity
         $assignedQuantity = ProductAssignment::where('purchase_id', $request->purchase_id)
             ->whereIn('status', ['assigned', 'in_progress'])
             ->sum('assigned_quantity');
-        
+            
         $availableQuantity = $purchase->quantity - $assignedQuantity;
         
         if ($request->assigned_quantity > $availableQuantity) {
             return back()->withErrors(['assigned_quantity' => 'Not enough quantity available. Available: ' . $availableQuantity]);
         }
 
-        ProductAssignment::create([
+        // Calculate commission amount
+        $totalExpectedSales = $request->assigned_quantity * $request->expected_selling_price;
+        $commissionAmount = ($totalExpectedSales * $request->commission_rate) / 100;
+
+        // Create the assignment
+        $assignment = ProductAssignment::create([
             'user_id' => $request->user_id,
             'purchase_id' => $request->purchase_id,
             'assigned_quantity' => $request->assigned_quantity,
             'expected_selling_price' => $request->expected_selling_price,
-            'assigned_date' => Carbon::today(),
+            'commission_rate' => $request->commission_rate,
+            'commission_amount' => $commissionAmount,
+            'assigned_date' => now(),
             'due_date' => $request->due_date,
-            'notes' => $request->notes,
             'status' => 'assigned',
+            'notes' => $request->notes,
         ]);
 
-        return redirect()->route('admin.assignments.index')->with('success', 'Product assigned successfully!');
-    }
+        // Update inventory
+        $purchase->decrement('quantity', $request->assigned_quantity);
+        $purchase->product->decrement('current_stock', $request->assigned_quantity);
 
-    /**
-     * Display the specified assignment
-     */
+        return redirect()->route('admin.assignments.index')
+            ->with('success', 'Product assigned successfully!');
+    }
     public function show(ProductAssignment $assignment)
     {
         $assignment->load(['user', 'purchase.product', 'sales']);

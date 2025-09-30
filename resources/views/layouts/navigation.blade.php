@@ -64,8 +64,11 @@
                             {{ __('Inventory') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
+                        <x-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.index')">
                             {{ __('Sales') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.sales.report')" :active="request()->routeIs('admin.sales.report')">
+                            {{ __('Sales Report') }}
                         </x-nav-link>
                     @else
                         <!-- Staff Navigation -->
@@ -79,6 +82,9 @@
 
                         <x-nav-link :href="route('sales.my-sales')" :active="request()->routeIs('sales.my-sales')">
                             {{ __('My Sales') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('sales.report')" :active="request()->routeIs('sales.report')">
+                            {{ __('My Sales Report') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -163,8 +169,11 @@
                     {{ __('Inventory') }}
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
+                <x-responsive-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.index')">
                     {{ __('Sales') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.sales.report')" :active="request()->routeIs('admin.sales.report')">
+                    {{ __('Sales Report') }}
                 </x-responsive-nav-link>
             @else
                 <!-- Staff Mobile Navigation -->
@@ -178,6 +187,9 @@
 
                 <x-responsive-nav-link :href="route('sales.my-sales')" :active="request()->routeIs('sales.my-sales')">
                     {{ __('My Sales') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('sales.report')" :active="request()->routeIs('sales.report')">
+                    {{ __('My Sales Report') }}
                 </x-responsive-nav-link>
             @endif
         </div>

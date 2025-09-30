@@ -51,6 +51,20 @@
                         </div>
                     @endif
 
+                    <div>
+                        <label for="payment_type" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select id="payment_type" 
+                                name="payment_type" 
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all">All Payment Methods</option>
+                            @foreach($paymentTypes as $value => $label)
+                                <option value="{{ $value }}" {{ request('payment_type') == $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <div class="flex items-end">
                         <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 mr-2">
                             Filter
@@ -63,31 +77,31 @@
             </div>
         </div>
 
-        <!-- Sales Summary -->
-        @if($sales->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Sales</p>
-                        <p class="text-2xl font-bold text-green-600">₦{{ number_format($sales->sum('total_amount'), 2) }}</p>
-                    </div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Sellers Commission</p>
-                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format($sales->sum('seller_profit_per_unit'), 2) }}</p>
-                    </div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Net Profit</p>
-                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format($sales->sum('profit') - $sales->sum('seller_profit_per_unit'), 2) }}</p>
-                    </div>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                    <div class="p-6 text-center">
-                        <p class="text-sm text-gray-500">Total Transactions</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ $sales->count() }}</p>
+        <!-- Payment Summary -->
+        @if($paymentSummary->isNotEmpty())
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Summary</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-{{ count($paymentSummary) + 2 }} gap-4">
+                        @foreach($paymentSummary as $payment)
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="text-sm font-medium text-gray-500">{{ $paymentTypes[$payment->payment_type] ?? ucfirst($payment->payment_type) }}</div>
+                                <div class="mt-1 text-2xl font-semibold text-gray-900">₦{{ number_format($payment->total, 2) }}</div>
+                                <div class="text-xs text-gray-500">{{ $payment->count }} {{ Str::plural('sale', $payment->count) }}</div>
+                            </div>
+                        @endforeach
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-blue-800">Total Sales</div>
+                            <div class="mt-1 text-2xl font-semibold text-blue-700">₦{{ number_format($totalSales, 2) }}</div>
+                            <div class="text-xs text-blue-600">{{ $sales->total() }} {{ Str::plural('sale', $sales->total()) }}</div>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-green-800">Total Profit</div>
+                            <div class="mt-1 text-2xl font-semibold text-green-700">₦{{ number_format($totalProfit, 2) }}</div>
+                            <div class="text-xs text-green-600">After costs</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -99,7 +113,16 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'sale_date', 'sort_direction' => request('sort_direction') === 'asc' && request('sort_by') === 'sale_date' ? 'desc' : 'asc']) }}" class="flex items-center">
+                                    Date
+                                    @if(request('sort_by') === 'sale_date')
+                                        <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    @endif
+                                </a>
+                            </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
@@ -134,7 +157,7 @@
                                     ₦{{ number_format($sale->total_amount, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                         @switch($sale->payment_type ?? 'cash')
                                             @case('cash') bg-green-100 text-green-800 @break
                                             @case('bank_transfer') bg-blue-100 text-blue-800 @break
@@ -143,7 +166,28 @@
                                             @case('credit') bg-red-100 text-red-800 @break
                                             @default bg-gray-100 text-gray-800
                                         @endswitch">
-                                        {{ ucfirst(str_replace('_', ' ', $sale->payment_type ?? 'cash')) }}
+                                        @if(($sale->payment_type ?? 'cash') === 'bank_transfer')
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-blue-800" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                        @elseif(($sale->payment_type ?? 'cash') === 'pos')
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-purple-800" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                        @elseif(($sale->payment_type ?? 'cash') === 'mobile_money')
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-yellow-800" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                        @elseif(($sale->payment_type ?? 'cash') === 'credit')
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-red-800" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                        @else
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-800" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                        @endif
+                                        {{ $paymentTypes[$sale->payment_type ?? 'cash'] ?? ucfirst(str_replace('_', ' ', $sale->payment_type ?? 'cash')) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
