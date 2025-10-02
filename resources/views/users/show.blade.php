@@ -69,7 +69,14 @@
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Performance Summary</h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @php
+                    $totalAssigned = $user->assignments()->count();
+                    $todayCommission = $user->sales()
+                        ->whereDate('sale_date', today())
+                        ->sum('seller_profit_per_unit');
+                @endphp
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-blue-50 p-4 rounded-lg">
                         <div class="text-2xl font-bold text-blue-600">{{ $user->sales()->count() }}</div>
                         <div class="text-sm text-blue-600">Total Sales</div>
@@ -84,7 +91,82 @@
                         <div class="text-2xl font-bold text-purple-600">₦{{ number_format($user->sales()->sum('profit'), 2) }}</div>
                         <div class="text-sm text-purple-600">Total Profit</div>
                     </div>
+
+                    <div class="bg-indigo-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-indigo-600">{{ $totalAssigned }}</div>
+                        <div class="text-sm text-indigo-600">Assigned Products</div>
+                    </div>
+
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <div class="text-2xl font-bold text-yellow-600">₦{{ number_format($todayCommission, 2) }}</div>
+                        <div class="text-sm text-yellow-600">Today's Commission</div>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Assigned Products -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Assigned Products</h3>
+                
+                @if($user->assignments()->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($user->assignments()->with('purchase.product')->latest()->get() as $assignment)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $assignment->purchase->product->name ?? 'N/A' }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        Expected Price: ₦{{ number_format($assignment->expected_selling_price, 2) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $assignment->assigned_date->format('M d, Y') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $assignment->assigned_quantity }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @php
+                                        $statusColors = [
+                                            'assigned' => 'bg-blue-100 text-blue-800',
+                                            'in_progress' => 'bg-yellow-100 text-yellow-800',
+                                            'completed' => 'bg-green-100 text-green-800',
+                                            'cancelled' => 'bg-red-100 text-red-800',
+                                        ][$assignment->status] ?? 'bg-gray-100 text-gray-800';
+                                    @endphp
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $statusColors }}">
+                                        {{ str_replace('_', ' ', ucfirst($assignment->status)) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $assignment->due_date ? $assignment->due_date->format('M d, Y') : 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('admin.assignments.show', $assignment) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <p class="text-gray-500 text-center py-4">No products assigned yet.</p>
+                @endif
             </div>
         </div>
 
