@@ -248,14 +248,14 @@
                         @forelse($availableProducts as $product)
                             <div class="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                                 <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ $product->product->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ ucfirst($product->product->unit_type) }} • ₦{{ number_format($product->selling_price, 2) }}</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ $product->purchase->product->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ ucfirst($product->purchase->product->unit_type) }} • ₦{{ number_format($product->purchase->purchase_price, 2) }}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm font-medium {{ $product->quantity < 10 ? 'text-red-600' : 'text-green-600' }}">
-                                        {{ number_format($product->quantity, 1) }} units
+                                    <p class="text-sm font-medium {{ ($product->assigned_quantity - $product->sold_quantity) < 10 ? 'text-red-600' : 'text-green-600' }}">
+                                        {{ number_format(($product->assigned_quantity - $product->sold_quantity), 1) }} units
                                     </p>
-                                    @if($product->quantity > 0)
+                                    @if(($product->assigned_quantity - $product->sold_quantity) > 0)
                                         <a href="{{ route('sales.create') }}?product={{ $product->id }}" class="text-xs text-blue-600 hover:text-blue-500">Sell now</a>
                                     @else
                                         <span class="text-xs text-red-500">Out of stock</span>
@@ -297,7 +297,7 @@
         </div>
 
         <!-- Performance Summary -->
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+        {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Performance Summary</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -335,7 +335,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 </x-shop-layout>
 

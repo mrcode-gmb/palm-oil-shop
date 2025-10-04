@@ -13,13 +13,67 @@ class ProductAssignmentController extends Controller
     /**
      * Display a listing of product assignments
      */
-    public function index()
+    public function index(Request $request)
     {
-        $assignments = ProductAssignment::with(['user', 'purchase.product'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = ProductAssignment::with(['user', 'purchase.product']);
 
-        return view('assignments.index', compact('assignments'));
+        // Apply filters
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('status', 'active');
+            } elseif ($request->status === 'completed') {
+                $query->where('status', 'completed');
+            } elseif ($request->status === 'overdue') {
+                $query->where('due_date', '<', now())->where('status', 'active');
+            }
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Handle PDF export
+        if ($request->has('export') && $request->export === 'pdf') {
+            $filters = [
+                'user_id' => $request->user_id,
+                'status' => $request->status,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date
+            ];
+            
+            $assignments = $query->get();
+            
+            $pdf = \PDF::loadView('exports.assignments-pdf', [
+                'assignments' => $assignments,
+                'filters' => $filters
+            ])->setPaper('a4', 'landscape');
+            
+            return $pdf->download('assignments-report-' . now()->format('Y-m-d') . '.pdf');
+        }
+
+        $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
+        
+        // Get users for filter dropdown
+        $users = \App\Models\User::where('role', 'salesperson')
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        // Get the current URL with all query parameters for export
+        $exportUrl = url()->current() . '?' . http_build_query(array_merge(
+            $request->query(),
+            ['export' => 'pdf']
+        ));
+
+        return view('assignments.index', compact('assignments', 'users', 'exportUrl'));
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
 use TCPDF;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -205,8 +206,8 @@ class ReportController extends Controller
         $pdf->SetFont('helvetica', 'B', 12);
         $pdf->Cell(0, 10, 'Summary', 0, 1, 'L');
         $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(0, 8, "Total Sales: ₦" . number_format($totalSales, 2), 0, 1, 'L');
-        $pdf->Cell(0, 8, "Total Profit: ₦" . number_format($totalProfit, 2), 0, 1, 'L');
+        $pdf->Cell(0, 8, "Total Sales: N" . number_format($totalSales, 2), 0, 1, 'L');
+        $pdf->Cell(0, 8, "Total Profit: N" . number_format($totalProfit, 2), 0, 1, 'L');
         $pdf->Cell(0, 8, "Number of Transactions: " . $sales->count(), 0, 1, 'L');
         $pdf->Ln(10);
 
@@ -226,14 +227,133 @@ class ReportController extends Controller
             $pdf->Cell(20, 8, $sale->sale_date->format('M d'), 1, 0, 'C');
             $pdf->Cell(40, 8, substr($sale->purchase->product->name, 0, 25), 1, 0, 'L');
             $pdf->Cell(20, 8, number_format($sale->quantity, 1), 1, 0, 'C');
-            $pdf->Cell(25, 8, '₦' . number_format($sale->selling_price_per_unit), 1, 0, 'R');
-            $pdf->Cell(25, 8, '₦' . number_format($sale->total_amount), 1, 0, 'R');
-            $pdf->Cell(25, 8, '₦' . number_format($sale->net_profit_per_unit), 1, 0, 'R');
+            $pdf->Cell(25, 8, 'N' . number_format($sale->selling_price_per_unit), 1, 0, 'R');
+            $pdf->Cell(25, 8, 'N' . number_format($sale->total_amount), 1, 0, 'R');
+            $pdf->Cell(25, 8, 'N' . number_format($sale->net_profit_per_unit), 1, 0, 'R');
             $pdf->Cell(35, 8, substr($sale->user->name, 0, 20), 1, 1, 'L');
         }
 
         $filename = "sales_report_{$startDate}_to_{$endDate}.pdf";
         $pdf->Output($filename, 'D');
+    }
+
+    /**
+     * Export Profit Report to PDF
+     */
+    public function exportProfitPDF(Request $request)
+    {
+        $period = $request->input('period', 'monthly');
+        $year = $request->input('year', Carbon::now()->year);
+
+        // Get the same data as the profit report
+        $profits = $this->getProfitData($period, $year);
+        
+        $totalSales = $profits->sum('sales');
+        $totalProfit = $profits->sum('profit');
+        $averageMargin = $totalSales > 0 ? ($totalProfit / $totalSales) * 100 : 0;
+
+        // Create PDF
+        $pdf = new TCPDF();
+        $pdf->SetCreator('Palm Oil Shop');
+        $pdf->SetAuthor('Palm Oil Shop');
+        $pdf->SetTitle('Profit Analysis Report');
+        $pdf->SetSubject('Profit Analysis Report');
+
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', 'B', 16);
+        $pdf->Cell(0, 10, 'Palm Oil Shop - Profit Analysis Report', 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 12);
+        $periodText = $period == 'monthly' ? 
+            'Monthly Report for ' . $year : 
+            'Daily Report for ' . Carbon::now()->format('F Y');
+        $pdf->Cell(0, 10, $periodText, 0, 1, 'C');
+        $pdf->Ln(5);
+
+        // Summary
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->Cell(0, 10, 'Summary', 0, 1, 'L');
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->Cell(0, 8, "Total Sales: N" . number_format($totalSales, 2), 0, 1, 'L');
+        $pdf->Cell(0, 8, "Total Profit: N" . number_format($totalProfit, 2), 0, 1, 'L');
+        $pdf->Cell(0, 8, "Average Margin: " . number_format($averageMargin, 1) . '%', 0, 1, 'L');
+        $pdf->Ln(10);
+
+        // Table header
+        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->Cell(40, 8, 'Period', 1, 0, 'C');
+        $pdf->Cell(40, 8, 'Sales', 1, 0, 'C');
+        $pdf->Cell(40, 8, 'Cost', 1, 0, 'C');
+        $pdf->Cell(40, 8, 'Profit', 1, 0, 'C');
+        $pdf->Cell(30, 8, 'Margin %', 1, 1, 'C');
+
+        // Table data
+        $pdf->SetFont('helvetica', '', 9);
+        foreach ($profits as $profit) {
+            $margin = $profit['sales'] > 0 ? ($profit['profit'] / $profit['sales']) * 100 : 0;
+            
+            $pdf->Cell(40, 8, $profit['period'], 1, 0, 'L');
+            $pdf->Cell(40, 8, 'N' . number_format($profit['sales'], 2), 1, 0, 'R');
+            $pdf->Cell(40, 8, 'N' . number_format($profit['cost'], 2), 1, 0, 'R');
+            $pdf->Cell(40, 8, 'N' . number_format($profit['profit'], 2), 1, 0, 'R');
+            $pdf->Cell(30, 8, number_format($margin, 1) . '%', 1, 1, 'R');
+        }
+
+        $filename = "profit_report_{$period}_{$year}.pdf";
+        $pdf->Output($filename, 'D');
+    }
+
+    /**
+     * Helper method to get profit data
+     */
+    protected function getProfitData($period, $year)
+    {
+        if ($period === 'daily') {
+            $startDate = Carbon::createFromDate($year, Carbon::now()->month, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+            
+            $sales = Sale::select(
+                DB::raw('DATE(sale_date) as date'),
+                DB::raw('SUM(total_amount) as sales'),
+                DB::raw('SUM(quantity * cost_price_per_unit) as cost'),
+                DB::raw('SUM(profit) as profit')
+            )
+            ->whereBetween('sale_date', [$startDate, $endDate])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+            return $sales->map(function($item) {
+                return [
+                    'period' => Carbon::parse($item->date)->format('M d'),
+                    'sales' => $item->sales,
+                    'cost' => $item->cost,
+                    'profit' => $item->profit
+                ];
+            });
+        } else {
+            $sales = Sale::select(
+                DB::raw('YEAR(sale_date) as year'),
+                DB::raw('MONTH(sale_date) as month'),
+                DB::raw('SUM(total_amount) as sales'),
+                DB::raw('SUM(quantity * cost_price_per_unit) as cost'),
+                DB::raw('SUM(profit) as profit')
+            )
+            ->whereYear('sale_date', $year)
+            ->groupBy('year', 'month')
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
+
+            return $sales->map(function($item) {
+                return [
+                    'period' => Carbon::createFromDate($item->year, $item->month, 1)->format('M Y'),
+                    'sales' => $item->sales,
+                    'cost' => $item->cost,
+                    'profit' => $item->profit
+                ];
+            });
+        }
     }
 
     public function exportExpensivePDF(Request $request)

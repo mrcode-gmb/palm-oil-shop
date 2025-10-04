@@ -8,8 +8,10 @@ use App\Models\Purchase;
 use App\Models\User;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SalesReportExport;
+use App\Exports\SalesPdfExport;
 use App\Models\ProductAssignment;
 use Carbon\Carbon;
+use PDF;
 
 class SalesController extends Controller
 {
@@ -61,19 +63,49 @@ class SalesController extends Controller
         $paymentTypes = ['cash' => 'Cash', 'bank_transfer' => 'Bank Transfer', 'pos' => 'POS', 'mobile_money' => 'Mobile Money', 'credit' => 'Credit'];
 
         if ($request->has('export')) {
-            return Excel::download(
-                new SalesReportExport($sales->get()), 
-                'sales-report-' . now()->format('Y-m-d') . '.xlsx'
-            );
+            if ($request->export === 'pdf') {
+                $filters = [
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'payment_type' => $request->payment_type,
+                    'include_salesperson' => auth()->user()->isAdmin(),
+                    'include_customer' => true
+                ];
+                
+                $pdf = PDF::loadView('exports.sales-pdf', [
+                    'sales' => $sales,
+                    'totalSales' => $totalSales,
+                    'totalProfit' => $totalProfit,
+                    'paymentSummary' => $paymentSummary,
+                    'paymentTypes' => $paymentTypes,
+                    'filters' => $filters
+                ])->setPaper('a4', 'landscape');
+                
+                return $pdf->download('sales-report-' . now()->format('Y-m-d') . '.pdf');
+            } else {
+                return Excel::download(
+                    new SalesReportExport($sales->get()), 
+                    'sales-report-' . now()->format('Y-m-d') . '.xlsx'
+                );
+            }
         }
 
+        $totalCommition = (clone $query)->sum('seller_profit_per_unit');
+        // Get the current URL with all query parameters
+        $exportUrl = url()->current() . '?' . http_build_query(array_merge(
+            $request->query(),
+            ['export' => 'pdf']
+        ));
+        
         return view('sales.index', compact(
             'sales',
             'salespeople',
             'paymentSummary',
             'totalSales',
+            'totalCommition',
             'totalProfit',
-            'paymentTypes'
+            'paymentTypes',
+            'exportUrl'
         ));
     }
 
@@ -344,8 +376,26 @@ class SalesController extends Controller
             abort(403, 'Unauthorized access.');
         }
 
-        $sale->load(['purchase.product', 'user', 'assignment']);
+        $sale->load(['purchase.product', 'user']);
         return view('sales.show', compact('sale'));
+    }
+
+    /**
+     * Print receipt for a sale
+     */
+    public function printReceipt(Sale $sale)
+    {
+        $sale->load(['purchase.product', 'user']);
+        
+        // For thermal printer, we'll use a custom view
+        $pdf = PDF::loadView('sales.print-receipt', compact('sale'))
+            ->setPaper([0, 0, 226.77, 841.89], 'portrait') // 80mm width in points (80mm = 226.77pt)
+            ->setOption('margin-top', 0)
+            ->setOption('margin-bottom', 0)
+            ->setOption('margin-left', 0)
+            ->setOption('margin-right', 0);
+            
+        return $pdf->stream("receipt-{$sale->id}.pdf");
     }
 
     /**
@@ -405,6 +455,7 @@ class SalesController extends Controller
 
         // Get total sales
         $totalSales = $query->sum('total_amount');
+        $totalCommition = $query->sum('seller_profit_per_unit') * $query->sum('quantity');
         
         // Get paginated results with ordering
         $sales = $query->where("user_id", auth()->id())->orderBy('id', 'desc')->paginate(20);
@@ -413,6 +464,7 @@ class SalesController extends Controller
             'sales' => $sales,
             'paymentSummary' => $paymentSummary,
             'totalSales' => $totalSales,
+            'totalCommition' => $totalCommition,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'payment_type' => $request->payment_type,

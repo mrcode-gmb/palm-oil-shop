@@ -79,14 +79,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/reports/profit', [ReportController::class, 'profitReport'])->name('reports.profit');
     Route::get('/reports/inventory', [ReportController::class, 'inventoryReport'])->name('reports.inventory');
     Route::get('/reports/sales/pdf', [ReportController::class, 'exportSalesPDF'])->name('reports.sales.pdf');
+    Route::get('/reports/profit/pdf', [ReportController::class, 'exportProfitPDF'])->name('reports.profit.pdf');
     
     
-    // Expensive (Admin only)
+    // Expenses (Admin only)
     Route::get('/expenses', [ExpensesController::class, 'index'])->name('expenses.index');
     Route::get('/expenses/create', [ExpensesController::class, 'create'])->name('expenses.create');
-    Route::post('/expenses/store', [ExpensesController::class, 'store'])->name('expenses.store');
+    Route::post('/expenses', [ExpensesController::class, 'store'])->name('expenses.store');
+    Route::get('/expenses/{expense}/edit', [ExpensesController::class, 'edit'])->name('expenses.edit');
+    Route::put('/expenses/{expense}', [ExpensesController::class, 'update'])->name('expenses.update');
+    Route::delete('/expenses/{expense}', [ExpensesController::class, 'destroy'])->name('expenses.destroy');
     Route::get('/expenses/inventory', [ExpensesController::class, 'inventoryReport'])->name('expenses.inventory');
-    Route::get('/reports/expensive/pdf', [ReportController::class, 'exportExpensivePDF'])->name('reports.expensive.pdf');
+    Route::get('/reports/expenses/pdf', [ReportController::class, 'exportExpensesPDF'])->name('reports.expenses.pdf');
 
     // app settings (Admin only)
 
@@ -129,6 +133,7 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
     Route::get('/sales/{sale}', [SalesController::class, 'show'])->name('sales.show');
+    Route::get('/sales/{sale}/print-receipt', [SalesController::class, 'printReceipt'])->name('sales.print-receipt');
     
     // View available inventory (read-only)
     Route::get('/inventory', [InventoryController::class, 'index'])->name('sales.inventory');

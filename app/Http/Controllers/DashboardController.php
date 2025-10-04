@@ -128,9 +128,11 @@ class DashboardController extends Controller
         $totalSoldQuantity = $assignments->sum("sold_quantity");
         $commission_rate = $assignments->sum("commission_rate");
         $totalRemainingQuantityStock = $assignments->sum("assigned_quantity") - $assignments->sum("sold_quantity");
-        // Available products with stock
-        $availableProducts = Purchase::with(['product', 'user', 'sales'])
-            ->where('quantity', '>', 0)
+        // Available products with stockProductAssigned
+        $availableProducts = ProductAssignment::where("user_id", auth()->id())->with(['purchase.product', 'user', 'sales'])
+            ->where('assigned_quantity', '>', 0)
+            ->orderByDesc("id")
+            ->limit(10)
             ->get();
 
         return view('sales.dashboard', compact(
