@@ -46,11 +46,11 @@
                             <option value="">Choose a product</option>
                             @foreach ($products as $purchase)
                                 <option value="{{ $purchase->id }}" data-available="{{ $purchase->quantity }}"
-                                    data-cost="{{ $purchase->cost_price_per_unit }}"
+                                    data-cost="{{ $purchase->purchase_price }}"
                                     data-selling="{{ $purchase->selling_price_per_unit }}"
                                     {{ old('purchase_id') == $purchase->id ? 'selected' : '' }}>
                                     {{ $purchase->product->name }} - Available: {{ $purchase->quantity }} units (Cost:
-                                    ₦{{ number_format($purchase->cost_price_per_unit, 2) }})
+                                    ₦{{ number_format($purchase->purchase_price, 2) }})
                                 </option>
                             @endforeach
                         </select>
@@ -60,7 +60,7 @@
                         <div id="productInfo" class="mt-2 text-sm text-gray-600 hidden">
                             <p>Available Quantity: <span id="availableQty">0</span> units</p>
                             <p>Cost Price: ₦<span id="costPrice">0.00</span> per unit</p>
-                            <p>Suggested Selling Price: ₦<span id="suggestedPrice">0.00</span> per unit</p>
+                            <p><span id="suggestedPrice"></span></p>
                         </div>
                     </div>
 
