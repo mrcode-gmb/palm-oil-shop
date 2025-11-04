@@ -300,16 +300,15 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    <script>
-        function showCollectModal(assignmentId, staffName, productName) {
-            document.getElementById('collectModal').classList.remove('hidden');
-        }
 
-        function hideCollectModal() {
-            document.getElementById('collectModal').classList.add('hidden');
-            document.getElementById('collectForm').reset();
-        }
-    </script>
+            <script>
+                function showCollectModal(assignmentId, staffName, productName) {
+                    document.getElementById('collectModal').classList.remove('hidden');
+                }
+
+                function hideCollectModal() {
+                    document.getElementById('collectModal').classList.add('hidden');
+                    document.getElementById('collectForm').reset();
+                }
+            </script>
 </x-shop-layout>

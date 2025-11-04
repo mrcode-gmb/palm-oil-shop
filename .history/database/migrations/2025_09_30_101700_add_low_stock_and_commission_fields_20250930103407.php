@@ -15,8 +15,8 @@ return new class extends Migration
 
         // Add commission fields to product_assignments
         Schema::table('product_assignments', function (Blueprint $table) {
-            $table->decimal('commission_rate', 30, 2)->default(0)->after('expected_selling_price');
-            $table->decimal('commission_amount', 30, 2)->default(0)->after('commission_rate');
+            $table->decimal('commission_rate', 5, 2)->default(0)->after('expected_selling_price');
+            $table->decimal('commission_amount', 10, 2)->default(0)->after('commission_rate');
         });
     }
 
