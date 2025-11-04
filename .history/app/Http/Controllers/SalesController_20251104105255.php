@@ -8,8 +8,10 @@ use App\Models\Purchase;
 use App\Models\User;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SalesReportExport;
+use App\Exports\SalesPdfExport;
 use App\Models\ProductAssignment;
 use Carbon\Carbon;
+use PDF;
 
 class SalesController extends Controller
 {
@@ -61,19 +63,49 @@ class SalesController extends Controller
         $paymentTypes = ['cash' => 'Cash', 'bank_transfer' => 'Bank Transfer', 'pos' => 'POS', 'mobile_money' => 'Mobile Money', 'credit' => 'Credit'];
 
         if ($request->has('export')) {
-            return Excel::download(
-                new SalesReportExport($sales->get()), 
-                'sales-report-' . now()->format('Y-m-d') . '.xlsx'
-            );
+            if ($request->export === 'pdf') {
+                $filters = [
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'payment_type' => $request->payment_type,
+                    'include_salesperson' => auth()->user()->isAdmin(),
+                    'include_customer' => true
+                ];
+                
+                $pdf = PDF::loadView('exports.sales-pdf', [
+                    'sales' => $sales,
+                    'totalSales' => $totalSales,
+                    'totalProfit' => $totalProfit,
+                    'paymentSummary' => $paymentSummary,
+                    'paymentTypes' => $paymentTypes,
+                    'filters' => $filters
+                ])->setPaper('a4', 'landscape');
+                
+                return $pdf->download('sales-report-' . now()->format('Y-m-d') . '.pdf');
+            } else {
+                return Excel::download(
+                    new SalesReportExport($sales->get()), 
+                    'sales-report-' . now()->format('Y-m-d') . '.xlsx'
+                );
+            }
         }
 
+        $totalCommition = (clone $query)->sum('seller_profit_per_unit');
+        // Get the current URL with all query parameters
+        $exportUrl = url()->current() . '?' . http_build_query(array_merge(
+            $request->query(),
+            ['export' => 'pdf']
+        ));
+        
         return view('sales.index', compact(
             'sales',
             'salespeople',
             'paymentSummary',
             'totalSales',
+            'totalCommition',
             'totalProfit',
-            'paymentTypes'
+            'paymentTypes',
+            'exportUrl'
         ));
     }
 
@@ -183,7 +215,7 @@ class SalesController extends Controller
     public function mySale(Request $request)
     {
         $query = Sale::with(['purchase.product', 'user', 'assignment']);
-
+        
         // Filter by date range
         if ($request->filled('start_date')) {
             $query->whereDate('sale_date', '>=', $request->start_date);
@@ -263,18 +295,17 @@ class SalesController extends Controller
             }
         }
 
-        $product = Purchase::with("product")->findOrFail($request->product_id);
-        
+        $product = Purchase::with(["product", "assignProduct"])->findOrFail($request->product_id);
+        // return $assignment;
         // For admin, check inventory stock
         if ($user->isAdmin() && $product->quantity < $request->quantity) {
             return back()->withErrors(['quantity' => 'Insufficient stock available.']);
         }
 
-        return $request->selling_price > 100000;
-        return $product->purchase_price > $request->selling_price;
-
+        
+        
         // Check if selling price is reasonable
-        if ($product->purchase_price < $request->selling_price) {
+        if ($request->selling_price < $product->purchase_price) {
             return back()->withErrors(['selling_price' => 'Selling price cannot be less than the purchase price.']);
         }
 
@@ -292,7 +323,7 @@ class SalesController extends Controller
 
         $profit = $totalAmount - $totalCost;
 
-        $seller_profit_per_unit = $product->seller_profit * $request->quantity;
+        $seller_profit_per_unit = $assignment->commission_rate * $request->quantity;
         $net_profit_per_unit = $profit - $seller_profit_per_unit;
 
 
@@ -327,7 +358,7 @@ class SalesController extends Controller
                 $assignment->update(['status' => 'in_progress']);
             }
         } else {
-            // Admin sale - update product stock directly
+            // Admin sale - upPdashate product stock directly
             $product->decrement('quantity', $request->quantity);
         }
 
@@ -341,12 +372,30 @@ class SalesController extends Controller
     {
         
         // Check if user can view this sale
-        if (auth()->user()->isSalesperson() && $sale->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access.');
-        }
+        // if (auth()->user()->isSalesperson() && $sale->user_id !== auth()->id()) {
+        //     abort(403, 'Unauthorized access.');
+        // }
 
-        $sale->load(['purchase.product', 'user', 'assignment']);
+        $sale->load(['purchase.product', 'user']);
         return view('sales.show', compact('sale'));
+    }
+
+    /**
+     * Print receipt for a sale
+     */
+    public function printReceipt(Sale $sale)
+    {
+        $sale->load(['purchase.product', 'user']);
+        
+        // For thermal printer, we'll use a custom view
+        $pdf = PDF::loadView('sales.print-receipt', compact('sale'))
+            ->setPaper([0, 0, 226.77, 841.89], 'portrait') // 80mm width in points (80mm = 226.77pt)
+            ->setOption('margin-top', 0)
+            ->setOption('margin-bottom', 0)
+            ->setOption('margin-left', 0)
+            ->setOption('margin-right', 0);
+            
+        return $pdf->stream("receipt-{$sale->id}.pdf");
     }
 
     /**
@@ -358,6 +407,12 @@ class SalesController extends Controller
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Only administrators can edit sales.');
         }
+
+        // Admin can sell from any available inventory
+        $products = Purchase::with("product")->where('quantity', '>', 0)->get();
+        $assignments = collect(); // Empty collection for admin
+        $sale->load(['purchase.product', 'user']);
+        return view('sales.edit', compact('sale', "products"));
     }
 
     /**
@@ -370,6 +425,7 @@ class SalesController extends Controller
             abort(403, 'This action is unauthorized.');
         }
 
+        
         $query = Sale::with(['purchase.product', 'assignment'])
             ->where('user_id', auth()->id())
             ->orderBy('sale_date', 'desc');
@@ -405,14 +461,16 @@ class SalesController extends Controller
 
         // Get total sales
         $totalSales = $query->sum('total_amount');
+        $totalCommition = $query->sum('seller_profit_per_unit') * $query->sum('quantity');
         
         // Get paginated results with ordering
-        $sales = $query->orderBy('sale_date', 'desc')->paginate(20);
+        $sales = $query->where("user_id", auth()->id())->orderBy('id', 'desc')->paginate(20);
 
         return view('sales.my-sales', [
             'sales' => $sales,
             'paymentSummary' => $paymentSummary,
             'totalSales' => $totalSales,
+            'totalCommition' => $totalCommition,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'payment_type' => $request->payment_type,

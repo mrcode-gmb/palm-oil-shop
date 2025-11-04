@@ -407,6 +407,12 @@ class SalesController extends Controller
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Only administrators can edit sales.');
         }
+
+        // Admin can sell from any available inventory
+        $products = Purchase::with("product")->where('quantity', '>', 0)->get();
+        $assignments = collect(); // Empty collection for admin
+        $sale->load(['purchase.product', 'user']);
+        return view('sales.edit', compact('sale', "products"));
     }
 
     /**
