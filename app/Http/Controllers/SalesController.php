@@ -372,9 +372,9 @@ class SalesController extends Controller
     {
         
         // Check if user can view this sale
-        if (auth()->user()->isSalesperson() && $sale->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access.');
-        }
+        // if (auth()->user()->isSalesperson() && $sale->user_id !== auth()->id()) {
+        //     abort(403, 'Unauthorized access.');
+        // }
 
         $sale->load(['purchase.product', 'user']);
         return view('sales.show', compact('sale'));
