@@ -106,6 +106,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 });
 
+
+
+
 // Admin and Salesperson shared sales routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // Admin sales management
@@ -132,8 +135,6 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
-    Route::get('/sales/{sale}', [SalesController::class, 'show'])->name('sales.show');
-    Route::get('/sales/{sale}/print-receipt', [SalesController::class, 'printReceipt'])->name('sales.print-receipt');
     
     // View available inventory (read-only)
     Route::get('/inventory', [InventoryController::class, 'index'])->name('sales.inventory');
@@ -141,6 +142,16 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     
     // Product Assignments for Staff
     Route::get('/my-assignments', [ProductAssignmentController::class, 'myAssignments'])->name('sales.assignments');
+});
+
+
+// Sales Routes (Admin & Salesperson)
+Route::middleware(['auth'])->prefix('sales')->group(function () {
+    
+    Route::get('/sales/{sale}', [SalesController::class, 'show'])->name('sales.show');
+    Route::get('/sales/{sale}/print-receipt', [SalesController::class, 'printReceipt'])->name('sales.print-receipt');
+    
+
 });
 
 // Shared Routes (Both Admin and Salesperson)
