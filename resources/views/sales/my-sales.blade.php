@@ -221,7 +221,7 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
-                                                <a href="{{ route('sales.show', $sale) }}"
+                                                <a href="{{ route('salesperson.show', $sale) }}"
                                                     class="text-blue-600 hover:text-blue-900">View</a>
                                                 @if (auth()->user()->isAdmin())
                                                     <a href="{{ route('sales.edit', $sale) }}"
