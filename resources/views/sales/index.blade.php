@@ -224,7 +224,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
-                                        <a href="{{ route('salesperson.show', $sale) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                        <a href="{{ route('sales.show', $sale) }}" class="text-blue-600 hover:text-blue-900">View</a>
                                         @if(auth()->user()->isAdmin())
                                             <a href="{{ route('sales.edit', $sale) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                             <form method="POST" action="{{ route('sales.destroy', $sale) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this sale?')">
