@@ -62,6 +62,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     
     // System Settings
     Route::get('/settings', [SuperAdminController::class, 'settings'])->name('super-admin.settings');
+    
+    // Activity Log
+    Route::get('/activity-log', [SuperAdminController::class, 'activityLog'])->name('super-admin.activity-log');
 });
 
 // Admin Routes

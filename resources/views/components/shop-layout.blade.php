@@ -47,7 +47,7 @@
         <div class="w-64 max-md:hidden max-md:fixed max-md:h-screen bg-white overflow-auto shadow-lg">
             <!-- Logo -->
             <div class="flex items-center justify-center h-16 bg-blue-600 text-white">
-                <h1 class="text-xl font-bold">Hizabrun Enterprises</h1>
+                <h1 class="text-xl font-bold">{{ auth()->user()->business->name ?? 'Business Portal' }}</h1>
             </div>
 
             <!-- User Info -->
