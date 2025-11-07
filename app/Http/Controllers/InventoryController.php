@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\ProductAssignment;
+use App\Traits\BusinessScoped;
 
 class InventoryController extends Controller
 {
+    use BusinessScoped;
     /**
      * Display a listing of products
      */
@@ -18,8 +20,8 @@ class InventoryController extends Controller
         $user = auth()->user();
         
         if ($user->isAdmin()) {
-            // Admin sees all inventory
-            $query = Purchase::query()->with('product');
+            // Admin sees inventory from their business only
+            $query = $this->scopeToCurrentBusiness(Purchase::class)->with('product');
 
             // Filter by unit type
             if ($request->filled('unit_type')) {
@@ -47,8 +49,8 @@ class InventoryController extends Controller
             $assignments = collect(); // Empty for admin
             
         } else {
-            // Staff sees their assigned products
-            $query = ProductAssignment::query()
+            // Staff sees their assigned products from their business
+            $query = $this->scopeToCurrentBusiness(ProductAssignment::class)
                 ->with(['purchase.product', 'user'])
                 ->where('user_id', $user->id);
 
@@ -74,7 +76,7 @@ class InventoryController extends Controller
      */
     public function create()
     {
-        $products = Product::all();
+        $products = $this->scopeToCurrentBusiness(Product::class)->get();
         return view('inventory.create', ['products' => $products]);
     }
 
@@ -91,12 +93,14 @@ class InventoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Product::create([
+        $data = $this->addBusinessId([
             'name' => $request->name,
             'unit_type' => $request->unit_type,
             'current_stock' => 0,
             'description' => $request->description,
         ]);
+
+        Product::create($data);
 
         return redirect()->route('inventory.index')->with('success', 'Product created successfully!');
     }
@@ -106,8 +110,10 @@ class InventoryController extends Controller
      */
     public function show($productId)
     {
-        // Fetch single product by ID
-        $product = Purchase::with(['product', 'sales'])->findOrFail($productId);
+        // Fetch single product by ID - ensure it belongs to current business
+        $product = $this->scopeToCurrentBusiness(Purchase::class)
+            ->with(['product', 'sales'])
+            ->findOrFail($productId);
 
         // return $product;
         // Initialize stock movements collection

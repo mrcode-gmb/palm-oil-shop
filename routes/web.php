@@ -11,6 +11,8 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductAssignmentController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\BusinessController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,13 +33,36 @@ Route::get('/', function () {
 // Redirect authenticated users based on role
 Route::get('/dashboard', function () {
     $user = auth()->user();
-    if ($user->role === 'admin') {
+    if ($user->role === 'super_admin') {
+        return redirect('/super-admin/dashboard');
+    } elseif ($user->role === 'admin') {
         return redirect('/admin/dashboard');
     } elseif ($user->role === 'salesperson') {
         return redirect('/sales/dashboard');
     }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// Super Admin Routes (Smabgroup Owner)
+Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('super-admin.dashboard');
+    
+    // Business Management
+    Route::resource('businesses', BusinessController::class)->names('super-admin.businesses');
+    Route::patch('/businesses/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])->name('super-admin.businesses.toggle-status');
+    Route::get('/businesses/{business}/users', [BusinessController::class, 'users'])->name('super-admin.businesses.users');
+    Route::get('/businesses/{business}/analytics', [BusinessController::class, 'analytics'])->name('super-admin.businesses.analytics');
+    
+    // Global User Management
+    Route::get('/users', [SuperAdminController::class, 'allUsers'])->name('super-admin.users.index');
+    
+    // Global Reports
+    Route::get('/reports', [SuperAdminController::class, 'reports'])->name('super-admin.reports');
+    
+    // System Settings
+    Route::get('/settings', [SuperAdminController::class, 'settings'])->name('super-admin.settings');
+});
 
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -133,6 +158,9 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
     Route::get('/sales/{sale}', [SalesController::class, 'show'])->name('sales.show');
+    Route::get('/sales/{sale}/edit', [SalesController::class, 'edit'])->name('sales.edit');
+    Route::put('/sales/{sale}', [SalesController::class, 'update'])->name('sales.update');
+    Route::delete('/sales/{sale}', [SalesController::class, 'destroy'])->name('sales.destroy');
     Route::get('/sales/{sale}/print-receipt', [SalesController::class, 'printReceipt'])->name('sales.print-receipt');
     
     // View available inventory (read-only)

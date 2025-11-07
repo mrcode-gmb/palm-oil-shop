@@ -10,20 +10,17 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SalesReportExport;
 use App\Exports\SalesPdfExport;
 use App\Models\ProductAssignment;
-use App\Traits\BusinessScoped;
 use Carbon\Carbon;
 use PDF;
 
 class SalesController extends Controller
 {
-    use BusinessScoped;
-    
     /**
      * Display a listing of sales
      */
     public function index(Request $request)
     {
-        $query = $this->scopeToCurrentBusiness(Sale::class)->with(['purchase.product', 'user', 'assignment']);
+        $query = Sale::with(['purchase.product', 'user', 'assignment']);
 
         // Filter by date range
         if ($request->filled('start_date')) {
@@ -330,8 +327,8 @@ class SalesController extends Controller
         $net_profit_per_unit = $profit - $seller_profit_per_unit;
 
 
-        // Create the sale with business_id
-        $data = $this->addBusinessId([
+        // Create the sale
+        $sale = Sale::create([
             'purchase_id' => $request->product_id,
             'user_id' => auth()->id(),
             'assignment_id' => $request->assignment_id,
@@ -350,22 +347,18 @@ class SalesController extends Controller
             'sale_date' => Carbon::today(),
             'notes' => $request->notes,
         ]);
-        
-        $sale = Sale::create($data);
 
         // Update assignment if this is a staff sale
         if ($assignment) {
             $assignment->increment('sold_quantity', $request->quantity);
             $assignment->increment('actual_total_sales', $totalAmount);
             
-            // Update assignment status based on progress
-            if ($assignment->sold_quantity >= $assignment->assigned_quantity) {
-                $assignment->update(['status' => 'completed']);
-            } elseif ($assignment->status === 'assigned') {
+            // Update assignment status to in_progress if it was assigned
+            if ($assignment->status === 'assigned') {
                 $assignment->update(['status' => 'in_progress']);
             }
         } else {
-            // Admin sale - update product stock directly
+            // Admin sale - upPdashate product stock directly
             $product->decrement('quantity', $request->quantity);
         }
 
@@ -501,48 +494,25 @@ class SalesController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $product = $sale->product;
         $oldQuantity = $sale->quantity;
-        $purchase = $sale->purchase;
-        $assignment = $sale->assignment;
 
-        // If this sale was from an assignment (staff sale), restore quantity to assignment
-        if ($assignment) {
-            // Restore the old quantity back to the assignment
-            $assignment->decrement('sold_quantity', $oldQuantity);
-            $assignment->decrement('actual_total_sales', $sale->total_amount);
-            
-            // Add the old quantity back to the purchase stock
-            $purchase->increment('quantity', $oldQuantity);
-        } else {
-            // Admin sale - restore stock to purchase
-            $purchase->increment('quantity', $oldQuantity);
-        }
+        // Restore old stock
+        $product->addStock($oldQuantity);
 
         // Check if enough stock is available for new quantity
-        if ($purchase->quantity < $request->quantity) {
-            // Restore the changes we just made
-            if ($assignment) {
-                $assignment->increment('sold_quantity', $oldQuantity);
-                $assignment->increment('actual_total_sales', $sale->total_amount);
-            }
-            $purchase->decrement('quantity', $oldQuantity);
+        if ($product->current_stock < $request->quantity) {
+            // Restore the stock we just added back
+            $product->reduceStock($oldQuantity);
             return back()->withErrors(['quantity' => 'Insufficient stock available.']);
         }
 
         // Calculate new totals
-        $sellingPricePerUnit = $sale->selling_price_per_unit;
+        $sellingPricePerUnit = $product->selling_price;
         $totalAmount = $sellingPricePerUnit * $request->quantity;
-        $costPricePerUnit = $purchase->purchase_price;
+        $costPricePerUnit = $product->getAverageCostPrice();
         $totalCost = $costPricePerUnit * $request->quantity;
         $profit = $totalAmount - $totalCost;
-        
-        // Calculate seller profit if assignment exists
-        $seller_profit_per_unit = 0;
-        $net_profit_per_unit = $profit;
-        if ($assignment) {
-            $seller_profit_per_unit = $assignment->commission_rate * $request->quantity;
-            $net_profit_per_unit = $profit - $seller_profit_per_unit;
-        }
 
         // Update the sale
         $sale->update([
@@ -552,19 +522,13 @@ class SalesController extends Controller
             'total_amount' => $totalAmount,
             'total_cost' => $totalCost,
             'profit' => $profit,
-            'seller_profit_per_unit' => $seller_profit_per_unit,
-            'net_profit_per_unit' => $net_profit_per_unit,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
             'notes' => $request->notes,
         ]);
 
-        // Update assignment and purchase stock with new quantity
-        if ($assignment) {
-            $assignment->increment('sold_quantity', $request->quantity);
-            $assignment->increment('actual_total_sales', $totalAmount);
-        }
-        $purchase->decrement('quantity', $request->quantity);
+        // Update product stock with new quantity
+        $product->reduceStock($request->quantity);
 
         return redirect()->route('sales.index')->with('success', 'Sale updated successfully!');
     }
@@ -579,18 +543,8 @@ class SalesController extends Controller
             abort(403, 'Only administrators can delete sales.');
         }
 
-        $purchase = $sale->purchase;
-        $assignment = $sale->assignment;
-
-        // If this sale was from an assignment (staff sale), restore quantity to assignment
-        if ($assignment) {
-            // Restore quantity back to the assignment
-            $assignment->decrement('sold_quantity', $sale->quantity);
-            $assignment->decrement('actual_total_sales', $sale->total_amount);
-        }
-        
-        // Restore stock to purchase
-        $purchase->increment('quantity', $sale->quantity);
+        // Restore stock
+        $sale->purchase->addStock($sale->quantity);
 
         $sale->delete();
 

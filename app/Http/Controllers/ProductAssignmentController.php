@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProductAssignment;
-use App\Models\Purchase;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\ProductAssignment;
+use App\Models\User;
+use App\Models\Purchase;
+use App\Traits\BusinessScoped;
 use Carbon\Carbon;
 
 class ProductAssignmentController extends Controller
 {
+    use BusinessScoped;
+
     /**
      * Display a listing of product assignments
      */
     public function index(Request $request)
     {
-        $query = ProductAssignment::with(['user', 'purchase.product']);
+        $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product']);
 
         // Apply filters
         if ($request->filled('user_id')) {
@@ -61,8 +64,9 @@ class ProductAssignmentController extends Controller
 
         $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
         
-        // Get users for filter dropdown
-        $users = \App\Models\User::where('role', 'salesperson')
+        // Get users for filter dropdown - only from current business
+        $users = $this->scopeToCurrentBusiness(User::class)
+            ->where('role', 'salesperson')
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
@@ -81,8 +85,14 @@ class ProductAssignmentController extends Controller
      */
     public function create()
     {
-        $staff = User::where('role', 'salesperson')->where('status', 'active')->get();
-        $products = Purchase::with('product')->where('quantity', '>', 0)->get();
+        $staff = $this->scopeToCurrentBusiness(User::class)
+            ->where('role', 'salesperson')
+            ->where('status', 'active')
+            ->get();
+        $products = $this->scopeToCurrentBusiness(Purchase::class)
+            ->with('product')
+            ->where('quantity', '>', 0)
+            ->get();
 
         return view('assignments.create', compact('staff', 'products'));
     }
@@ -103,10 +113,11 @@ class ProductAssignmentController extends Controller
         ]);
 
         // Check if enough quantity is available in the purchase
-        $purchase = Purchase::findOrFail($request->purchase_id);
+        $purchase = $this->scopeToCurrentBusiness(Purchase::class)->findOrFail($request->purchase_id);
         
         // Calculate already assigned quantity
-        $assignedQuantity = ProductAssignment::where('purchase_id', $request->purchase_id)
+        $assignedQuantity = $this->scopeToCurrentBusiness(ProductAssignment::class)
+            ->where('purchase_id', $request->purchase_id)
             ->whereIn('status', ['assigned', 'in_progress'])
             ->sum('assigned_quantity');
             
@@ -120,8 +131,8 @@ class ProductAssignmentController extends Controller
         $totalExpectedSales = $request->assigned_quantity * $request->expected_selling_price;
         
 
-        // Create the assignment
-        $assignment = ProductAssignment::create([
+        // Create the assignment with business_id
+        $data = $this->addBusinessId([
             'user_id' => $request->user_id,
             'purchase_id' => $request->purchase_id,
             'assigned_quantity' => $request->assigned_quantity,
@@ -133,6 +144,8 @@ class ProductAssignmentController extends Controller
             'status' => 'assigned',
             'notes' => $request->notes,
         ]);
+        
+        $assignment = ProductAssignment::create($data);
 
         // Update inventory
         $purchase->decrement('quantity', $request->assigned_quantity);

@@ -17,6 +17,7 @@ class Expenses extends Model
         'amount',
         'today_net_profit',
         'notes',
+        'business_id',
     ];
 
 
@@ -27,5 +28,13 @@ class Expenses extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the business this expense belongs to
+     */
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 }

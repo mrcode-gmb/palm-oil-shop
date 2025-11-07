@@ -25,6 +25,7 @@ class ProductAssignment extends Model
         'due_date',
         'returned_date',
         'notes',
+        'business_id',
     ];
 
     protected $casts = [
@@ -91,4 +92,11 @@ class ProductAssignment extends Model
         return $this->due_date && $this->due_date->isPast() && $this->status !== 'completed';
     }
 
+    /**
+     * Get the business this assignment belongs to
+     */
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
+    }
 }

@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Purchase;
 use App\Models\Product;
+use App\Traits\BusinessScoped;
 use Carbon\Carbon;
 
 class PurchaseController extends Controller
 {
+    use BusinessScoped;
+    
     /**
      * Display a listing of purchases
      */
     public function index(Request $request)
     {
-        $query = Purchase::with(['product', 'user']);
+        $query = $this->scopeToCurrentBusiness(Purchase::class)->with(['product', 'user']);
 
         // Filter by date range
         if ($request->filled('start_date')) {
@@ -30,7 +33,7 @@ class PurchaseController extends Controller
         }
 
         $purchases = $query->orderBy('created_at', 'desc')->paginate(20);
-        $products = Product::all();
+        $products = $this->scopeToCurrentBusiness(Product::class)->get();
 
         return view('purchases.index', compact('purchases', 'products'));
     }
@@ -40,7 +43,7 @@ class PurchaseController extends Controller
      */
     public function create()
     {
-        $products = Product::all();
+        $products = $this->scopeToCurrentBusiness(Product::class)->get();
         return view('purchases.create', compact('products'));
     }
 
@@ -64,8 +67,8 @@ class PurchaseController extends Controller
 
         $totalCost = $request->quantity * $request->buying_price_per_unit;
 
-        // Create the purchase
-        $purchase = Purchase::create([
+        // Create the purchase with business_id
+        $data = $this->addBusinessId([
             'product_id' => $request->product_id,
             'user_id' => auth()->id(),
             'supplier_name' => $request->supplier_name,
@@ -77,8 +80,9 @@ class PurchaseController extends Controller
             'seller_profit' => $request->selling_profit_per_unit,
             'purchase_date' => $request->purchase_date,
             'notes' => $request->notes,
-
         ]);
+        
+        $purchase = Purchase::create($data);
 
         // Update product stock
         $product = Product::findOrFail($request->product_id);

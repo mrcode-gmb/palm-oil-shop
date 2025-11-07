@@ -9,17 +9,20 @@ use App\Models\Product;
 use App\Models\Expenses;
 use App\Models\Purchase;
 use App\Exports\ExpensesPdfExport;
+use App\Traits\BusinessScoped;
 use Illuminate\Http\Request;
 use PDF;
 
 class ExpensesController extends Controller
 {
+    use BusinessScoped;
+    
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Expenses::with(['user'])
+        $query = $this->scopeToCurrentBusiness(Expenses::class)->with(['user'])
             ->when($request->start_date, fn($q) => $q->whereDate('created_at', '>=', $request->start_date))
             ->when($request->end_date, fn($q) => $q->whereDate('created_at', '<=', $request->end_date))
             ->when($request->supplier, fn($q) => $q->where('name', 'like', '%' . $request->supplier . '%'))
@@ -83,9 +86,12 @@ class ExpensesController extends Controller
 
 
 
-        $todayProfit = Sale::whereDate('sale_date', $today)->sum('net_profit_per_unit');
-        // return number_format($todayProfit,2);
-        Expenses::create([
+        $todayProfit = $this->scopeToCurrentBusiness(Sale::class)
+            ->whereDate('sale_date', $today)
+            ->sum('net_profit_per_unit');
+        
+        // Create expense with business_id
+        $data = $this->addBusinessId([
             'user_id' => $user_id,
             'name' => $request->name,
             'today_profit' => $todayProfit,
@@ -94,6 +100,8 @@ class ExpensesController extends Controller
             'date' => $request->date,
             'notes' => $request->notes,
         ]);
+        
+        Expenses::create($data);
 
         return redirect()->route('expenses.index')->with('success', 'Expense recorded successfully.');
     }

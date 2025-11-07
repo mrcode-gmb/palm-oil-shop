@@ -8,18 +8,64 @@ use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\Product;
 use App\Models\User;
+use App\Traits\BusinessScoped;
 use Carbon\Carbon;
 use TCPDF;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+    use BusinessScoped;
     /**
      * Show reports dashboard
      */
     public function index()
     {
-        return view('reports.index');
+        // Get today's stats scoped to business
+        $todaySales = $this->scopeToCurrentBusiness(Sale::class)
+            ->whereDate('created_at', today())
+            ->sum('total_amount');
+        
+        $todayProfit = $this->scopeToCurrentBusiness(Sale::class)
+            ->whereDate('created_at', today())
+            ->sum('profit');
+        
+        $monthlySales = $this->scopeToCurrentBusiness(Sale::class)
+            ->whereMonth('created_at', now()->month)
+            ->sum('total_amount');
+        
+        $lowStockItems = $this->scopeToCurrentBusiness(Purchase::class)
+            ->where('quantity', '<', 10)
+            ->count();
+        
+        // Top selling products this month
+        $topProducts = $this->scopeToCurrentBusiness(Sale::class)
+            ->with('purchase.product')
+            ->selectRaw('purchase_id, SUM(quantity) as total_sold, SUM(total_amount) as total_revenue')
+            ->whereMonth('created_at', now()->month)
+            ->groupBy('purchase_id')
+            ->orderBy('total_sold', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Top performers this month
+        $topSalespeople = $this->scopeToCurrentBusiness(Sale::class)
+            ->with('user')
+            ->selectRaw('user_id, SUM(total_amount) as total_sales, SUM(profit) as total_profit, COUNT(*) as sales_count')
+            ->whereMonth('created_at', now()->month)
+            ->groupBy('user_id')
+            ->orderBy('total_sales', 'desc')
+            ->limit(5)
+            ->get();
+        
+        return view('reports.index', compact(
+            'todaySales',
+            'todayProfit',
+            'monthlySales',
+            'lowStockItems',
+            'topProducts',
+            'topSalespeople'
+        ));
     }
 
     /**
@@ -31,7 +77,8 @@ class ReportController extends Controller
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
         $userId = $request->input('user_id');
 
-        $query = Sale::with(['purchase.product', 'user'])
+        $query = $this->scopeToCurrentBusiness(Sale::class)
+            ->with(['purchase.product', 'user'])
             ->whereDate('sale_date', '>=', $startDate)
             ->whereDate('sale_date', '<=', $endDate);
 
@@ -70,7 +117,9 @@ class ReportController extends Controller
 
         // return $productSales;
 
-        $salespeople = User::where('role', 'salesperson')->get();
+        $salespeople = $this->scopeToCurrentBusiness(User::class)
+            ->where('role', 'salesperson')
+            ->get();
 
         return view('reports.sales', compact(
             'sales',
@@ -100,11 +149,13 @@ class ReportController extends Controller
                 $startDate = Carbon::create($year, $month, 1)->startOfMonth();
                 $endDate = Carbon::create($year, $month, 1)->endOfMonth();
 
-                $monthlyProfit = Sale::whereDate('sale_date', '>=', $startDate)
+                $monthlyProfit = $this->scopeToCurrentBusiness(Sale::class)
+                    ->whereDate('sale_date', '>=', $startDate)
                     ->whereDate('sale_date', '<=', $endDate)
                     ->sum('profit');
 
-                $monthlySales = Sale::whereDate('sale_date', '>=', $startDate)
+                $monthlySales = $this->scopeToCurrentBusiness(Sale::class)
+                    ->whereDate('sale_date', '>=', $startDate)
                     ->whereDate('sale_date', '<=', $endDate)
                     ->sum('total_amount');
 
@@ -121,10 +172,12 @@ class ReportController extends Controller
             $endDate = Carbon::now()->endOfMonth();
 
             for ($date = $startDate->copy(); $date <= $endDate; $date->addDay()) {
-                $dailyProfit = Sale::whereDate('sale_date', $date)
+                $dailyProfit = $this->scopeToCurrentBusiness(Sale::class)
+                    ->whereDate('sale_date', $date)
                     ->sum('profit');
 
-                $dailySales = Sale::whereDate('sale_date', $date)
+                $dailySales = $this->scopeToCurrentBusiness(Sale::class)
+                    ->whereDate('sale_date', $date)
                     ->sum('total_amount');
 
                 $profits->push([
@@ -144,7 +197,9 @@ class ReportController extends Controller
      */
     public function inventoryReport()
     {
-        $products = Purchase::with(['product', 'sales'])->get();
+        $products = $this->scopeToCurrentBusiness(Purchase::class)
+            ->with(['product', 'sales'])
+            ->get();
 
         $inventoryData = $products->map(function ($product) {
             $totalPurchased = $product->sum('purchase_price');
@@ -178,7 +233,8 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
-        $sales = Sale::with(['purchase.product', 'user'])
+        $sales = $this->scopeToCurrentBusiness(Sale::class)
+            ->with(['purchase.product', 'user'])
             ->whereDate('sale_date', '>=', $startDate)
             ->whereDate('sale_date', '<=', $endDate)
             ->orderBy('sale_date', 'desc')
@@ -312,16 +368,17 @@ class ReportController extends Controller
             $startDate = Carbon::createFromDate($year, Carbon::now()->month, 1);
             $endDate = $startDate->copy()->endOfMonth();
             
-            $sales = Sale::select(
-                DB::raw('DATE(sale_date) as date'),
-                DB::raw('SUM(total_amount) as sales'),
-                DB::raw('SUM(quantity * cost_price_per_unit) as cost'),
-                DB::raw('SUM(profit) as profit')
-            )
-            ->whereBetween('sale_date', [$startDate, $endDate])
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+            $sales = $this->scopeToCurrentBusiness(Sale::class)
+                ->select(
+                    DB::raw('DATE(sale_date) as date'),
+                    DB::raw('SUM(total_amount) as sales'),
+                    DB::raw('SUM(quantity * cost_price_per_unit) as cost'),
+                    DB::raw('SUM(profit) as profit')
+                )
+                ->whereBetween('sale_date', [$startDate, $endDate])
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
 
             return $sales->map(function($item) {
                 return [
@@ -332,18 +389,19 @@ class ReportController extends Controller
                 ];
             });
         } else {
-            $sales = Sale::select(
-                DB::raw('YEAR(sale_date) as year'),
-                DB::raw('MONTH(sale_date) as month'),
-                DB::raw('SUM(total_amount) as sales'),
-                DB::raw('SUM(quantity * cost_price_per_unit) as cost'),
-                DB::raw('SUM(profit) as profit')
-            )
-            ->whereYear('sale_date', $year)
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
+            $sales = $this->scopeToCurrentBusiness(Sale::class)
+                ->select(
+                    DB::raw('YEAR(sale_date) as year'),
+                    DB::raw('MONTH(sale_date) as month'),
+                    DB::raw('SUM(total_amount) as sales'),
+                    DB::raw('SUM(quantity * cost_price_per_unit) as cost'),
+                    DB::raw('SUM(profit) as profit')
+                )
+                ->whereYear('sale_date', $year)
+                ->groupBy('year', 'month')
+                ->orderBy('year')
+                ->orderBy('month')
+                ->get();
 
             return $sales->map(function($item) {
                 return [
@@ -361,7 +419,8 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->format('Y-m-d'));
 
-        $expenses = Expenses::with(['user'])
+        $expenses = $this->scopeToCurrentBusiness(Expenses::class)
+            ->with(['user'])
             ->whereDate('created_at', '>=', $startDate)
             ->whereDate('created_at', '<=', $endDate)
             ->orderBy('created_at', 'desc')

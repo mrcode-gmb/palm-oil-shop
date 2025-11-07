@@ -14,29 +14,38 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create default admin user
-        User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@palmoilshop.com',
-            'password' => Hash::make('password123'),
-            'role' => 'admin',
-        ]);
+        // Create Super Admin first
+        $this->call(SuperAdminSeeder::class);
 
-        // Create default salesperson
-        User::create([
-            'name' => 'Sales Person',
-            'email' => 'sales@palmoilshop.com',
-            'password' => Hash::make('password123'),
-            'role' => 'salesperson',
-        ]);
+        // Create default admin user (only if doesn't exist)
+        if (!User::where('email', 'admin@palmoilshop.com')->exists()) {
+            User::create([
+                'name' => 'Admin User',
+                'email' => 'admin@palmoilshop.com',
+                'password' => Hash::make('password123'),
+                'role' => 'admin',
+            ]);
+        }
 
-        // Create another salesperson
-        User::create([
-            'name' => 'Amina Sani',
-            'email' => 'amina@palmoilshop.com',
-            'password' => Hash::make('password123'),
-            'role' => 'salesperson',
-        ]);
+        // Create default salesperson (only if doesn't exist)
+        if (!User::where('email', 'sales@palmoilshop.com')->exists()) {
+            User::create([
+                'name' => 'Sales Person',
+                'email' => 'sales@palmoilshop.com',
+                'password' => Hash::make('password123'),
+                'role' => 'salesperson',
+            ]);
+        }
+
+        // Create another salesperson (only if doesn't exist)
+        if (!User::where('email', 'amina@palmoilshop.com')->exists()) {
+            User::create([
+                'name' => 'Amina Sani',
+                'email' => 'amina@palmoilshop.com',
+                'password' => Hash::make('password123'),
+                'role' => 'salesperson',
+            ]);
+        }
 
         // // Create palm oil products
         // Product::create([

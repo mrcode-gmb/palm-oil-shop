@@ -27,6 +27,7 @@ class Sale extends Model
         'sale_status',
         'sale_date',
         'notes',
+        'business_id',
     ];
 
     protected $casts = [
@@ -59,5 +60,13 @@ class Sale extends Model
     public function assignment()
     {
         return $this->belongsTo(ProductAssignment::class, 'assignment_id');
+    }
+
+    /**
+     * Get the business this sale belongs to
+     */
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 }

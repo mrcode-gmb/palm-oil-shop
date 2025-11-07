@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use App\Traits\BusinessScoped;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    use BusinessScoped;
     /**
      * Display the registration view.
      */
@@ -61,12 +63,15 @@ class RegisteredUserController extends Controller
             'role' => ['required', 'string', 'in:admin,salesperson'],
         ]);
 
-        $user = User::create([
+        // Auto-assign business_id from the logged-in admin
+        $data = $this->addBusinessId([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make("1234"),
             'role' => $request->role,
         ]);
+
+        $user = User::create($data);
 
         event(new Registered($user));
 

@@ -17,7 +17,7 @@ class Product extends Model
         'seller_profit',
         'description',
         'purchase_price',
-
+        'business_id',
     ];
 
     /**
@@ -68,5 +68,13 @@ class Product extends Model
     {
         $this->quantity -= $quantity;
         $this->save();
+    }
+
+    /**
+     * Get the business this product belongs to
+     */
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 }

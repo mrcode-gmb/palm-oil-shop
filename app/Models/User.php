@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
+        'business_id',
     ];
 
     /**
@@ -44,6 +45,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Check if user is super admin
+     */
+    public function isSuperAdmin()
+    {
+        return $this->role === 'super_admin';
+    }
 
     /**
      * Check if user is admin
@@ -112,5 +121,13 @@ class User extends Authenticatable
     public function activeAssignments()
     {
         return $this->assignments()->whereIn('status', ['assigned', 'in_progress']);
+    }
+
+    /**
+     * Business this user belongs to
+     */
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 }

@@ -139,19 +139,19 @@
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Overview</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-green-600">₦{{ number_format(\App\Models\Sale::whereDate('created_at', today())->sum('total_amount'), 2) }}</p>
+                        <p class="text-2xl font-bold text-green-600">₦{{ number_format($todaySales, 2) }}</p>
                         <p class="text-sm text-gray-500">Today's Sales</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format(\App\Models\Sale::whereDate('created_at', today())->sum('profit'), 2) }}</p>
+                        <p class="text-2xl font-bold text-blue-600">₦{{ number_format($todayProfit, 2) }}</p>
                         <p class="text-sm text-gray-500">Today's Profit</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-purple-600">₦{{ number_format(\App\Models\Sale::whereMonth('created_at', now()->month)->sum('total_amount'), 2) }}</p>
+                        <p class="text-2xl font-bold text-purple-600">₦{{ number_format($monthlySales, 2) }}</p>
                         <p class="text-sm text-gray-500">Monthly Sales</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-indigo-600">{{ \App\Models\Purchase::where('quantity', '<', 10)->count() }}</p>
+                        <p class="text-2xl font-bold text-indigo-600">{{ $lowStockItems }}</p>
                         <p class="text-sm text-gray-500">Low Stock Items</p>
                     </div>
                 </div>
@@ -165,15 +165,6 @@
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Top Selling Products (This Month)</h3>
                     <div class="space-y-3">
-                        @php
-                            $topProducts = \App\Models\Sale::with('purchase.product')
-                                ->selectRaw('purchase_id, SUM(quantity) as total_sold, SUM(total_amount) as total_revenue')
-                                ->whereMonth('created_at', now()->month)
-                                ->groupBy('purchase_id')
-                                ->orderBy('total_sold', 'desc')
-                                ->limit(5)
-                                ->get();
-                        @endphp
                         @forelse($topProducts as $item)
                             <div class="flex justify-between items-center">
                                 <div>
@@ -194,15 +185,6 @@
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Top Performers (This Month)</h3>
                     <div class="space-y-3">
-                        @php
-                            $topSalespeople = \App\Models\Sale::with('user')
-                                ->selectRaw('user_id, SUM(total_amount) as total_sales, SUM(profit) as total_profit, COUNT(*) as sales_count')
-                                ->whereMonth('created_at', now()->month)
-                                ->groupBy('user_id')
-                                ->orderBy('total_sales', 'desc')
-                                ->limit(5)
-                                ->get();
-                        @endphp
                         @forelse($topSalespeople as $performer)
                             <div class="flex justify-between items-center">
                                 <div>

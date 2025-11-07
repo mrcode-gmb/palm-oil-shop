@@ -21,6 +21,7 @@ class Purchase extends Model
         "seller_profit",
         "purchase_date",
         "notes",
+        "business_id",
     ];
 
     protected $casts = [
@@ -83,5 +84,13 @@ class Purchase extends Model
     public function expenses()
     {
         return $this->hasMany(Expenses::class);
+    }
+
+    /**
+     * Get the business this purchase belongs to
+     */
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 }
