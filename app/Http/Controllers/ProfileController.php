@@ -16,6 +16,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        // Check if user is Super Admin
+        if ($request->user()->role === 'super_admin') {
+            return view('profile.super-admin-edit', [
+                'user' => $request->user(),
+            ]);
+        }
+        
         return view('profile.edit', [
             'user' => $request->user(),
         ]);

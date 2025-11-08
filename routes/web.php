@@ -174,9 +174,9 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     Route::get('/my-assignments', [ProductAssignmentController::class, 'myAssignments'])->name('sales.assignments');
 });
 
-// Shared Routes (Both Admin and Salesperson)
-Route::middleware(['auth', 'role:admin,salesperson'])->group(function () {
-    // Profile management
+// Shared Routes (All authenticated users)
+Route::middleware(['auth'])->group(function () {
+    // Profile management - accessible by all roles (super_admin, admin, salesperson)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
