@@ -60,7 +60,7 @@ class PurchaseController extends Controller
             'quantity' => 'required|numeric|min:0.01',
             'buying_price_per_unit' => 'required|numeric|min:0',
             // 'selling_price' => 'required|numeric|min:0',
-            'selling_profit_per_unit' => 'required|numeric|min:0',
+            'selling_profit_per_unit' => 'nullable|numeric|min:0',
             'purchase_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);

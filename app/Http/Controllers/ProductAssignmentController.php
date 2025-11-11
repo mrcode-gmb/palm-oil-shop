@@ -107,7 +107,7 @@ class ProductAssignmentController extends Controller
             'purchase_id' => 'required|exists:purchases,id',
             'assigned_quantity' => 'required|numeric|min:1',
             'expected_selling_price' => 'required|numeric|min:10',
-            'commission_rate' => 'required|numeric|min:0',
+            'commission_rate' => 'nullable|numeric|min:0',
             'due_date' => 'nullable|date|after:today',
             'notes' => 'nullable|string|max:1000',
         ]);

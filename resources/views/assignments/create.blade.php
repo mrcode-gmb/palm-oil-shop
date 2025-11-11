@@ -91,8 +91,8 @@
                         <!-- Commission Rate -->
                         <div>
                             <label for="commission_rate" class="block text-sm font-medium text-gray-700">Commission
-                                Fee (₦)</label>
-                            <input type="number" min="1" name="commission_rate" id="commission_rate" required
+                                Fee ₦ (Optional)</label>
+                            <input type="number" name="commission_rate" id="commission_rate" required
                                 value="{{ old('commission_rate') }}"
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             @error('commission_rate')

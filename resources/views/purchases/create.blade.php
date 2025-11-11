@@ -119,9 +119,8 @@
                
                     <!-- Selling profit per unit -->
                     <div>
-                        <label for="selling_profit_per_unit" class="block text-sm font-medium text-gray-700">Sellers Commission (₦)</label>
+                        <label for="selling_profit_per_unit" class="block text-sm font-medium text-gray-700">Sellers Commission ₦ (Optional)</label>
                         <input type="number" name="selling_profit_per_unit" id="selling_profit_per_unit"
-                            step="0.01" required
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                         @error('selling_profit_per_unit')
                             <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
