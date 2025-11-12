@@ -100,7 +100,7 @@
                         <div class="bg-blue-50 p-4 rounded-lg">
                             <div class="text-sm font-medium text-blue-800">Total Sales</div>
                             <div class="mt-1 text-2xl font-semibold text-blue-700">₦{{ number_format($totalSales, 2) }}</div>
-                            <div class="text-xs text-blue-600">{{ $sales->total() }} {{ Str::plural('sale', $sales->total()) }}</div>
+                            <div class="text-xs text-blue-600">{{ $sales->count() }} {{ Str::plural('sale', $sales->count()) }}</div>
                         </div>
 
                         <div class="bg-green-50 p-4 rounded-lg">
@@ -111,12 +111,12 @@
                         <div class="bg-blue-50 p-4 rounded-lg">
                             <div class="text-sm font-medium text-blue-800">Total Commision</div>
                             <div class="mt-1 text-2xl font-semibold text-blue-700">₦{{ number_format($totalCommition, 2) }}</div>
-                            <div class="text-xs text-blue-600">{{ $sales->total() }} {{ Str::plural('sale', $sales->total()) }}</div>
+                            <div class="text-xs text-blue-600">{{ $sales->count() }} {{ Str::plural('sale', $sales->count()) }}</div>
                         </div>
                         <div class="bg-blue-50 p-4 rounded-lg">
                             <div class="text-sm font-medium text-blue-800">Total Net Profit</div>
                             <div class="mt-1 text-2xl font-semibold text-blue-700">₦{{ number_format($totalProfit - $totalCommition, 2) }}</div>
-                            <div class="text-xs text-blue-600">{{ $sales->total() }} {{ Str::plural('sale', $sales->total()) }}</div>
+                            <div class="text-xs text-blue-600">{{ $sales->count() }} {{ Str::plural('sale', $sales->count()) }}</div>
                         </div>
                         
                     </div>
@@ -249,13 +249,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
-            @if($sales->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200">
-                    {{ $sales->appends(request()->query())->links() }}
-                </div>
-            @endif
         </div>
     </div>
 </x-shop-layout>

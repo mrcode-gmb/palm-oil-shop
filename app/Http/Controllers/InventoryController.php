@@ -45,7 +45,7 @@ class InventoryController extends Controller
                 }
             }
 
-            $products = $query->orderBy('id')->paginate(20);
+            $products = $query->orderBy('id')->get();
             $assignments = collect(); // Empty for admin
             
         } else {
@@ -62,7 +62,7 @@ class InventoryController extends Controller
                 $query->whereIn('status', ['assigned', 'in_progress']);
             }
 
-            $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
+            $assignments = $query->orderBy('created_at', 'desc')->get();
             $products = collect(); // Empty for staff
         }
 
@@ -142,7 +142,7 @@ class InventoryController extends Controller
                 'created_at' => $sale->created_at,
             ]);
         }
-        $adjustmentRecord = AdjustmentProduct::with("purchase")->where("purchase_id", $productId)->paginate(10);
+        $adjustmentRecord = AdjustmentProduct::with("purchase")->where("purchase_id", $productId)->get();
         // Sort by newest first
         $stockMovements = $stockMovements->sortByDesc('created_at');
 

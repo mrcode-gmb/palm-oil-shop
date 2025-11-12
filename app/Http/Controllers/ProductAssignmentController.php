@@ -62,7 +62,7 @@ class ProductAssignmentController extends Controller
             return $pdf->download('assignments-report-' . now()->format('Y-m-d') . '.pdf');
         }
 
-        $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
+        $assignments = $query->orderBy('created_at', 'desc')->get();
         
         // Get users for filter dropdown - only from current business
         $users = $this->scopeToCurrentBusiness(User::class)
@@ -168,7 +168,7 @@ class ProductAssignmentController extends Controller
         $user = auth()->user();
         $assignments = $user->assignments()->with(['purchase.product', 'sales'])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
 
         return view('assignments.my-assignments', compact('assignments'));
     }

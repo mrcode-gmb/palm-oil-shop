@@ -146,13 +146,6 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
-            @if($purchases->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200">
-                    {{ $purchases->appends(request()->query())->links() }}
-                </div>
-            @endif
         </div>
     </div>
 </x-shop-layout>

@@ -32,7 +32,7 @@ class PurchaseController extends Controller
             $query->where('product_id', $request->product_id);
         }
 
-        $purchases = $query->orderBy('created_at', 'desc')->paginate(20);
+        $purchases = $query->orderBy('created_at', 'desc')->get();
         $products = $this->scopeToCurrentBusiness(Product::class)->get();
 
         return view('purchases.index', compact('purchases', 'products'));

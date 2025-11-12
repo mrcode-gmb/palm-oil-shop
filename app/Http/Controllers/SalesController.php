@@ -60,7 +60,7 @@ class SalesController extends Controller
         // Apply sorting and pagination
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDirection = $request->get('sort_direction', 'desc');
-        $sales = $query->orderBy($sortBy, $sortDirection)->paginate(20);
+        $sales = $query->orderBy($sortBy, $sortDirection)->get();
 
         $salespeople = User::where('role', 'salesperson')->get();
         $paymentTypes = ['cash' => 'Cash', 'bank_transfer' => 'Bank Transfer', 'pos' => 'POS', 'mobile_money' => 'Mobile Money', 'credit' => 'Credit'];
@@ -230,7 +230,7 @@ class SalesController extends Controller
         // If salesperson, only show their sales
         $query->where('user_id', auth()->id());
 
-        $sales = $query->orderBy('created_at', 'desc')->paginate(20);
+        $sales = $query->orderBy('created_at', 'desc')->get();
         $salespeople = User::where('role', 'salesperson')->get();
 
         return view('sales.index', compact('sales', 'salespeople'));
@@ -471,7 +471,7 @@ class SalesController extends Controller
         $totalCommition = $query->sum('seller_profit_per_unit') * $query->sum('quantity');
         
         // Get paginated results with ordering
-        $sales = $query->where("user_id", auth()->id())->orderBy('id', 'desc')->paginate(20);
+        $sales = $query->where("user_id", auth()->id())->orderBy('id', 'desc')->get();
 
         return view('sales.my-sales', [
             'sales' => $sales,

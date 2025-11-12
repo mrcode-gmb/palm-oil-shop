@@ -261,13 +261,6 @@
                     </div>
                 @endforelse
             </div>
-
-            <!-- Pagination -->
-            @if ($products->hasPages())
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg">
-                    {{ $products->appends(request()->query())->links() }}
-                </div>
-            @endif
         @else
             <!-- Staff Assignments Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -362,13 +355,6 @@
                     </div>
                 @endforelse
             </div>
-
-            <!-- Pagination -->
-            @if ($assignments->hasPages())
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg">
-                    {{ $assignments->appends(request()->query())->links() }}
-                </div>
-            @endif
         @endif
     </div>
 </x-shop-layout>
