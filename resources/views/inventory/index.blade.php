@@ -92,7 +92,7 @@
                         <div class="p-6 text-center">
                             <p class="text-sm text-gray-500">Available Stock</p>
                             <p class="text-2xl font-bold text-green-600">
-                                {{ $products->where('quantity', '>', 0)->count() }}</p>
+                                {{ $products->sum('quantity') }}</p>
                         </div>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm rounded-lg">
