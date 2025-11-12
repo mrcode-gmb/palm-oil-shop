@@ -84,7 +84,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                         <div class="p-6 text-center">
-                            <p class="text-sm text-gray-500">Total Products</p>
+                            <p class="text-sm text-gray-500">Total Inventory</p>
                             <p class="text-2xl font-bold text-blue-600">{{ $products->count() }}</p>
                         </div>
                     </div>
