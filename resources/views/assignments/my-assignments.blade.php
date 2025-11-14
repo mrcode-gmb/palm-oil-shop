@@ -127,43 +127,43 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
+            {{-- <!-- Pagination -->
             @if ($assignments->hasPages())
                 <div class="px-6 py-4 border-t border-gray-200">
                     {{ $assignments->appends(request()->query())->links() }}
                 </div>
-            @endif
+            @endif --}}
         </div>
 
         <!-- Performance Summary -->
         @if($assignments->count() > 0)
-        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-            <div class="p-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Performance Summary</h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <div class="text-2xl font-bold text-blue-600">{{ $assignments->sum('assigned_quantity') }}</div>
-                        <div class="text-sm text-blue-600">Total Assigned Units</div>
-                    </div>
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Performance Summary</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">{{ $assignments->sum('assigned_quantity') }}</div>
+                            <div class="text-sm text-blue-600">Total Assigned Units</div>
+                        </div>
 
-                    <div class="bg-green-50 p-4 rounded-lg">
-                        <div class="text-2xl font-bold text-green-600">{{ $assignments->sum('sold_quantity') }}</div>
-                        <div class="text-sm text-green-600">Total Units Sold</div>
-                    </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">{{ $assignments->sum('sold_quantity') }}</div>
+                            <div class="text-sm text-green-600">Total Units Sold</div>
+                        </div>
 
-                    <div class="bg-purple-50 p-4 rounded-lg">
-                        <div class="text-2xl font-bold text-purple-600">₦{{ number_format($assignments->sum('actual_total_sales'), 2) }}</div>
-                        <div class="text-sm text-purple-600">Total Sales Revenue</div>
-                    </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600">₦{{ number_format($assignments->sum('actual_total_sales'), 2) }}</div>
+                            <div class="text-sm text-purple-600">Total Sales Revenue</div>
+                        </div>
 
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                        <div class="text-2xl font-bold text-yellow-600">₦{{ number_format($assignments->sum('profit_collected'), 2) }}</div>
-                        <div class="text-sm text-yellow-600">Profit Collected</div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600">₦{{ number_format($assignments->sum('profit_collected'), 2) }}</div>
+                            <div class="text-sm text-yellow-600">Profit Collected</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
     </div>
 
@@ -195,7 +195,7 @@
     <script>
         function showAssignmentDetails(assignmentId) {
             // Find the assignment data from the current page
-            const assignments = @json($assignments->items());
+            const assignments = @json($assignments);
             const assignment = assignments.find(a => a.id === assignmentId);
             
             if (assignment) {

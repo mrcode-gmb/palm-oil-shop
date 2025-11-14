@@ -166,22 +166,24 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <div class="flex items-center justify-end pt-6 border-t border-gray-200">
                         <x-primary-button>
                             {{ __('Update Sale') }}
                         </x-primary-button>
-                        
-                        @if(auth()->user()->isAdmin())
-                            <form method="POST" action="{{ route('sales.destroy', $sale) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this sale? This will restore the stock and cannot be undone.')">
-                                @csrf
-                                @method('DELETE')
-                                <x-danger-button type="submit">
-                                    {{ __('Delete Sale') }}
-                                </x-danger-button>
-                            </form>
-                        @endif
                     </div>
                 </form>
+                
+                @if(auth()->user()->isAdmin())
+                    <div class="mt-4">
+                        <form method="POST" action="{{ route('sales.destroy', $sale) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this sale? This will restore the stock and cannot be undone.')">
+                            @csrf
+                            @method('DELETE')
+                            <x-danger-button type="submit">
+                                {{ __('Delete Sale') }}
+                            </x-danger-button>
+                        </form>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
