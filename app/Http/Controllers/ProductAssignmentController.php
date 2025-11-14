@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProductAssignment;
+use App\Models\CollectHistory;
 use App\Models\User;
 use App\Models\Purchase;
 use App\Traits\BusinessScoped;
@@ -18,7 +19,7 @@ class ProductAssignmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product']);
+        $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories']);
 
         // Apply filters
         if ($request->filled('user_id')) {
@@ -156,7 +157,7 @@ class ProductAssignmentController extends Controller
     }
     public function show(ProductAssignment $assignment)
     {
-        $assignment->load(['user', 'purchase.product', 'sales']);
+        $assignment->load(['user', 'purchase.product', 'sales', 'collectionHistories.collectedBy']);
         return view('assignments.show', compact('assignment'));
     }
 
@@ -174,27 +175,51 @@ class ProductAssignmentController extends Controller
     }
 
     /**
-     * Mark assignment as returned and collect remaining products
+     * Collect returned products in batches
      */
     public function collectReturn(Request $request, ProductAssignment $assignment)
     {
         $request->validate([
-            'returned_quantity' => 'required|numeric|min:0',
+            'returned_quantity' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $assignment->update([
-            'returned_quantity' => $request->returned_quantity,
-            'profit_collected' => 0.00,
-            'returned_date' => Carbon::today(),
-            'status' => 'completed',
-            'notes' => $assignment->notes . "\n\nReturn Notes: " . $request->notes,
+        $remainingQuantity = $assignment->remaining_quantity;
+        $collectedQuantity = $request->returned_quantity;
+
+        // Validate that collected quantity doesn't exceed remaining quantity
+        if ($collectedQuantity > $remainingQuantity) {
+            return back()->withErrors([
+                'returned_quantity' => "Cannot collect more than remaining quantity ({$remainingQuantity})"
+            ]);
+        }
+
+        // Create collection history record
+        $assignment->collectionHistories()->create([
+            'collected_by' => auth()->id(),
+            'collected_quantity' => $collectedQuantity,
+            'remaining_quantity_before' => $remainingQuantity,
+            'remaining_quantity_after' => $remainingQuantity - $collectedQuantity,
+            'notes' => $request->notes,
+            'collected_at' => now(),
         ]);
 
-        // Update inventory - add returned quantity back to purchase
-        $assignment->purchase->increment('quantity', $request->returned_quantity);
+        // Update inventory - add collected quantity back to purchase
+        $assignment->purchase->increment('quantity', $collectedQuantity);
+
+        // Check if all remaining quantity has been collected
+        $newRemainingQuantity = $remainingQuantity - $collectedQuantity;
+        if ($newRemainingQuantity <= 0) {
+            $assignment->update([
+                'status' => 'completed',
+                'returned_date' => now(),
+            ]);
+            $message = 'All remaining products collected successfully! Assignment marked as completed.';
+        } else {
+            $message = "Collected {$collectedQuantity} units successfully! {$newRemainingQuantity} units remaining.";
+        }
 
         return redirect()->route('admin.assignments.show', $assignment)
-            ->with('success', 'Return processed successfully! Inventory updated.');
+            ->with('success', $message);
     }
 }

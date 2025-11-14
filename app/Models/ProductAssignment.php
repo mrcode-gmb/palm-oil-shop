@@ -58,13 +58,6 @@ class ProductAssignment extends Model
         return $this->hasMany(Sale::class, 'assignment_id');
     }
 
-    /**
-     * Calculate remaining quantity
-     */
-    public function getRemainingQuantityAttribute()
-    {
-        return $this->assigned_quantity - $this->sold_quantity - $this->returned_quantity;
-    }
 
     /**
      * Calculate expected profit
@@ -98,5 +91,30 @@ class ProductAssignment extends Model
     public function business()
     {
         return $this->belongsTo(Business::class);
+    }
+
+    /**
+     * Get collection histories for this assignment
+     */
+    public function collectionHistories()
+    {
+        return $this->hasMany(CollectHistory::class);
+    }
+
+    /**
+     * Get total collected quantity from all collections
+     */
+    public function getTotalCollectedQuantityAttribute()
+    {
+        return $this->collectionHistories()->sum('collected_quantity');
+    }
+
+    /**
+     * Calculate remaining quantity after all collections
+     */
+    public function getRemainingQuantityAttribute()
+    {
+        $totalCollected = $this->total_collected_quantity ?? 0;
+        return $this->assigned_quantity - $this->sold_quantity - $totalCollected;
     }
 }

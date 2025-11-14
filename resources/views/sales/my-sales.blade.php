@@ -255,10 +255,10 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
+                    {{-- <!-- Pagination -->
                     <div class="mt-4">
                         {{ $sales->appends(request()->except('page'))->links() }}
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>

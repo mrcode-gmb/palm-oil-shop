@@ -230,6 +230,62 @@
                             </div>
                         </div>
 
+                        <!-- Collection History -->
+                        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                            <div class="p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Collection History</h3>
+
+                                @if ($assignment->collectionHistories->count() > 0)
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Date</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Collected By</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Quantity</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Before</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        After</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="bg-white divide-y divide-gray-200">
+                                                @foreach ($assignment->collectionHistories->sortByDesc('collected_at') as $history)
+                                                    <tr>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ $history->collected_at->format('M d, Y H:i') }}
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ $history->collectedBy->name }}
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {{ number_format($history->collected_quantity, 2) }} units
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {{ number_format($history->remaining_quantity_before, 2) }}
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {{ number_format($history->remaining_quantity_after, 2) }}
+                                                        </td>
+                                                        <td class="px-6 py-4 text-sm text-gray-900">
+                                                            {{ $history->notes ?: '-' }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-gray-500 text-center py-4">No collections recorded yet.</p>
+                                @endif
+                            </div>
+                        </div>
+
                         <!-- Notes -->
                         @if ($assignment->notes)
                             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -262,22 +318,14 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <label for="returned_quantity"
-                                            class="block text-sm font-medium text-gray-700">Returned Quantity (Max:
+                                        <label for="collected_quantity"
+                                            class="block text-sm font-medium text-gray-700">Collect Quantity (Max:
                                             {{ $assignment->remaining_quantity }})</label>
-                                        <input type="number" step="0.01" name="returned_quantity"
-                                            id="returned_quantity" required
+                                        <input type="number" step="0.01" name="collected_quantity"
+                                            id="collected_quantity" required
                                             max="{{ $assignment->remaining_quantity }}"
                                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label for="profit_collected"
-                                            class="block text-sm font-medium text-gray-700">Profit Collected
-                                            (₦)</label>
-                                        <input type="number" step="0.01" name="profit_collected"
-                                            id="profit_collected" required
-                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                        <p class="text-xs text-gray-500 mt-1">Remaining quantity: {{ $assignment->remaining_quantity }} units</p>
                                     </div>
 
                                     <div class="mb-4">
