@@ -85,7 +85,7 @@ class PurchaseController extends Controller
         ]);
         
         $purchase = Purchase::create($data);
-        $purchaseHistories = PurchaseHistory::create($data);
+        // $purchaseHistories = PurchaseHistory::create($data);
 
         // Update product stock
         $product = Product::findOrFail($request->product_id);
