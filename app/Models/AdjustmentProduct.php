@@ -19,4 +19,6 @@ class AdjustmentProduct extends Model
     {
         return $this->belongsTo(Purchase::class);
     }
+
+    
 }

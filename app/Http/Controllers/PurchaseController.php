@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Purchase;
+use App\Models\PurchaseHistory;
 use App\Models\Product;
 use App\Traits\BusinessScoped;
 use Carbon\Carbon;
@@ -17,7 +18,7 @@ class PurchaseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = $this->scopeToCurrentBusiness(Purchase::class)->with(['product', 'user']);
+        $query = $this->scopeToCurrentBusiness(PurchaseHistory::class)->with(['product', 'user']);
 
         // Filter by date range
         if ($request->filled('start_date')) {
@@ -35,6 +36,7 @@ class PurchaseController extends Controller
         $purchases = $query->orderBy('created_at', 'desc')->get();
         $products = $this->scopeToCurrentBusiness(Product::class)->get();
 
+        // return $purchases; 
         return view('purchases.index', compact('purchases', 'products'));
     }
 
@@ -83,6 +85,7 @@ class PurchaseController extends Controller
         ]);
         
         $purchase = Purchase::create($data);
+        $purchaseHistories = PurchaseHistory::create($data);
 
         // Update product stock
         $product = Product::findOrFail($request->product_id);

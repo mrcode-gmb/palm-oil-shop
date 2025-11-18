@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PurchaseHistory;
 
 class Product extends Model
 {
@@ -26,6 +27,11 @@ class Product extends Model
     public function purchase()
     {
         return $this->hasMany(Purchase::class);
+    }
+
+    public function purchaseHistory()
+    {
+        return $this->hasMany(PurchaseHistory::class);
     }
 
 
