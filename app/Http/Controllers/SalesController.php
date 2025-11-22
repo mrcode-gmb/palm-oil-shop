@@ -390,22 +390,89 @@ class SalesController extends Controller
     /**
      * Print receipt for a sale
      */
-    public function printReceipt(Sale $sale)
-    {
-        $sale->load(['purchase.product', 'user']);
+    // public function printReceipt(Sale $sale)
+    // {
+    //     $sale->load(['purchase.product', 'user']);
         
-        // For thermal printer, we'll use a custom view
-        $pdf = PDF::loadView('sales.print-receipt', compact('sale'))
-            ->setPaper([0, 0, 226.77, 841.89], 'portrait') // 80mm width in points (80mm = 226.77pt)
-            ->setOption('margin-top', 0)
-            ->setOption('margin-bottom', 0)
-            ->setOption('margin-left', 0)
-            ->setOption('margin-right', 0);
+    //     // For thermal printer, we'll use a custom view
+    //     $pdf = PDF::loadView('sales.print-receipt', compact('sale'))
+    //         ->setPaper([0, 0, 226.77, 841.89], 'portrait') // 80mm width in points (80mm = 226.77pt)
+    //         ->setOption('margin-top', 0)
+    //         ->setOption('margin-bottom', 0)
+    //         ->setOption('margin-left', 0)
+    //         ->setOption('margin-right', 0);
             
-        return $pdf->stream("receipt-{$sale->id}.pdf");
+    //     return $pdf->stream("receipt-{$sale->id}.pdf");
+    // }
+
+    // public function printReceipt(Sale $sale)
+    // {
+    //     $sale->load(['purchase.product', 'user', 'business']);
+        
+    //     // For thermal printer, we'll use a custom view
+    //     $pdf = PDF::loadView('sales.print-receipt', compact('sale'))
+    //         ->setPaper([0, 0, 226.77, 841.89], 'portrait') // 80mm width in points (80mm = 226.77pt)
+    //         ->setOption('margin-top', 2)
+    //         ->setOption('margin-bottom', 2)
+    //         ->setOption('margin-left', 2)
+    //         ->setOption('margin-right', 2);
+            
+    //     return $pdf->stream("receipt-{$sale->id}.pdf");
+    // }
+
+    public function printReceipt(Sale $sale)
+{
+    $sale->load(['purchase.product', 'user', 'business']);
+    
+    $pdf = PDF::loadView('sales.print-receipt', compact('sale'))
+        ->setPaper([0, 0, 226.77, 841.89], 'portrait')
+        ->setOption('margin-top', 2)
+        ->setOption('margin-bottom', 2)
+        ->setOption('margin-left', 2)
+        ->setOption('margin-right', 2);
+        
+    return $pdf->stream("receipt-{$sale->id}.pdf");
+}
+
+public function printMultipleReceipts(Request $request)
+{
+    // Debug: Log the incoming request data
+    \Log::info('Print multiple receipts request:', $request->all());
+    
+    if (!$request->has('sale_ids') || empty($request->sale_ids)) {
+        abort(400, 'No sale IDs provided');
     }
 
-    /**
+    $saleIds = explode(',', $request->input('sale_ids'));
+    
+    // Validate that sale_ids are numeric
+    if (empty(array_filter($saleIds, 'is_numeric'))) {
+        abort(400, 'Invalid sale IDs provided');
+    }
+
+    // Load all sales with their relationships
+    $sales = Sale::with(['purchase.product', 'user', 'business'])
+        ->whereIn('id', $saleIds)
+        ->orderBy('created_at')
+        ->get();
+
+    if ($sales->isEmpty()) {
+        abort(404, 'No sales found with the provided IDs');
+    }
+
+    // Use the first sale's business info for the receipt header
+    $business = $sales->first()->business;
+
+    $pdf = PDF::loadView('sales.print-multiple-receipts', compact('sales', 'business'))
+        ->setPaper([0, 0, 226.77, 841.89], 'portrait')
+        ->setOption('margin-top', 2)
+        ->setOption('margin-bottom', 2)
+        ->setOption('margin-left', 2)
+        ->setOption('margin-right', 2);
+
+    return $pdf->stream("receipt-multiple-{$sales->first()->id}-to-{$sales->last()->id}.pdf");
+}
+/**
      * Show the form for editing the specified sale
      */
     public function edit(Sale $sale)

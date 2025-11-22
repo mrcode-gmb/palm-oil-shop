@@ -165,6 +165,10 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     Route::put('/sales/{sale}', [SalesController::class, 'update'])->name('sales.update');
     Route::delete('/sales/{sale}', [SalesController::class, 'destroy'])->name('sales.destroy');
     Route::get('/sales/{sale}/print-receipt', [SalesController::class, 'printReceipt'])->name('sales.print-receipt');
+    // Add this with your other sales routes
+    Route::get('/print-multiple-receipts', [SalesController::class, 'printMultipleReceipts'])
+        ->name('sales.print-multiple-receipts');
+    
     
     // View available inventory (read-only)
     Route::get('/inventory', [InventoryController::class, 'index'])->name('sales.inventory');

@@ -5,10 +5,19 @@
                 {{ auth()->user()->isAdmin() ? 'All Sales' : 'My Sales' }}
             </h2>
             @if (auth()->user()->isSalesperson())
-                <a href="{{ route('sales.create') }}"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                    Record New Sale
-                </a>
+                <div>
+                    <a href="{{ route('sales.create') }}"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                        Record New Sale
+                    </a>
+
+                    @if (!$sales->isEmpty())
+                        <button type="button" id="printSelected"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ml-2">
+                            Print Selected
+                        </button>
+                    @endif
+                </div>
             @endif
         </div>
     </x-slot>
@@ -74,8 +83,9 @@
                                     </div>
                                 @endforeach
                                 <div class="bg-blue-50 p-4 rounded-lg">
-                                    <p class="text-sm font-medium text-blue-700">Total Seller Commission	</p>
-                                    <p class="text-xl font-semibold text-blue-700">₦{{ number_format($sales->sum("seller_profit_per_unit"), 2) }}
+                                    <p class="text-sm font-medium text-blue-700">Total Seller Commission </p>
+                                    <p class="text-xl font-semibold text-blue-700">
+                                        ₦{{ number_format($sales->sum('seller_profit_per_unit'), 2) }}
                                     </p>
                                 </div>
 
@@ -85,7 +95,7 @@
                                     </p>
                                 </div>
 
-                                
+
                             </div>
                         </div>
                     @endif
@@ -95,6 +105,11 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input type="checkbox" id="selectAll"
+                                            class="rounded text-blue-600 focus:ring-blue-500">
+                                    </th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'sale_date', 'sort_direction' => request('sort_direction') === 'asc' && request('sort_by') === 'sale_date' ? 'desc' : 'asc']) }}"
@@ -146,6 +161,10 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($sales as $sale)
                                     <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <input type="checkbox" name="sale_ids[]" value="{{ $sale->id }}"
+                                                class="sale-checkbox rounded text-blue-600 focus:ring-blue-500">
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ $sale->sale_date->format('M d, Y') }}
                                         </td>
@@ -262,5 +281,62 @@
                 </div>
             </div>
         </div>
+        <!-- Add this right before the closing </div> of the main content -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Select all checkboxes
+                const selectAll = document.getElementById('selectAll');
+                const checkboxes = document.querySelectorAll('.sale-checkbox');
+                const printBtn = document.getElementById('printSelected');
+
+                if (selectAll && checkboxes.length > 0) {
+                    // Toggle all checkboxes
+                    selectAll.addEventListener('change', function() {
+                        checkboxes.forEach(checkbox => {
+                            checkbox.checked = selectAll.checked;
+                        });
+                    });
+
+                    // Update "Select All" when individual checkboxes change
+                    checkboxes.forEach(checkbox => {
+                        checkbox.addEventListener('change', function() {
+                            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                            selectAll.checked = allChecked;
+                        });
+                    });
+                }
+
+
+                if (printBtn) {
+                    printBtn.addEventListener('click', function() {
+                        const selectedCheckboxes = Array.from(document.querySelectorAll(
+                            '.sale-checkbox:checked'));
+
+                        if (selectedCheckboxes.length === 0) {
+                            alert('Please select at least one sale to print');
+                            return;
+                        }
+
+                        // Get all selected sale IDs
+                        const saleIds = selectedCheckboxes.map(checkbox => checkbox.value);
+
+                        // Debug: Log the selected sale IDs
+                        console.log('Selected sale IDs:', saleIds);
+
+                        // Open the multiple receipts view
+                        const url = "{{ route('sales.print-multiple-receipts') }}?sale_ids=" + saleIds.join(
+                            ',');
+                        console.log('Generated URL:', url); // Debug log
+
+                        const printWindow = window.open(url, '_blank');
+
+                        // Add error handling for popup blockers
+                        if (!printWindow || printWindow.closed || typeof printWindow.closed === 'undefined') {
+                            alert('Popup was blocked. Please allow popups for this site and try again.');
+                        }
+                    });
+                }
+            });
+        </script>
     </div>
 </x-shop-layout>

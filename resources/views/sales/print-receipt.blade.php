@@ -32,6 +32,9 @@
         .text-xlarge {
             font-size: 14px;
         }
+        .text-small {
+            font-size: 9px;
+        }
         .divider {
             border-top: 1px dashed #000;
             margin: 3px 0;
@@ -66,17 +69,38 @@
             text-transform: uppercase;
             font-weight: bold;
         }
+        .business-info {
+            margin-bottom: 3px;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body onload="window.print();">
     <div class="receipt-header">
-        <div class="text-xlarge text-bold">{{ config('app.name') }}</div>
-        <div>--------------------------</div>
+        @if($sale->business)
+            <div class="text-xlarge text-bold">{{ $sale->business->name }}</div>
+            @if($sale->business->address)
+                <div class="business-info text-small">{{ $sale->business->address }}</div>
+            @endif
+            @if($sale->business->phone)
+                <div class="business-info">Tel: {{ $sale->business->phone }}</div>
+            @endif
+            @if($sale->business->email)
+                <div class="business-info text-small">{{ $sale->business->email }}</div>
+            @endif
+            <div class="divider"></div>
+        @else
+            <div class="text-xlarge text-bold">{{ config('app.name') }}</div>
+            <div>--------------------------</div>
+        @endif
     </div>
 
     <div class="receipt-info">
         <div>#{{ $sale->id }} | {{ $sale->created_at->format('M d, Y h:i A') }}</div>
         <div>Cashier: {{ substr($sale->user->name, 0, 15) }}</div>
+        @if($sale->customer_name)
+            <div>Customer: {{ $sale->customer_name }}</div>
+        @endif
         <div class="divider"></div>
     </div>
 
@@ -107,17 +131,27 @@
                 <td>TOTAL:</td>
                 <td class="text-right">N{{ number_format($sale->total_amount, 2) }}</td>
             </tr>
+            @if($sale->payment_type === 'cash' && $sale->amount_tendered > 0)
+            <tr>
+                <td>Amount Tendered:</td>
+                <td class="text-right">N{{ number_format($sale->amount_tendered, 2) }}</td>
+            </tr>
             <tr>
                 <td>Change:</td>
-                <td class="text-right">N0.00</td>
+                <td class="text-right">N{{ number_format($sale->amount_tendered - $sale->total_amount, 2) }}</td>
             </tr>
+            @endif
         </table>
         <div class="divider"></div>
     </div>
 
     <div class="receipt-footer">
         <div>Thank you for your business!</div>
-        <div>{{ config('app.name') }}</div>
+        @if($sale->business)
+            <div>{{ $sale->business->name }}</div>
+        @else
+            <div>{{ config('app.name') }}</div>
+        @endif
         <div>{{ now()->format('M d, Y h:i A') }}</div>
     </div>
 
