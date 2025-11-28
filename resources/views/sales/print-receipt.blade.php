@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Receipt #{{ $sale->id }}</title>
+    <title>Receipt #{{ $sale->unique_id }}</title>
     <style>
         @page {
             size: 80mm 297mm;
@@ -96,7 +96,7 @@
     </div>
 
     <div class="receipt-info">
-        <div>#{{ $sale->id }} | {{ $sale->created_at->format('M d, Y h:i A') }}</div>
+        <div>#{{ $sale->unique_id }}</div>
         <div>Cashier: {{ substr($sale->user->name, 0, 15) }}</div>
         @if($sale->customer_name)
             <div>Customer: {{ $sale->customer_name }}</div>

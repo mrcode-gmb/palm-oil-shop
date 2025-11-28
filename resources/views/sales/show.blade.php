@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Sale Details #{{ $sale->id }}
+                Sale Details
             </h2>
             <div class="flex space-x-2">
                 @if(auth()->user()->isAdmin() || auth()->user()->id == $sale->user_id)
@@ -28,7 +28,7 @@
                         <dl class="space-y-3">
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Sale ID</dt>
-                                <dd class="text-lg font-semibold text-gray-900">#{{ $sale->id }}</dd>
+                                <dd class="text-lg font-semibold text-gray-900">#{{ $sale->unique_id }}</dd>
                             </div>
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Product</dt>

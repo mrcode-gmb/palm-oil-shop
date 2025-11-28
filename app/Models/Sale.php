@@ -27,6 +27,7 @@ class Sale extends Model
         'sale_status',
         'sale_date',
         'notes',
+        'unique_id',
         'business_id',
     ];
 
@@ -54,6 +55,14 @@ class Sale extends Model
         return $this->belongsTo(User::class);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($sale) {
+            $sale->unique_id = 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd');
+        });
+    }
     /**
      * Get the product assignment this sale belongs to
      */

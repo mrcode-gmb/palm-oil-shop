@@ -198,7 +198,7 @@
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ $sale->purchase->product->name }}</div>
                                     <div class="text-sm text-gray-500">
-                                        {{ ucfirst($sale->purchase->product->unit_type) }}</div>
+                                        {{ ucfirst($sale->unique_id) }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ number_format($sale->quantity, 1) }}

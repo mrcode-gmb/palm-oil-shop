@@ -334,6 +334,7 @@ class SalesController extends Controller
         $data = $this->addBusinessId([
             'purchase_id' => $request->product_id,
             'user_id' => auth()->id(),
+            'unique_id' => 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
             'assignment_id' => $request->assignment_id,
             'quantity' => $request->quantity,
             'selling_price_per_unit' => $sellingPricePerUnit,
