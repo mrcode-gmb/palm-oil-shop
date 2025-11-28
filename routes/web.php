@@ -68,6 +68,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     
     // Sales Management
     Route::get('/sales', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'index'])->name('super-admin.sales.index');
+    Route::get('/sales/export', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'export'])->name('super-admin.sales.export');
     Route::get('/sales/{sale}', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'show'])->name('super-admin.sales.show');
 });
 
