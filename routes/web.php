@@ -96,7 +96,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/inventory/{adjustment}/adjust-stock/delete', [InventoryController::class, 'adjustStockDelete'])->name('inventory.adjustStockDelete');
     
     // Purchase Management (Admin only)
-    Route::resource('purchases', PurchaseController::class);
+    // Replace the single resource route with explicit routes
+    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+    Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
+    Route::put('/purchases/update/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+    Route::delete('/purchases/destroy/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
     
     // Sales Management (Admin can view/edit all)
     // Route::resource('sales', SalesController::class);

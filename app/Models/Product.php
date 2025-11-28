@@ -49,7 +49,7 @@ class Product extends Model
     }
     public function getIsLowStockAttribute()
     {
-        return $this->quantity <= $this->low_stock;
+        return $this->current_stock <= $this->low_stock;
     }
     /**
      * Get average cost price for profit calculation
@@ -65,18 +65,18 @@ class Product extends Model
     /**
      * Update stock after purchase
      */
-    public function addStock($quantity)
+    public function addStock($current_stock)
     {
-        $this->current_stock += $quantity;
+        $this->current_stock += $current_stock;
         $this->save();
     }
 
     /**
      * Update stock after sale
      */
-    public function reduceStock($quantity)
+    public function reduceStock($current_stock)
     {
-        $this->quantity -= $quantity;
+        $this->current_stock -= $current_stock;
         $this->save();
     }
 

@@ -7,6 +7,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseHistory;
 use App\Models\Product;
 use App\Traits\BusinessScoped;
+use App\Models\ProductAssignment;
 use Carbon\Carbon;
 
 class PurchaseController extends Controller
@@ -16,6 +17,11 @@ class PurchaseController extends Controller
     /**
      * Display a listing of purchases
      */
+
+    private function getPurchase($created_at, $user_id)
+    {
+        return Purchase::with(['product', 'user'])->where("created_at", $created_at)->where("user_id", $user_id)->first();
+    }
     public function index(Request $request)
     {
         $query = $this->scopeToCurrentBusiness(PurchaseHistory::class)->with(['product', 'user']);
@@ -97,8 +103,9 @@ class PurchaseController extends Controller
     /**
      * Display the specified purchase
      */
-    public function show(Purchase $purchase)
+    public function show(PurchaseHistory $purchase)
     {
+        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
         $purchase->load(['product', 'user']);
         return view('purchases.show', compact('purchase'));
     }
@@ -106,48 +113,64 @@ class PurchaseController extends Controller
     /**
      * Show the form for editing the specified purchase
      */
-    public function edit(Purchase $purchase)
+    public function edit(PurchaseHistory $purchase)
     {
+
         $products = Product::all();
         $purchase->load(['product']);
+        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
         return view('purchases.edit', compact('purchase', 'products'));
     }
 
     /**
      * Update the specified purchase
      */
-    public function update(Request $request, Purchase $purchase)
+    public function update(Request $request, PurchaseHistory $purchase)
     {
         $request->validate([
             'supplier_name' => 'required|string|max:255',
             'supplier_phone' => 'nullable|string|max:20',
             'quantity' => 'required|numeric|min:0.01',
-            'buying_price_per_unit' => 'required|numeric|min:0',
+            'cost_price_per_unit' => 'required|numeric|min:0',
             'purchase_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
 
+        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
         $product = $purchase->product;
         $oldQuantity = $purchase->quantity;
 
         // Remove old stock quantity
         $product->reduceStock($oldQuantity);
+        // $purchase->reduceStock($request->quantity);
+        // $purchaseReal->reduceStock($request->quantity);
 
-        $totalCost = $request->quantity * $request->buying_price_per_unit;
+        $totalCost = $request->quantity * $request->cost_price_per_unit;
 
         // Update the purchase
         $purchase->update([
             'supplier_name' => $request->supplier_name,
             'supplier_phone' => $request->supplier_phone,
             'quantity' => $request->quantity,
-            'buying_price_per_unit' => $request->buying_price_per_unit,
+            'purchase_price' => $request->cost_price_per_unit,
+            'total_cost' => $totalCost,
+            'purchase_date' => $request->purchase_date,
+            'notes' => $request->notes,
+        ]);
+        $purchaseReal->update([
+            'supplier_name' => $request->supplier_name,
+            'supplier_phone' => $request->supplier_phone,
+            'quantity' => $request->quantity,
+            'purchase_price' => $request->cost_price_per_unit,
             'total_cost' => $totalCost,
             'purchase_date' => $request->purchase_date,
             'notes' => $request->notes,
         ]);
 
         // Add new stock quantity
-        $product->addStock($request->quantity);
+        $product->addStock("current_stock");
+        // $purchase->addStock($request->quantity);
+        // $purchaseReal->addStock($request->quantity);
 
         return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully!');
     }
@@ -155,12 +178,19 @@ class PurchaseController extends Controller
     /**
      * Remove the specified purchase
      */
-    public function destroy(Purchase $purchase)
+    public function destroy(PurchaseHistory $purchase)
     {
         // Remove stock from product
         $purchase->product->reduceStock($purchase->quantity);
+        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
+        // return $purchaseReal->id;
+        $purchaseAssignment = ProductAssignment::where("purchase_id", $purchaseReal->id)->count();
+        if($purchaseAssignment > 0){
+            return back()->withErrors("Sorry you can't delete this purchase becouse have a some product assignment!");
+        }
 
         $purchase->delete();
+        $purchaseReal->delete();
 
         return redirect()->route('purchases.index')->with('success', 'Purchase deleted successfully!');
     }

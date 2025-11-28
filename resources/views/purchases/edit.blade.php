@@ -210,13 +210,13 @@
                             {{ __('Update Purchase') }}
                         </x-primary-button>
                         
-                        <form method="POST" action="{{ route('purchases.destroy', $purchase) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this purchase? This will reduce the stock and cannot be undone.')">
+                        {{-- <form method="POST" action="{{ route('purchases.destroy', $purchase) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this purchase? This will reduce the stock and cannot be undone.')">
                             @csrf
                             @method('DELETE')
                             <x-danger-button type="submit">
                                 {{ __('Delete Purchase') }}
                             </x-danger-button>
-                        </form>
+                        </form> --}}
                     </div>
                 </form>
             </div>
