@@ -65,6 +65,10 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     
     // Activity Log
     Route::get('/activity-log', [SuperAdminController::class, 'activityLog'])->name('super-admin.activity-log');
+    
+    // Sales Management
+    Route::get('/sales', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'index'])->name('super-admin.sales.index');
+    Route::get('/sales/{sale}', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'show'])->name('super-admin.sales.show');
 });
 
 // Admin Routes

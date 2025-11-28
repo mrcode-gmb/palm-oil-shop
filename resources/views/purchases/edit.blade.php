@@ -112,7 +112,7 @@
                                           step="0.01" 
                                           min="0" 
                                           class="mt-1 block w-full" 
-                                          :value="old('cost_price_per_unit', $purchase->cost_price_per_unit)" 
+                                          :value="old('cost_price_per_unit', $purchase->purchase_price)" 
                                           required 
                                           oninput="calculateTotal()" />
                             <x-input-error class="mt-2" :messages="$errors->get('cost_price_per_unit')" />
