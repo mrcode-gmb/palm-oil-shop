@@ -108,7 +108,7 @@
                             <p class="text-sm text-gray-500">Low Stock</p>
                             <p class="text-2xl font-bold text-yellow-600">
                                 {{ $products->filter(function ($product) {
-                                        return $product->quantity < $product->low_stock_threshold && $product->quantity > 0;
+                                        return $product->quantity < $product->product->low_stock_threshold;
                                     })->count() }}
                             </p>
 

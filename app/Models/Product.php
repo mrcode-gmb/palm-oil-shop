@@ -18,6 +18,7 @@ class Product extends Model
         'seller_profit',
         'description',
         'purchase_price',
+        'low_stock',
         'business_id',
     ];
 
@@ -46,7 +47,10 @@ class Product extends Model
     {
         return $this->hasMany(Sale::class);
     }
-
+    public function getIsLowStockAttribute()
+    {
+        return $this->quantity <= $this->low_stock;
+    }
     /**
      * Get average cost price for profit calculation
      */

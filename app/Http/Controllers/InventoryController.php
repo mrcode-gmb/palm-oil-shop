@@ -91,12 +91,15 @@ class InventoryController extends Controller
             'name' => 'required|string|max:255',
             'unit_type' => 'required|in:Customize,Uncustomize',
             'description' => 'nullable|string',
+            'low_stock' => "required",
         ]);
 
         $data = $this->addBusinessId([
             'name' => $request->name,
             'unit_type' => $request->unit_type,
             'current_stock' => 0,
+            'low_stock'=> $request->low_stock,
+            'low_stock_threshold'=> $request->low_stock,
             'description' => $request->description,
         ]);
 

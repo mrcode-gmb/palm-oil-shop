@@ -44,6 +44,16 @@
                         @enderror
                     </div>
 
+
+                    <!-- Supplier Name -->
+                    <div>
+                        <label for="low_stock" class="block text-sm font-medium text-gray-700">Low Stock</label>
+                        <input type="number" name="low_stock" id="low_stock" min="0" max="100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        @error('low_stock')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Notes -->
                     <div>
                         <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
