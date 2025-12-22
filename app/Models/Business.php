@@ -48,6 +48,14 @@ class Business extends Model
     }
 
     /**
+     * Get the wallet associated with the business.
+     */
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    /**
      * Get the admin user for this business.
      */
     public function admin()

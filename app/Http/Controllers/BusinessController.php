@@ -81,7 +81,17 @@ class BusinessController extends Controller
      */
     public function show(Business $business)
     {
-        $business->load(['users', 'products', 'sales', 'purchases', 'expenses']);
+        $business->load(['users', 'products', 'sales', 'purchases', 'expenses', 'wallet']);
+        
+        // Ensure wallet exists
+        if (!$business->wallet) {
+            $business->wallet()->create([
+                'balance' => 0,
+                'currency' => 'NGN',
+                'status' => 'active'
+            ]);
+            $business->load('wallet'); // Reload the relationship
+        }
         
         // Get statistics
         $stats = [
@@ -96,7 +106,7 @@ class BusinessController extends Controller
             'total_expenses' => $business->expenses()->sum('amount'),
         ];
         $purchase = $business->purchases;
-        // return $stats;
+        
         return view('super-admin.businesses.show', compact('business', 'stats', 'purchase'));
     }
 

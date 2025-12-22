@@ -14,6 +14,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
         
         <!-- Additional Styles -->
         <style>
@@ -157,5 +158,6 @@
                 </main>
             </div>
         </div>
+    @livewireScripts
     </body>
 </html>

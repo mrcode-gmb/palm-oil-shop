@@ -70,6 +70,12 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::get('/sales', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'index'])->name('super-admin.sales.index');
     Route::get('/sales/export', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'export'])->name('super-admin.sales.export');
     Route::get('/sales/{sale}', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'show'])->name('super-admin.sales.show');
+
+    // Wallet Management
+    Route::get('/businesses/{business}/wallet/deposit', [\App\Http\Controllers\SuperAdmin\WalletController::class, 'createDeposit'])->name('super-admin.wallets.deposit');
+    Route::post('/businesses/{business}/wallet/deposit', [\App\Http\Controllers\SuperAdmin\WalletController::class, 'storeDeposit'])->name('super-admin.wallets.deposit.store');
+    Route::get('/businesses/{business}/wallet/withdraw', [\App\Http\Controllers\SuperAdmin\WalletController::class, 'createWithdrawal'])->name('super-admin.wallets.withdraw');
+    Route::post('/businesses/{business}/wallet/withdraw', [\App\Http\Controllers\SuperAdmin\WalletController::class, 'storeWithdrawal'])->name('super-admin.wallets.withdraw.store');
 });
 
 // Admin Routes
