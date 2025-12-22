@@ -82,7 +82,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Total Products</p>
+                    <p class="text-sm font-medium text-gray-600">Total Purchase</p>
                     <p class="text-3xl font-bold text-gray-900">{{ $stats['total_products'] }}</p>
                 </div>
                 <div class="bg-blue-100 rounded-full p-3">
@@ -120,6 +120,96 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Inventory & Sales Summary -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Inventory & Sales Overview</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Total Inventory Value -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Current Inventory Value</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($purchase->sum(function($item) { return $item->purchase_price * $item->quantity; }) ?? 0, 2) }}</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-2">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ $purchase->sum("quantity") ?? 0 }} items in stock</p>
+            </div>
+
+            <!-- Total Purchases -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Purchases</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['total_purchases'] ?? 0, 2) }}</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-2">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ $stats['total_purchase_quantity'] ?? 0 }} units purchased</p>
+            </div>
+
+            <!-- Sales Performance -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Sales</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['total_sales'] ?? 0, 2) }}</p>
+                    </div>
+                    <div class="bg-yellow-100 rounded-full p-2">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ $stats['total_quantity_sold'] ?? 0 }} units sold</p>
+            </div>
+
+            <!-- Profit Summary -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Gross Profit</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['gross_profit'] ?? 0, 2) }}</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-2">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ $stats['profit_margin'] ?? 0 }}% profit margin</p>
+            </div>
+        </div>
+
+        <!-- Inventory Turnover -->
+        @if(isset($stats['inventory_turnover']))
+        <div class="mt-6 pt-4 border-t border-gray-100">
+            <h4 class="text-sm font-medium text-gray-600 mb-2">Inventory Turnover</h4>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ min(100, $stats['inventory_turnover']) }}%"></div>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+                {{ number_format($stats['inventory_turnover'] ?? 0, 2) }}x - 
+                @if(($stats['inventory_turnover'] ?? 0) > 5)
+                    <span class="text-green-600">High Turnover</span>
+                @elseif(($stats['inventory_turnover'] ?? 0) > 2)
+                    <span class="text-yellow-600">Moderate Turnover</span>
+                @else
+                    <span class="text-red-600">Low Turnover</span>
+                @endif
+            </p>
+        </div>
+        @endif
     </div>
 
     <!-- Quick Actions -->

@@ -70,7 +70,7 @@
             </div>
 
             
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Product Assignments -->

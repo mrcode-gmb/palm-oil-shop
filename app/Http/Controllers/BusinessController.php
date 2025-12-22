@@ -88,14 +88,16 @@ class BusinessController extends Controller
             'total_users' => $business->users()->count(),
             'total_admins' => $business->users()->where('role', 'admin')->count(),
             'total_salespeople' => $business->users()->where('role', 'salesperson')->count(),
-            'total_products' => $business->products()->count(),
+            'total_products' => $business->purchases()->count(),
             'total_sales' => $business->sales()->sum('total_amount'),
             'total_profit' => $business->sales()->sum('profit'),
             'total_purchases' => $business->purchases()->sum('total_cost'),
+            'total_purchase_quantity' => $business->purchases()->sum('quantity'),
             'total_expenses' => $business->expenses()->sum('amount'),
         ];
-
-        return view('super-admin.businesses.show', compact('business', 'stats'));
+        $purchase = $business->purchases;
+        // return $stats;
+        return view('super-admin.businesses.show', compact('business', 'stats', 'purchase'));
     }
 
     /**

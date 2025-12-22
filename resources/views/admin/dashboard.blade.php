@@ -9,7 +9,7 @@
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Today's Sales -->
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -29,7 +29,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Today's Profit -->
             {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -55,7 +55,7 @@
             </div> --}}
 
             <!-- Sellers Commission -->
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -77,7 +77,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Today's Expenses -->
             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -106,7 +106,7 @@
 
 
             <!-- Today's Net Profit -->
-            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -129,7 +129,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
 
 
@@ -212,7 +212,7 @@
         </div>
 
         <!-- Monthly Overview -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Performance</h3>
@@ -259,7 +259,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Recent Activities -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

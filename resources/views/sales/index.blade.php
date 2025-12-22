@@ -86,7 +86,7 @@
         </div>
 
         <!-- Payment Summary -->
-        @if ($paymentSummary->isNotEmpty())
+        {{-- @if ($paymentSummary->isNotEmpty())
             <div class="bg-white overflow-hidden shadow-sm rounded-lg mb-6">
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Summary</h3>
@@ -135,7 +135,7 @@
                     </div>
                 </div>
             </div>
-        @endif
+        @endif --}}
 
         <!-- Sales Table -->
         <div class="bg-white overflow-hidden shadow-sm rounded-lg">

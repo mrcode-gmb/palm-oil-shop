@@ -70,7 +70,7 @@
                     </div>
 
                     <!-- Payment Summary -->
-                    @if ($paymentSummary->isNotEmpty())
+                    {{-- @if ($paymentSummary->isNotEmpty())
                         <div class="mb-6">
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Payment Summary</h3>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -98,7 +98,7 @@
 
                             </div>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <!-- Sales Table -->
                     <div class="overflow-x-auto">

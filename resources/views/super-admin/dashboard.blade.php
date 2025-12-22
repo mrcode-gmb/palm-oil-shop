@@ -7,7 +7,7 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <!-- Total Businesses -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <a href="{{ route('super-admin.businesses.index') }}" class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Businesses</p>
@@ -20,10 +20,10 @@
                     </svg>
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- Total Users -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <a href="{{ route('super-admin.users.index') }}" class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Users</p>
@@ -36,10 +36,10 @@
                     </svg>
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- Total Sales -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <a href="{{ route('super-admin.sales.index') }}" class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Total Sales</p>
@@ -52,7 +52,7 @@
                     </svg>
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- Total Profit -->
         <div class="bg-white rounded-lg shadow-md p-6">
