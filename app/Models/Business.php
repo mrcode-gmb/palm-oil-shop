@@ -112,6 +112,14 @@ class Business extends Model
     }
 
     /**
+     * Get all creditors for this business.
+     */
+    public function creditors()
+    {
+        return $this->hasMany(Creditor::class);
+    }
+
+    /**
      * Check if business is active.
      */
     public function isActive()

@@ -88,6 +88,8 @@
                             </svg>
                             Reports
                         </a>
+
+                        
                     @else
                         <!-- Salesperson Navigation -->
                         <a href="{{ route('sales.dashboard') }}" class="sidebar-link {{ request()->routeIs('sales.dashboard') ? 'active' : '' }}">

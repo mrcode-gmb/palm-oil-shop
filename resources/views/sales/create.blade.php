@@ -163,6 +163,28 @@
                         @enderror
                     </div>
 
+                    <!-- Creditor Selection (for Credit sales) -->
+                    <div id="creditor-section" class="hidden">
+                        <label for="creditor_id" class="block text-sm font-medium text-gray-700">Select Creditor</label>
+                        <select id="creditor_id" name="creditor_id" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select a creditor</option>
+                            @foreach($creditors as $creditor)
+                                <option value="{{ $creditor->id }}">{{ $creditor->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('creditor_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="amount-paid-section" class="hidden">
+                        <label for="amount_paid" class="block text-sm font-medium text-gray-700">Amount Paid (₦)</label>
+                        <input type="number" id="amount_paid" name="amount_paid" step="0.01" min="0" value="{{ old('amount_paid', 0) }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        @error('amount_paid')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Notes -->
                     <div>
                         <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
@@ -282,6 +304,28 @@
             if (productSelect.value) {
                 updateProductInfo();
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const paymentTypeSelect = document.getElementById('payment_type');
+            const creditorSection = document.getElementById('creditor-section');
+            const creditorSelect = document.getElementById('creditor_id');
+            const amountPaidSection = document.getElementById('amount-paid-section');
+
+            function toggleCreditorSection() {
+                if (paymentTypeSelect.value === 'credit') {
+                    creditorSection.classList.remove('hidden');
+                    amountPaidSection.classList.remove('hidden');
+                    creditorSelect.required = true;
+                } else {
+                    creditorSection.classList.add('hidden');
+                    amountPaidSection.classList.add('hidden');
+                    creditorSelect.required = false;
+                }
+            }
+
+            paymentTypeSelect.addEventListener('change', toggleCreditorSection);
+            toggleCreditorSection(); // Initial check
         });
 
         // Function for staff assignment selection

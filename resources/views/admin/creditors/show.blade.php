@@ -1,0 +1,74 @@
+<x-shop-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Creditors
+        </h2>
+    </x-slot>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2">
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Transaction History</h3>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Running Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($transactions as $transaction)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $transaction->created_at->format('d M, Y') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ $transaction->description }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $transaction->type === 'debit' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ ucfirst($transaction->type) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">₦{{ number_format($transaction->amount, 2) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">₦{{ number_format($transaction->running_balance, 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">No transactions found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                <div class="mt-4">
+                    {{ $transactions->links() }}
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Creditor Information</h3>
+                <p><strong>Name:</strong> {{ $creditor->name }}</p>
+                <p><strong>Email:</strong> {{ $creditor->email }}</p>
+                <p><strong>Phone:</strong> {{ $creditor->phone }}</p>
+                <p><strong>Address:</strong> {{ $creditor->address }}</p>
+                <p class="mt-4 text-xl"><strong>Current Balance:</strong> <span class="text-red-600">₦{{ number_format($creditor->balance, 2) }}</span></p>
+            </div>
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Record a Payment</h3>
+                <form action="{{ route('admin.creditors.record-payment', $creditor) }}" method="POST">
+                    @csrf
+                    <div>
+                        <label for="amount" class="block text-sm font-medium text-gray-700">Amount Paid</label>
+                        <input type="number" id="amount" name="amount" step="0.01" min="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                    </div>
+                    <div class="mt-4">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <input type="text" id="description" name="description" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div class="mt-6">
+                        <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-shop-layout>

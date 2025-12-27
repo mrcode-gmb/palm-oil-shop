@@ -31,6 +31,8 @@ class Sale extends Model
         'notes',
         'unique_id',
         'business_id',
+        'creditor_id',
+        'amount_paid',
     ];
 
     protected $casts = [
@@ -79,5 +81,13 @@ class Sale extends Model
     public function business()
     {
         return $this->belongsTo(Business::class);
+    }
+
+    /**
+     * Get the creditor this sale belongs to
+     */
+    public function creditor()
+    {
+        return $this->belongsTo(Creditor::class);
     }
 }

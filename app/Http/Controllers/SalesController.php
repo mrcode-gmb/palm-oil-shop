@@ -182,6 +182,15 @@ class SalesController extends Controller
         ));
     }
 
+    public function getBusinessId()
+    {
+        return auth()->user()->business_id;
+    }
+    public function getBusiness()
+    {
+        return auth()->user()->business;
+    }
+    
     /**
      * Export sales report to Excel
      *
@@ -245,6 +254,10 @@ class SalesController extends Controller
     {
         $user = auth()->user();
         
+        $business = $this->getBusiness();
+        $creditors = $business->creditors()->get();
+        // return $creditors;
+        
         if ($user->isAdmin()) {
             // Admin can sell from any available inventory
             $products = Purchase::with("product")->where('quantity', '>', 0)->get();
@@ -255,7 +268,7 @@ class SalesController extends Controller
             $products = collect(); // Empty collection for staff
         }
         
-        return view('sales.create', compact('products', 'assignments'));
+        return view('sales.create', compact('products', 'assignments', 'creditors'));
     }
 
     /**
@@ -271,6 +284,8 @@ class SalesController extends Controller
             'customer_phone' => 'nullable|string|max:20',
             'selling_price' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:cash,bank_transfer,pos,mobile_money,credit',
+            'creditor_id' => 'required_if:payment_type,credit|exists:creditors,id',
+            'amount_paid' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
 
@@ -353,7 +368,26 @@ class SalesController extends Controller
             'notes' => $request->notes,
         ]);
         
+        $data['creditor_id'] = $request->creditor_id;
+        $data['amount_paid'] = $request->amount_paid;
         $sale = Sale::create($data);
+
+        if ($request->payment_type === 'credit') {
+            $creditor = \App\Models\Creditor::find($request->creditor_id);
+            $creditAmount = $totalAmount - $request->amount_paid;
+
+            if ($creditAmount > 0) {
+                $creditor->balance += $creditAmount;
+                $creditor->save();
+
+                $creditor->transactions()->create([
+                    'type' => 'debit',
+                    'amount' => $creditAmount,
+                    'description' => 'Sale #' . $sale->unique_id,
+                    'running_balance' => $creditor->balance,
+                ]);
+            }
+        }
 
         // Update assignment if this is a staff sale
         if ($assignment) {

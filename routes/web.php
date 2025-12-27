@@ -150,12 +150,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/app-setting/store/news', [AppSettingController::class, 'storeNews'])->name('appSetting.storeNews');
     // Route::get('/reports/expensive/pdf', [ReportController::class, 'exportExpensivePDF'])->name('reports.expensive.pdf');
 
+    // Creditor Management
+    Route::resource('creditors', \App\Http\Controllers\Admin\CreditorController::class)->names('admin.creditors');
+    Route::post('creditors/{creditor}/record-payment', [\App\Http\Controllers\Admin\CreditorController::class, 'recordPayment'])->name('admin.creditors.record-payment');
 });
 
 // Admin and Salesperson shared sales routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // Admin sales management
-    Route::resource('sales', SalesController::class);
     Route::get('/sales/report', [SalesController::class, 'report'])->name('admin.sales.report');
     Route::get('/sales/export', [SalesController::class, 'export'])->name('admin.sales.export');
     Route::get('/sales/export-pdf', [SalesController::class, 'exportPdf'])->name('admin.sales.export-pdf');
