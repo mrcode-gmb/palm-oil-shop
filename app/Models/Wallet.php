@@ -54,6 +54,7 @@ class Wallet extends Model
     {
         return \DB::transaction(function () use ($amount, $type, $description, $metadata) {
             $transaction = $this->transactions()->create([
+                'business_id' => $this->business_id,
                 'amount' => $amount,
                 'type' => $type,
                 'reference' => 'WALLET-' . strtoupper(\Str::random(10)),

@@ -9,7 +9,7 @@
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Today's Sales -->
-            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -24,15 +24,34 @@
                         <div class="ml-5 w-0 flex-1">
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Today's Sales</dt>
-                                <dd class="text-lg font-medium text-gray-900">₦{{ number_format($todaySales, 2) }}</dd>
+                                <dd class="text-2xl font-bold text-gray-900">₦{{ number_format($todaySales, 2) }}</dd>
                             </dl>
                         </div>
                     </div>
                 </div>
-            </div> --}}
+            </div>
+
+            <!-- Today's Credit Sales -->
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div class="p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V9a2 2 0 00-2-2h-3.382a1 1 0 01-.94-.66L11.5 3.34a1 1 0 00-1.88 0L8.322 6.34A1 1 0 017.382 7H4a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Today's Credit Sales</dt>
+                                <dd class="text-2xl font-bold text-gray-900">₦{{ number_format($todayCreditSales, 2) }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Today's Profit -->
-            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -52,10 +71,10 @@
                         </div>
                     </div>
                 </div>
-            </div> --}}
+            </div>
 
             <!-- Sellers Commission -->
-            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -77,7 +96,7 @@
                         </div>
                     </div>
                 </div>
-            </div> --}}
+            </div>
 
             <!-- Today's Expenses -->
             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -106,7 +125,7 @@
 
 
             <!-- Today's Net Profit -->
-            {{-- <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -129,7 +148,7 @@
                         </div>
                     </div>
                 </div>
-            </div> --}}
+            </div>
 
 
 
@@ -212,7 +231,7 @@
         </div>
 
         <!-- Monthly Overview -->
-        {{-- <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2 bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Performance</h3>
@@ -259,7 +278,7 @@
                     </div>
                 </div>
             </div>
-        </div> --}}
+        </div>
 
         <!-- Recent Activities -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">

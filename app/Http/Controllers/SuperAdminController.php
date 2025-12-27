@@ -6,6 +6,7 @@ use App\Models\Business;
 use App\Models\User;
 use App\Models\Sale;
 use App\Models\Purchase;
+use App\Models\CreditorTransaction;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,9 @@ class SuperAdminController extends Controller
      */
     public function dashboard()
     {
+        $totalCreditorPayments = CreditorTransaction::where("type", "credit")->sum('amount');
         // Overall statistics across all businesses
+        // return $totalCreditorPayments;
         $stats = [
             'total_businesses' => Business::count(),
             'active_businesses' => Business::where('status', 'active')->count(),
@@ -25,7 +28,7 @@ class SuperAdminController extends Controller
             'total_admins' => User::where('role', 'admin')->count(),
             'total_salespeople' => User::where('role', 'salesperson')->count(),
             'total_products' => Product::count(),
-            'total_sales_amount' => Sale::sum('total_amount'),
+            'total_sales_amount' => Sale::where("payment_type", "credit")->sum('total_amount') + $totalCreditorPayments,
             'total_profit' => Sale::sum('profit'),
             'total_purchases' => Purchase::sum('total_cost'),
         ];

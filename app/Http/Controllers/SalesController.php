@@ -9,10 +9,12 @@ use App\Models\User;
 use App\Models\Purchase;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Traits\BusinessScoped;
 use App\Exports\SalesPdfExport;
 use App\Models\ProductAssignment;
 use App\Exports\SalesReportExport;
+use App\Models\Wallet;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SalesController extends Controller
@@ -188,7 +190,19 @@ class SalesController extends Controller
     }
     public function getBusiness()
     {
-        return auth()->user()->business;
+        $user = auth()->user();
+        if (!$user) {
+            // This case should ideally be handled by auth middleware
+            abort(401, 'Unauthenticated.');
+        }
+
+        $business = $user->business;
+        if (!$business) {
+            // This user is not associated with any business
+            abort(403, 'No business is associated with your account.');
+        }
+
+        return $business;
     }
     
     /**
@@ -284,7 +298,7 @@ class SalesController extends Controller
             'customer_phone' => 'nullable|string|max:20',
             'selling_price' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:cash,bank_transfer,pos,mobile_money,credit',
-            'creditor_id' => 'required_if:payment_type,credit|exists:creditors,id',
+            'creditor_id' => 'nullable|required_if:payment_type,credit|exists:creditors,id',
             'amount_paid' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
         ]);
@@ -344,8 +358,7 @@ class SalesController extends Controller
 
         $seller_profit_per_unit = $assignment->commission_rate * $request->quantity;
         $net_profit_per_unit = $profit - $seller_profit_per_unit;
-
-
+        
         // Create the sale with business_id
         $data = $this->addBusinessId([
             'purchase_id' => $request->product_id,
@@ -368,42 +381,79 @@ class SalesController extends Controller
             'notes' => $request->notes,
         ]);
         
-        $data['creditor_id'] = $request->creditor_id;
+        $data['creditor_id'] = $request->payment_type === 'credit' ? $request->creditor_id : null;
         $data['amount_paid'] = $request->amount_paid;
-        $sale = Sale::create($data);
+        
 
-        if ($request->payment_type === 'credit') {
-            $creditor = \App\Models\Creditor::find($request->creditor_id);
-            $creditAmount = $totalAmount - $request->amount_paid;
+            // $business = $this->getBusiness();
+            // return $business->wallet->balance;
+        // Wrap sale creation and wallet updates in a transaction
+        DB::transaction(function () use ($data, $request, $totalAmount, $totalCost, $product, $assignment) {
+            // Create the sale
+            $sale = Sale::create($data);
 
-            if ($creditAmount > 0) {
-                $creditor->balance += $creditAmount;
-                $creditor->save();
-
-                $creditor->transactions()->create([
-                    'type' => 'debit',
-                    'amount' => $creditAmount,
-                    'description' => 'Sale #' . $sale->unique_id,
-                    'running_balance' => $creditor->balance,
+            // Get the business and its wallet
+            $business = $this->getBusiness();
+            $businessWallet = Wallet::where("business_id", $this->getBusiness()->id)->first();
+            
+            // 1. Handle cash/wallet update for incoming payment
+            $amountReceived = $request->payment_type === 'credit' ? ($request->amount_paid ?? 0) : $totalAmount;
+            if ($amountReceived > 0) {
+                $business->wallet->balance += $amountReceived;
+                $business->walletTransactions()->create([
+                    'wallet_id'=> $businessWallet->id,
+                    'reference'=> 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
+                    'amount' => $amountReceived,
+                    'type' => 'credit',
+                    'description' => 'Payment for Sale #' . $sale->unique_id,
+                    'balance_after' => $business->wallet->balance,
                 ]);
             }
-        }
-
-        // Update assignment if this is a staff sale
-        if ($assignment) {
-            $assignment->increment('sold_quantity', $request->quantity);
-            $assignment->increment('actual_total_sales', $totalAmount);
             
-            // Update assignment status based on progress
-            if ($assignment->sold_quantity >= $assignment->assigned_quantity) {
-                $assignment->update(['status' => 'completed']);
-            } elseif ($assignment->status === 'assigned') {
-                $assignment->update(['status' => 'in_progress']);
+            // 2. Deduct total cost of goods from wallet
+            // $business->wallet->balance -= $totalCost;
+            // $business->walletTransactions()->create([
+            //     'wallet_id'=> $businessWallet->id,
+            //     'reference'=> 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
+            //     'amount' => $totalCost,
+            //     'type' => 'debit',
+            //     'description' => 'Cost of goods for Sale #' . $sale->unique_id,
+            //     'balance_after' => $business->wallet->balance,
+            // ]);
+
+            $business->save();
+
+            // 3. Handle creditor logic if payment type is credit
+            if ($request->payment_type === 'credit') {
+                $creditor = \App\Models\Creditor::find($request->creditor_id);
+                $creditAmount = $totalAmount - ($request->amount_paid ?? 0);
+
+                if ($creditAmount > 0) {
+                    $creditor->balance += $creditAmount;
+                    $creditor->save();
+
+                    $creditor->transactions()->create([
+                        'type' => 'debit',
+                        'amount' => $creditAmount,
+                        'description' => 'Sale #' . $sale->unique_id,
+                        'running_balance' => $creditor->balance,
+                    ]);
+                }
             }
-        } else {
-            // Admin sale - update product stock directly
-            $product->decrement('quantity', $request->quantity);
-        }
+
+            // 4. Update inventory stock
+            if ($assignment) {
+                $assignment->increment('sold_quantity', $request->quantity);
+                $assignment->increment('actual_total_sales', $totalAmount);
+                if ($assignment->sold_quantity >= $assignment->assigned_quantity) {
+                    $assignment->update(['status' => 'completed']);
+                } elseif ($assignment->status === 'assigned') {
+                    $assignment->update(['status' => 'in_progress']);
+                }
+            } else {
+                $product->decrement('quantity', $request->quantity);
+            }
+        });
 
         return redirect()->route('sales.my-sales')->with('success', 'Sale recorded successfully!');
     }

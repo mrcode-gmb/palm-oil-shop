@@ -56,6 +56,14 @@ class Business extends Model
     }
 
     /**
+     * Get all of the wallet transactions for the business.
+     */
+    public function walletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    /**
      * Get the admin user for this business.
      */
     public function admin()
@@ -117,6 +125,14 @@ class Business extends Model
     public function creditors()
     {
         return $this->hasMany(Creditor::class);
+    }
+
+    /**
+     * Get all of the creditor transactions for the business.
+     */
+    public function creditorTransactions()
+    {
+        return $this->hasManyThrough(CreditorTransaction::class, Creditor::class);
     }
 
     /**

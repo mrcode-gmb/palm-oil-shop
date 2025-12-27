@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Models\Purchase;
 use App\Models\User;
 use App\Models\ProductAssignment;
+use App\Models\CreditorTransaction;
 use App\Traits\BusinessScoped;
 use Carbon\Carbon;
 
@@ -37,9 +38,22 @@ class DashboardController extends Controller
             ->get();
 
         // Sales statistics - scoped to business
-        $todaySales = $this->scopeToCurrentBusiness(Sale::class)
+        $todayCashSales = $this->scopeToCurrentBusiness(Sale::class)
             ->whereDate('sale_date', $today)
+            ->where('payment_type', '!=', 'credit')
             ->sum('total_amount');
+
+        $todayCreditSales = $this->scopeToCurrentBusiness(Sale::class)
+            ->whereDate('sale_date', $today)
+            ->where('payment_type', 'credit')
+            ->sum('total_amount');
+
+        $todayCreditorPayments = CreditorTransaction::join('creditors', 'creditor_transactions.creditor_id', '=', 'creditors.id')
+            ->where('creditors.business_id', $this->getBusinessId())
+            ->whereDate('creditor_transactions.created_at', $today)
+            ->sum('creditor_transactions.amount');
+
+        $todaySales = $todayCashSales + $todayCreditorPayments;
         $todayProfit = $this->scopeToCurrentBusiness(Sale::class)
             ->whereDate('sale_date', $today)
             ->sum('profit');
@@ -92,6 +106,7 @@ class DashboardController extends Controller
             'todayExpenses',
             'lowStockProducts',
             'todaySales',
+            'todayCreditSales',
             'todayProfit',
             'monthlySales',
             'monthlyProfit',

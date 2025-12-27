@@ -45,20 +45,26 @@ class CreditorController extends Controller
     {
         $this->authorize('view', $creditor);
         $transactions = $creditor->transactions()->latest()->paginate(10);
-        return view('admin.creditors.show', compact('creditor', 'transactions'));
+
+        $total_credit = $creditor->transactions()->where('type', 'debit')->sum('amount');
+        $total_paid = $creditor->transactions()->where('type', 'credit')->sum('amount');
+
+        return view('admin.creditors.show', compact('creditor', 'transactions', 'total_credit', 'total_paid'));
     }
 
     public function recordPayment(Request $request, \App\Models\Creditor $creditor)
     {
         $this->authorize('update', $creditor);
-
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:255',
         ]);
-
+        if($creditor->balance < $request->amount){
+            return back()->withErrors('The amount is not grater than the current balance.');
+        }
         $creditor->balance -= $request->amount;
         $creditor->save();
+        
 
         $creditor->transactions()->create([
             'type' => 'credit',

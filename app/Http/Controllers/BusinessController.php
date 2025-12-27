@@ -94,20 +94,48 @@ class BusinessController extends Controller
         }
         
         // Get statistics
+        // Calculate sales from non-credit transactions
+        $nonCreditSales = $business->sales()->where('payment_type', '!=', 'credit')->sum('total_amount');
+
+        // Calculate total payments received from creditors
+        $creditorPayments = $business->creditorTransactions()->where('type', 'credit')->sum('amount');
+
+        // Calculate the actual total sales
+        $totalSales = $nonCreditSales + $creditorPayments;
+
+        // Get statistics
+        // Get all purchases to calculate inventory stats without pagination interference
+        $allPurchases = $business->purchases()->get();
+
         $stats = [
             'total_users' => $business->users()->count(),
             'total_admins' => $business->users()->where('role', 'admin')->count(),
             'total_salespeople' => $business->users()->where('role', 'salesperson')->count(),
-            'total_products' => $business->purchases()->count(),
-            'total_sales' => $business->sales()->sum('total_amount'),
+            'total_products' => $allPurchases->count(),
+            'total_sales' => $totalSales,
             'total_profit' => $business->sales()->sum('profit'),
-            'total_purchases' => $business->purchases()->sum('total_cost'),
-            'total_purchase_quantity' => $business->purchases()->sum('quantity'),
+            'total_purchases' => $allPurchases->sum('total_cost'),
+            'total_purchase_quantity' => $allPurchases->sum('quantity'), // This is historical total, not current stock
             'total_expenses' => $business->expenses()->sum('amount'),
+            'current_inventory_value' => $allPurchases->sum(function($item) { 
+                return $item->purchase_price * $item->quantity; 
+            }),
+            'current_stock_quantity' => $allPurchases->sum('quantity'),
         ];
-        $purchase = $business->purchases;
-        
-        return view('super-admin.businesses.show', compact('business', 'stats', 'purchase'));
+        // Fetch transaction histories with pagination
+        $sales = $business->sales()->with('user', 'purchase.product')->latest()->paginate(10, ['*'], 'sales');
+        $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
+        $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
+        $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
+
+        return view('super-admin.businesses.show', compact(
+            'business',
+            'stats',
+            'sales',
+            'purchases',
+            'expenses',
+            'creditorTransactions'
+        ));
     }
 
     /**
