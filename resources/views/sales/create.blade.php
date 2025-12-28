@@ -38,15 +38,15 @@
                             <select id="assignment_id" name="assignment_id" required onchange="updateAssignmentInfo()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Select an assignment</option>
                                 @foreach($assignments as $assignment)
-                                    @if($assignment->remaining_quantity > 0)
+                                    @if($assignment->assigned_quantity - $assignment->sold_quantity > 0)
                                         <option value="{{ $assignment->id }}" 
                                                 data-product-id="{{ $assignment->purchase_id }}"
                                                 data-price="{{ $assignment->expected_selling_price }}" 
-                                                data-stock="{{ $assignment->remaining_quantity }}"
+                                                data-stock="{{ $assignment->assigned_quantity - $assignment->sold_quantity }}"
                                                 data-cost="{{ $assignment->purchase->cost_price_per_unit }}"
                                                 data-unit="{{ $assignment->purchase->product->unit_type }}"
                                                 {{ (old('assignment_id') == $assignment->id || request('assignment_id') == $assignment->id) ? 'selected' : '' }}>
-                                            {{ $assignment->purchase->product->name }} - Available: {{ $assignment->remaining_quantity }} - Price: ₦{{ number_format($assignment->expected_selling_price, 2) }}
+                                            {{ $assignment->purchase->product->name }} - Available: {{ $assignment->assigned_quantity - $assignment->sold_quantity }} - Price: ₦{{ number_format($assignment->expected_selling_price, 2) }}
                                         </option>
                                     @endif
                                 @endforeach

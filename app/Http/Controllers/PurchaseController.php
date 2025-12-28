@@ -60,6 +60,7 @@ class PurchaseController extends Controller
      */
     public function store(Request $request)
     {
+        
         // return $request;
         $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -72,9 +73,11 @@ class PurchaseController extends Controller
             'purchase_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
-
+        
         $totalCost = $request->quantity * $request->buying_price_per_unit;
-
+        
+        
+        
         // Create the purchase with business_id
         $data = $this->addBusinessId([
             'product_id' => $request->product_id,
@@ -96,6 +99,21 @@ class PurchaseController extends Controller
         // Update product stock
         $product = Product::findOrFail($request->product_id);
         $product->addStock($request->quantity);
+
+        $businessWallet = auth()->user()->business->wallet;
+        $businessWallet->balance -= $totalCost;
+        $businessWallet->save();
+
+        $transaction = $businessWallet->transactions()->create([
+            'wallet_id' => $businessWallet->id,
+            'business_id'=> auth()->user()->business->id,
+            'amount' => $totalCost,
+            'type' => "debit",
+            'reference' => 'PURCHASE-' . strtoupper(\Str::random(10)),
+            'description' => "Purchase product history",
+            'status' => 'completed',
+            'metadata' => $data
+        ]);
 
         return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully!');
     }

@@ -65,6 +65,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     
     // Activity Log
     Route::get('/activity-log', [SuperAdminController::class, 'activityLog'])->name('super-admin.activity-log');
+
+    // All Documents
+    Route::get('/documents', [SuperAdminController::class, 'allDocuments'])->name('super-admin.documents.index');
     
     // Sales Management
     Route::get('/sales', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'index'])->name('super-admin.sales.index');
@@ -153,6 +156,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // Creditor Management
     Route::resource('creditors', \App\Http\Controllers\Admin\CreditorController::class)->names('admin.creditors');
     Route::post('creditors/{creditor}/record-payment', [\App\Http\Controllers\Admin\CreditorController::class, 'recordPayment'])->name('admin.creditors.record-payment');
+
+    // Document Management
+    Route::resource('documents', \App\Http\Controllers\DocumentController::class)->names('documents');
 });
 
 // Admin and Salesperson shared sales routes

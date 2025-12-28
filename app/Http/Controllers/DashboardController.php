@@ -149,6 +149,11 @@ class DashboardController extends Controller
             ->where('sale_date', '>=', $thisMonth)
             ->sum('profit');
 
+        $totalCreditSales = $this->scopeToCurrentBusiness(Sale::class)
+            ->where('user_id', $user->id)
+            ->where('payment_type', 'credit')
+            ->sum('total_amount');
+
         // Recent sales by this user - scoped to business
         $recentSales = $this->scopeToCurrentBusiness(Sale::class)
             ->with(['purchase.product', 'user'])
@@ -190,6 +195,7 @@ class DashboardController extends Controller
             'todayProfit',
             'monthlySales',
             'monthlyProfit',
+            'totalCreditSales',
             'recentSales',
             'availableProducts',
             'totalStock',

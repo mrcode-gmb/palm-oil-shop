@@ -70,6 +70,10 @@
                         <x-nav-link :href="route('admin.sales.report')" :active="request()->routeIs('admin.sales.report')">
                             {{ __('Sales Report') }}
                         </x-nav-link>
+
+                        <x-nav-link :href="route('documents.index')" :active="request()->routeIs('documents.index')">
+                            {{ __('Documents') }}
+                        </x-nav-link>
                     @else
                         <!-- Staff Navigation -->
                         <x-nav-link :href="route('sales.assignments')" :active="request()->routeIs('sales.assignments')">

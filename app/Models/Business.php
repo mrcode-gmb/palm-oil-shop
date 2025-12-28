@@ -136,6 +136,14 @@ class Business extends Model
     }
 
     /**
+     * Get all of the documents for the business.
+     */
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
+
+    /**
      * Check if business is active.
      */
     public function isActive()

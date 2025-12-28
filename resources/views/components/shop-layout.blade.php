@@ -162,13 +162,13 @@
                         Reports
                     </a>
 
-                    <a href="{{ route('appSetting.index') }}"
+                    <a href="{{ route('documents.index') }}"
                         class="sidebar-link flex py-3 px-5 {{ request()->routeIs('gallery.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 7l6 6-6 6M21 7l-6 6 6 6" />
                         </svg>
-                        Gallery
+                        Documents
                     </a>
 
                     <a href="{{ route("appSetting.indexNews") }}"

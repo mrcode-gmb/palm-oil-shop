@@ -408,6 +408,8 @@ class SalesController extends Controller
                     'description' => 'Payment for Sale #' . $sale->unique_id,
                     'balance_after' => $business->wallet->balance,
                 ]);
+                $business->wallet->balance += $totalAmount;
+                $business->wallet->save();
             }
             
             // 2. Deduct total cost of goods from wallet
@@ -438,6 +440,9 @@ class SalesController extends Controller
                         'description' => 'Sale #' . $sale->unique_id,
                         'running_balance' => $creditor->balance,
                     ]);
+
+                    // $business->wallet->balance += $totalAmount;
+                    // $business->wallet->save();
                 }
             }
 

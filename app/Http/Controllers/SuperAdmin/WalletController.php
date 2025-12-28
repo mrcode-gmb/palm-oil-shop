@@ -20,7 +20,8 @@ class WalletController extends Controller
         ]);
 
         try {
-            $business->wallet->credit($request->amount, $request->description ?: 'Manual deposit by Super Admin');
+            $business->wallet->credit($request->amount, $request->description ?: 'Manual deposit by Super Admin', [], $business->id);
+            
             return redirect()->route('super-admin.businesses.show', $business)->with('success', 'Funds added successfully.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -40,7 +41,7 @@ class WalletController extends Controller
         ]);
 
         try {
-            $business->wallet->debit($request->amount, $request->description ?: 'Manual withdrawal by Super Admin');
+            $business->wallet->debit($request->amount, $request->description ?: 'Manual withdrawal by Super Admin', [], $business->id);
             return redirect()->route('super-admin.businesses.show', $business)->with('success', 'Withdrawal successful.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());

@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('wallets', function (Blueprint $table) {
+        Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('business_id')->constrained()->onDelete('cascade');
-            $table->decimal('balance', 50, 2)->default(0);
-            $table->string('currency', 3)->default('NGN');
-            $table->enum('status', ['active', 'suspended', 'closed'])->default('active');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->string('path');
+            $table->unsignedBigInteger('size');
+            $table->string('type');
             $table->timestamps();
-            
-            $table->unique('business_id');
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('wallets');
+        Schema::dropIfExists('documents');
     }
 };

@@ -184,4 +184,10 @@ class SuperAdminController extends Controller
 
         return view('super-admin.activity-log.index', compact('activities', 'businesses', 'actions'));
     }
+
+    public function allDocuments()
+    {
+        $documents = \App\Models\Document::with(['business', 'user'])->latest()->paginate(20);
+        return view('super-admin.documents.index', compact('documents'));
+    }
 }

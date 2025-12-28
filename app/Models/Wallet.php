@@ -36,25 +36,26 @@ class Wallet extends Model
         return $this->hasMany(WalletTransaction::class);
     }
     
-    public function credit($amount, $description = 'Deposit', $metadata = [])
+    public function credit($amount, $description = 'Deposit', $metadata = [], $business_id = null)
     {
-        return $this->processTransaction($amount, WalletTransaction::TYPE_CREDIT, $description, $metadata);
+        return $this->processTransaction($amount, WalletTransaction::TYPE_CREDIT, $description, $metadata, $business_id);
     }
     
-    public function debit($amount, $description = 'Withdrawal', $metadata = [])
+    public function debit($amount, $description = 'Withdrawal', $metadata = [], $business_id = null)
     {
         if ($this->balance < $amount) {
             throw new \Exception('Insufficient funds in wallet');
         }
         
-        return $this->processTransaction($amount, WalletTransaction::TYPE_DEBIT, $description, $metadata);
+        return $this->processTransaction($amount, WalletTransaction::TYPE_DEBIT, $description, $metadata, $business_id);
     }
     
-    protected function processTransaction($amount, $type, $description, $metadata = [])
+    protected function processTransaction($amount, $type, $description, $metadata, $business_id)
     {
-        return \DB::transaction(function () use ($amount, $type, $description, $metadata) {
+        return \DB::transaction(function () use ($amount, $type, $description, $metadata, $business_id) {
             $transaction = $this->transactions()->create([
-                'business_id' => $this->business_id,
+                'wallet_id' => $this->id,
+                'business_id'=>$business_id,
                 'amount' => $amount,
                 'type' => $type,
                 'reference' => 'WALLET-' . strtoupper(\Str::random(10)),
@@ -62,11 +63,12 @@ class Wallet extends Model
                 'status' => 'completed',
                 'metadata' => $metadata
             ]);
+            if ($type === WalletTransaction::TYPE_CREDIT) {
+                $this->balance += $amount;
+            } else {
+                $this->balance -= $amount;
+            }
             
-            $this->balance = $type === WalletTransaction::TYPE_CREDIT 
-                ? $this->balance + $amount 
-                : $this->balance - $amount;
-                
             $this->last_transaction_at = now();
             $this->save();
             
