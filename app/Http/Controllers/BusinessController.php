@@ -81,7 +81,7 @@ class BusinessController extends Controller
      */
     public function show(Business $business)
     {
-        $business->load(['users', 'products', 'sales', 'purchases', 'expenses', 'wallet']);
+        $business->load(['users', 'products', 'sales', 'purchases', 'expenses', 'wallet', 'businessCapital']);
         
         // Ensure wallet exists
         if (!$business->wallet) {
@@ -92,6 +92,15 @@ class BusinessController extends Controller
             ]);
             $business->load('wallet'); // Reload the relationship
         }
+
+        if (!$business->businessCapital) {
+            $business->businessCapital()->create([
+                'balance' => 0,
+                'currency' => 'NGN',
+                'status' => 'active'
+            ]);
+            $business->load('businessCapital'); // Reload the relationship
+        }
         
         // Get statistics
         // Calculate sales from non-credit transactions
@@ -99,6 +108,8 @@ class BusinessController extends Controller
 
         // Calculate total payments received from creditors
         $creditorPayments = $business->creditorTransactions()->where('type', 'credit')->sum('amount');
+
+        $total_commission = $business->productAssignments()->sum('commission_amount');
 
         // Calculate the actual total sales
         $totalSales = $nonCreditSales + $creditorPayments;
@@ -128,13 +139,18 @@ class BusinessController extends Controller
         $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
         $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
 
+        $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
+
+
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',
             'sales',
             'purchases',
             'expenses',
-            'creditorTransactions'
+            'creditorTransactions',
+            'total_commission',
+            'net_profit'
         ));
     }
 

@@ -21,6 +21,12 @@ class SuperAdminController extends Controller
         $totalCreditorPayments = CreditorTransaction::where("type", "credit")->sum('amount');
         // Overall statistics across all businesses
         // return $totalCreditorPayments;
+        $total_expenses = \App\Models\Expenses::sum('amount');
+        $total_commission = \App\Models\ProductAssignment::sum('commission_amount');
+        $total_profit = Sale::sum('profit');
+        $net_profit = $total_profit - $total_expenses - $total_commission;
+        $total_business_capital = \App\Models\BusinessCapital::sum('balance');
+
         $stats = [
             'total_businesses' => Business::count(),
             'active_businesses' => Business::where('status', 'active')->count(),
@@ -29,8 +35,12 @@ class SuperAdminController extends Controller
             'total_salespeople' => User::where('role', 'salesperson')->count(),
             'total_products' => Product::count(),
             'total_sales_amount' => Sale::where("payment_type", "credit")->sum('total_amount') + $totalCreditorPayments,
-            'total_profit' => Sale::sum('profit'),
+            'total_profit' => $total_profit,
             'total_purchases' => Purchase::sum('total_cost'),
+            'total_expenses' => $total_expenses,
+            'total_commission' => $total_commission,
+            'net_profit' => $net_profit,
+            'total_business_capital' => $total_business_capital,
         ];
 
         // Recent businesses

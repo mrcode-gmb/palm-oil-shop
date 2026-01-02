@@ -74,6 +74,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::get('/sales/export', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'export'])->name('super-admin.sales.export');
     Route::get('/sales/{sale}', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'show'])->name('super-admin.sales.show');
 
+        // Business Capital Management
+    Route::get('/businesses/{business}/capital/create', [\App\Http\Controllers\SuperAdmin\BusinessCapitalController::class, 'create'])->name('super-admin.capital.create');
+    Route::post('/businesses/{business}/capital', [\App\Http\Controllers\SuperAdmin\BusinessCapitalController::class, 'store'])->name('super-admin.capital.store');
     // Wallet Management
     Route::get('/businesses/{business}/wallet/deposit', [\App\Http\Controllers\SuperAdmin\WalletController::class, 'createDeposit'])->name('super-admin.wallets.deposit');
     Route::post('/businesses/{business}/wallet/deposit', [\App\Http\Controllers\SuperAdmin\WalletController::class, 'storeDeposit'])->name('super-admin.wallets.deposit.store');
@@ -186,6 +189,7 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     Route::get('/sales/export', [SalesController::class, 'export'])->name('sales.export');
     Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SalesController::class, 'store'])->name('sales.store');
+    Route::get('/sales/success', [SalesController::class, 'success'])->name('sales.success');
     Route::get('/sales/{sale}', [SalesController::class, 'show'])->name('sales.show');
     Route::get('/sales/{sale}/edit', [SalesController::class, 'edit'])->name('sales.edit');
     Route::put('/sales/{sale}', [SalesController::class, 'update'])->name('sales.update');

@@ -290,13 +290,14 @@ class SalesController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:purchases,id',
-            'assignment_id' => 'nullable|exists:product_assignments,id',
-            'quantity' => 'required|numeric|min:0.01',
+        $validated = $request->validate([
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:purchases,id',
+            'products.*.assignment_id' => 'nullable|exists:product_assignments,id',
+            'products.*.quantity' => 'required|numeric|min:0.01',
+            'products.*.selling_price' => 'required|numeric|min:0.01',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
-            'selling_price' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:cash,bank_transfer,pos,mobile_money,credit',
             'creditor_id' => 'nullable|required_if:payment_type,credit|exists:creditors,id',
             'amount_paid' => 'nullable|numeric|min:0',
@@ -304,163 +305,121 @@ class SalesController extends Controller
         ]);
 
         $user = auth()->user();
-        $assignment = null;
-        
-        // If staff member, validate they can sell this product
-        if ($user->isSalesperson()) {
-            if (!$request->assignment_id) {
-                return back()->withErrors(['assignment_id' => 'Staff must select from assigned products.']);
-            }
-            
-            $assignment = ProductAssignment::where('id', $request->assignment_id)
-                ->where('user_id', $user->id)
-                ->where('purchase_id', $request->product_id)
-                ->whereIn('status', ['assigned', 'in_progress'])
-                ->first();
-                
-            if (!$assignment) {
-                return back()->withErrors(['assignment_id' => 'Invalid assignment or product not assigned to you.']);
-            }
-            
-            // Check if enough assigned quantity is available
-            if ($assignment->remaining_quantity < $request->quantity) {
-                return back()->withErrors(['quantity' => 'Insufficient assigned quantity. Available: ' . $assignment->remaining_quantity]);
-            }
-        }
+        $totalSaleAmount = 0;
+        $saleIds = [];
 
-        $product = Purchase::with(["product", "assignProduct"])->findOrFail($request->product_id);
-        // return $assignment;
-        // For admin, check inventory stock
-        if ($user->isAdmin() && $product->quantity < $request->quantity) {
-            return back()->withErrors(['quantity' => 'Insufficient stock available.']);
-        }
+        try {
+            DB::transaction(function () use ($validated, $user, &$totalSaleAmount, &$saleIds) {
+                foreach ($validated['products'] as $productData) {
+                    $assignment = null;
+                    if ($user->isSalesperson()) {
+                        $assignment = ProductAssignment::where('id', $productData['assignment_id'])
+                            ->where('user_id', $user->id)
+                            ->where('purchase_id', $productData['product_id'])
+                            ->whereIn('status', ['assigned', 'in_progress'])
+                            ->first();
+                        if (!$assignment || $assignment->remaining_quantity < $productData['quantity']) {
+                            throw new \Exception('Invalid assignment or insufficient quantity for a product.');
+                        }
+                    }
 
-        
-        
-        // Check if selling price is reasonable
-        if ($request->selling_price < $product->purchase_price) {
-            return back()->withErrors(['selling_price' => 'Selling price cannot be less than the purchase price.']);
-        }
+                    $product = Purchase::findOrFail($productData['product_id']);
+                    if ($user->isAdmin() && $product->quantity < $productData['quantity']) {
+                        throw new \Exception('Insufficient stock for a product.');
+                    }
 
-        // return $request;
+                    if ($productData['selling_price'] < $product->purchase_price) {
+                        throw new \Exception('Selling price cannot be less than purchase price for a product.');
+                    }
 
-        // Calculate prices and profit
+                    $totalAmount = $productData['selling_price'] * $productData['quantity'];
+                    $totalCost = $product->purchase_price * $productData['quantity'];
+                    $profit = $totalAmount - $totalCost;
 
-        $sellingPricePerUnit = $request->selling_price;
+                    $seller_profit_per_unit = 0;
+                    if ($assignment && isset($assignment->commission_rate)) {
+                        $seller_profit_per_unit = $assignment->commission_rate * $productData['quantity'];
+                    }
+                    $net_profit_per_unit = $profit - $seller_profit_per_unit;
 
-        $totalAmount = $sellingPricePerUnit * $request->quantity;
-
-        $costPricePerUnit = $product->purchase_price;
-
-        $totalCost = $costPricePerUnit * $request->quantity;
-
-        $profit = $totalAmount - $totalCost;
-
-        $seller_profit_per_unit = $assignment->commission_rate * $request->quantity;
-        $net_profit_per_unit = $profit - $seller_profit_per_unit;
-        
-        // Create the sale with business_id
-        $data = $this->addBusinessId([
-            'purchase_id' => $request->product_id,
-            'user_id' => auth()->id(),
-            'unique_id' => 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
-            'assignment_id' => $request->assignment_id,
-            'quantity' => $request->quantity,
-            'selling_price_per_unit' => $sellingPricePerUnit,
-            'cost_price_per_unit' => $costPricePerUnit,
-            'total_amount' => $totalAmount,
-            'total_cost' => $totalCost,
-            'profit' => $profit,
-            'seller_profit_per_unit' => $seller_profit_per_unit,
-            'net_profit_per_unit' => $net_profit_per_unit,
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'payment_type' => $request->payment_type,
-            'sale_status' => 'completed',
-            'sale_date' => Carbon::today(),
-            'notes' => $request->notes,
-        ]);
-        
-        $data['creditor_id'] = $request->payment_type === 'credit' ? $request->creditor_id : null;
-        $data['amount_paid'] = $request->amount_paid;
-        
-
-            // $business = $this->getBusiness();
-            // return $business->wallet->balance;
-        // Wrap sale creation and wallet updates in a transaction
-        DB::transaction(function () use ($data, $request, $totalAmount, $totalCost, $product, $assignment) {
-            // Create the sale
-            $sale = Sale::create($data);
-
-            // Get the business and its wallet
-            $business = $this->getBusiness();
-            $businessWallet = Wallet::where("business_id", $this->getBusiness()->id)->first();
-            
-            // 1. Handle cash/wallet update for incoming payment
-            $amountReceived = $request->payment_type === 'credit' ? ($request->amount_paid ?? 0) : $totalAmount;
-            if ($amountReceived > 0) {
-                $business->wallet->balance += $amountReceived;
-                $business->walletTransactions()->create([
-                    'wallet_id'=> $businessWallet->id,
-                    'reference'=> 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
-                    'amount' => $amountReceived,
-                    'type' => 'credit',
-                    'description' => 'Payment for Sale #' . $sale->unique_id,
-                    'balance_after' => $business->wallet->balance,
-                ]);
-                $business->wallet->balance += $totalAmount;
-                $business->wallet->save();
-            }
-            
-            // 2. Deduct total cost of goods from wallet
-            // $business->wallet->balance -= $totalCost;
-            // $business->walletTransactions()->create([
-            //     'wallet_id'=> $businessWallet->id,
-            //     'reference'=> 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
-            //     'amount' => $totalCost,
-            //     'type' => 'debit',
-            //     'description' => 'Cost of goods for Sale #' . $sale->unique_id,
-            //     'balance_after' => $business->wallet->balance,
-            // ]);
-
-            $business->save();
-
-            // 3. Handle creditor logic if payment type is credit
-            if ($request->payment_type === 'credit') {
-                $creditor = \App\Models\Creditor::find($request->creditor_id);
-                $creditAmount = $totalAmount - ($request->amount_paid ?? 0);
-
-                if ($creditAmount > 0) {
-                    $creditor->balance += $creditAmount;
-                    $creditor->save();
-
-                    $creditor->transactions()->create([
-                        'type' => 'debit',
-                        'amount' => $creditAmount,
-                        'description' => 'Sale #' . $sale->unique_id,
-                        'running_balance' => $creditor->balance,
+                    $sale = Sale::create([
+                        'business_id' => $this->getBusinessId(),
+                        'purchase_id' => $productData['product_id'],
+                        'user_id' => $user->id,
+                        'unique_id' => 'SALE-' . strtoupper(Str::random(8)) . '-' . now()->format('Ymd'),
+                        'assignment_id' => $productData['assignment_id'] ?? null,
+                        'quantity' => $productData['quantity'],
+                        'selling_price_per_unit' => $productData['selling_price'],
+                        'cost_price_per_unit' => $product->purchase_price,
+                        'total_amount' => $totalAmount,
+                        'total_cost' => $totalCost,
+                        'profit' => $profit,
+                        'seller_profit_per_unit' => $seller_profit_per_unit,
+                        'net_profit_per_unit' => $net_profit_per_unit,
+                        'customer_name' => $validated['customer_name'],
+                        'customer_phone' => $validated['customer_phone'],
+                        'payment_type' => $validated['payment_type'],
+                        'sale_status' => 'completed',
+                        'sale_date' => now(),
+                        'notes' => $validated['notes'],
+                        'creditor_id' => $validated['payment_type'] === 'credit' ? $validated['creditor_id'] : null,
+                        'amount_paid' => $validated['amount_paid'] ?? 0,
                     ]);
 
-                    // $business->wallet->balance += $totalAmount;
-                    // $business->wallet->save();
-                }
-            }
+                    $saleIds[] = $sale->id;
+                    $totalSaleAmount += $totalAmount;
 
-            // 4. Update inventory stock
-            if ($assignment) {
-                $assignment->increment('sold_quantity', $request->quantity);
-                $assignment->increment('actual_total_sales', $totalAmount);
-                if ($assignment->sold_quantity >= $assignment->assigned_quantity) {
-                    $assignment->update(['status' => 'completed']);
-                } elseif ($assignment->status === 'assigned') {
-                    $assignment->update(['status' => 'in_progress']);
+                    if ($assignment) {
+                        $assignment->increment('sold_quantity', $productData['quantity']);
+                        $assignment->increment('actual_total_sales', $totalAmount);
+                    } else {
+                        $product->decrement('quantity', $productData['quantity']);
+                    }
                 }
-            } else {
-                $product->decrement('quantity', $request->quantity);
-            }
-        });
 
-        return redirect()->route('sales.my-sales')->with('success', 'Sale recorded successfully!');
+                // Handle wallet and creditor logic outside the loop
+                $business = $this->getBusiness();
+                if ($validated['payment_type'] !== 'credit') {
+                    $business->wallet->credit($totalSaleAmount, 'Payment for multiple sales');
+                } else {
+                    if ($validated['amount_paid'] > 0) {
+                        $business->wallet->credit($validated['amount_paid'], 'Partial payment for multiple credit sales');
+                    }
+                    $creditor = \App\Models\Creditor::find($validated['creditor_id']);
+                    $creditAmount = $totalSaleAmount - ($validated['amount_paid'] ?? 0);
+                    if ($creditAmount > 0) {
+                        $creditor->balance += $creditAmount;
+                        $creditor->save();
+                        $creditor->transactions()->create([
+                            'type' => 'debit',
+                            'amount' => $creditAmount,
+                            'description' => 'Multiple sales on credit',
+                            'running_balance' => $creditor->balance,
+                        ]);
+                    }
+                }
+            });
+        } catch (\Exception $e) {
+            return back()->with('error', 'An error occurred: ' . $e->getMessage())->withInput();
+        }
+
+        return redirect()->route('sales.success', ['sale_ids' => implode(',', $saleIds)]);
+    }
+
+    public function success(Request $request)
+    {
+        if (!$request->has('sale_ids')) {
+            return redirect()->route('sales.index')->with('error', 'No sales to display.');
+        }
+
+        $saleIds = explode(',', $request->input('sale_ids'));
+        $sales = Sale::with(['purchase.product', 'user', 'business'])->whereIn('id', $saleIds)->get();
+
+        if ($sales->isEmpty()) {
+            return redirect()->route('sales.index')->with('error', 'Could not find the recorded sales.');
+        }
+
+        return view('sales.success', compact('sales'));
     }
 
     /**

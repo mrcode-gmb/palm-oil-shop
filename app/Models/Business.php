@@ -143,6 +143,11 @@ class Business extends Model
         return $this->hasMany(Document::class);
     }
 
+    public function businessCapital()
+    {
+        return $this->hasOne(BusinessCapital::class);
+    }
+
     /**
      * Check if business is active.
      */

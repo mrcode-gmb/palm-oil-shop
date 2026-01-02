@@ -36,18 +36,18 @@ class Wallet extends Model
         return $this->hasMany(WalletTransaction::class);
     }
     
-    public function credit($amount, $description = 'Deposit', $metadata = [], $business_id = null)
+    public function credit($amount, $description = 'Deposit', $metadata = [])
     {
-        return $this->processTransaction($amount, WalletTransaction::TYPE_CREDIT, $description, $metadata, $business_id);
+        return $this->processTransaction($amount, WalletTransaction::TYPE_CREDIT, $description, $metadata, $this->business_id);
     }
     
-    public function debit($amount, $description = 'Withdrawal', $metadata = [], $business_id = null)
+    public function debit($amount, $description = 'Withdrawal', $metadata = [])
     {
         if ($this->balance < $amount) {
             throw new \Exception('Insufficient funds in wallet');
         }
         
-        return $this->processTransaction($amount, WalletTransaction::TYPE_DEBIT, $description, $metadata, $business_id);
+        return $this->processTransaction($amount, WalletTransaction::TYPE_DEBIT, $description, $metadata, $this->business_id);
     }
     
     protected function processTransaction($amount, $type, $description, $metadata, $business_id)
