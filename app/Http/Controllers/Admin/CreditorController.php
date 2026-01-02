@@ -45,11 +45,12 @@ class CreditorController extends Controller
     {
         $this->authorize('view', $creditor);
         $transactions = $creditor->transactions()->latest()->paginate(10);
+        $sales = $creditor->sales()->with('purchase.product', 'user')->latest()->paginate(10, ['*'], 'sales');
 
         $total_credit = $creditor->transactions()->where('type', 'debit')->sum('amount');
         $total_paid = $creditor->transactions()->where('type', 'credit')->sum('amount');
 
-        return view('admin.creditors.show', compact('creditor', 'transactions', 'total_credit', 'total_paid'));
+        return view('admin.creditors.show', compact('creditor', 'transactions', 'sales', 'total_credit', 'total_paid'));
     }
 
     public function recordPayment(Request $request, \App\Models\Creditor $creditor)

@@ -27,4 +27,9 @@ class Creditor extends Model
     {
         return $this->hasMany(CreditorTransaction::class);
     }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class);
+    }
 }
