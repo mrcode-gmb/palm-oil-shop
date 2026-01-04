@@ -11,6 +11,7 @@ class Creditor extends Model
 
     protected $fillable = [
         'business_id',
+        'user_id',
         'name',
         'email',
         'phone',
@@ -31,5 +32,10 @@ class Creditor extends Model
     public function sales()
     {
         return $this->hasMany(Sale::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

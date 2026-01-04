@@ -52,7 +52,6 @@ class DashboardController extends Controller
             ->where('creditors.business_id', $this->getBusinessId())
             ->whereDate('creditor_transactions.created_at', $today)
             ->sum('creditor_transactions.amount');
-
         $todaySales = $todayCashSales + $todayCreditorPayments;
         $todayProfit = $this->scopeToCurrentBusiness(Sale::class)
             ->whereDate('sale_date', $today)
@@ -129,20 +128,44 @@ class DashboardController extends Controller
         $thisMonth = Carbon::now()->startOfMonth();
 
         // Get user's sales statistics - scoped to business
-        $todaySales = $this->scopeToCurrentBusiness(Sale::class)
+        $todayCashSales = $this->scopeToCurrentBusiness(Sale::class)
             ->where('user_id', $user->id)
             ->whereDate('sale_date', $today)
+            ->where('payment_type', '!=', 'credit')
             ->sum('total_amount');
+        $todayCashSalescredit = $this->scopeToCurrentBusiness(Sale::class)
+            ->where('user_id', $user->id)
+            ->whereDate('sale_date', $today)
+            ->where('payment_type', '=', 'credit')
+            ->sum('amount_paid');
+        $todayCreditorPayments = CreditorTransaction::join('creditors', 'creditor_transactions.creditor_id', '=', 'creditors.id')
+            ->where('creditors.business_id', $this->getBusinessId())
+            ->where('creditors.user_id', $user->id)
+            ->whereDate('creditor_transactions.created_at', $today)
+            ->where('creditor_transactions.type', 'credit')
+            ->sum('creditor_transactions.amount');
+
+        $todaySales = $todayCashSales + $todayCreditorPayments + $todayCashSalescredit;
 
         $todayProfit = $this->scopeToCurrentBusiness(Sale::class)
             ->where('user_id', $user->id)
             ->whereDate('sale_date', $today)
             ->sum('profit');
 
-        $monthlySales = $this->scopeToCurrentBusiness(Sale::class)
+        $monthlyCashSales = $this->scopeToCurrentBusiness(Sale::class)
             ->where('user_id', $user->id)
             ->where('sale_date', '>=', $thisMonth)
+            ->where('payment_type', '!=', 'credit')
             ->sum('total_amount');
+
+        $monthlyCreditorPayments = CreditorTransaction::join('creditors', 'creditor_transactions.creditor_id', '=', 'creditors.id')
+            ->where('creditors.business_id', $this->getBusinessId())
+            ->where('creditors.user_id', $user->id)
+            ->whereDate('creditor_transactions.created_at', '>=', $thisMonth)
+            ->where('creditor_transactions.type', 'credit')
+            ->sum('creditor_transactions.amount');
+        
+        $monthlySales = $monthlyCashSales + $monthlyCreditorPayments;
 
         $monthlyProfit = $this->scopeToCurrentBusiness(Sale::class)
             ->where('user_id', $user->id)

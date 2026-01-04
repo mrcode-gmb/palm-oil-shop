@@ -145,7 +145,7 @@
                         Staffs
                     </a>
                     <a href="{{ route('admin.creditors.index') }}"
-                        class="sidebar-link flex py-3 px-5 {{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                        class="sidebar-link flex py-3 px-5 {{ request()->routeIs('admin.creditors.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm0 0V9"></path>
                             </svg>
@@ -207,6 +207,14 @@
                             </path>
                         </svg>
                         My Sales
+                    </a>
+
+                    <a href="{{ route('admin.creditors.index') }}"
+                        class="sidebar-link flex py-3 px-5 {{ request()->routeIs('admin.creditors.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm0 0V9"></path>
+                        </svg>
+                        Creditors
                     </a>
 
                     <a href="{{ route('sales.inventory') }}"

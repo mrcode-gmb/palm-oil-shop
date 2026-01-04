@@ -13,9 +13,15 @@ class CreditorController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
         $businessId = $this->getBusinessId();
         $business = \App\Models\Business::findOrFail($businessId);
-        $creditors = $business->creditors()->paginate(10);
+
+        if ($user->isSalesperson()) {
+            $creditors = $business->creditors()->where('user_id', $user->id)->paginate(10);
+        } else {
+            $creditors = $business->creditors()->paginate(10);
+        }
         // return $creditors;
         return view('admin.creditors.index', compact('creditors'));
     }
@@ -36,7 +42,9 @@ class CreditorController extends Controller
 
         $businessId = $this->getBusinessId();
         $business = \App\Models\Business::findOrFail($businessId);
-        $business->creditors()->create($request->all());
+        $data = $request->all();
+        $data['user_id'] = auth()->id();
+        $business->creditors()->create($data);
 
         return redirect()->route('admin.creditors.index')->with('success', 'Creditor created successfully.');
     }
