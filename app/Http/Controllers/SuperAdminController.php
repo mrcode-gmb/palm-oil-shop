@@ -34,7 +34,7 @@ class SuperAdminController extends Controller
             'total_admins' => User::where('role', 'admin')->count(),
             'total_salespeople' => User::where('role', 'salesperson')->count(),
             'total_products' => Product::count(),
-            'total_sales_amount' => Sale::where("payment_type", "credit")->sum('total_amount') + $totalCreditorPayments,
+            'total_sales_amount' => Sale::where("payment_type", "!=", "credit")->sum('total_amount') + $totalCreditorPayments,
             'total_profit' => $total_profit,
             'total_purchases' => Purchase::sum('total_cost'),
             'total_expenses' => $total_expenses,
