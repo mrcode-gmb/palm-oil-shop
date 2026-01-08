@@ -30,6 +30,9 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Running Balance</th>
+                            <th scope="col" class="relative px-6 py-3">
+                                <span class="sr-only">Print</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -44,6 +47,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">₦{{ number_format($transaction->amount, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">₦{{ number_format($transaction->running_balance, 2) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{{ route('admin.creditors.print-transaction', $transaction) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">Print</a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -59,30 +65,40 @@
         </div>
         <div>
             <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Creditor Information</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Creditor Information</h3>
+                    <a href="{{ route('admin.creditors.print', $creditor) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10" />
+                        </svg>
+                        Print
+                    </a>
+                </div>
                 <p><strong>Name:</strong> {{ $creditor->name }}</p>
                 <p><strong>Email:</strong> {{ $creditor->email }}</p>
                 <p><strong>Phone:</strong> {{ $creditor->phone }}</p>
                 <p><strong>Address:</strong> {{ $creditor->address }}</p>
                 <p class="mt-4 text-xl"><strong>Current Balance:</strong> <span class="text-red-600">₦{{ number_format($creditor->balance, 2) }}</span></p>
             </div>
-            <div class="bg-white shadow-md rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Record a Payment</h3>
-                <form action="{{ route('admin.creditors.record-payment', $creditor) }}" method="POST">
-                    @csrf
-                    <div>
-                        <label for="amount" class="block text-sm font-medium text-gray-700">Amount Paid</label>
-                        <input type="number" id="amount" name="amount" step="0.01" min="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
-                    </div>
-                    <div class="mt-4">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                        <input type="text" id="description" name="description" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    </div>
-                    <div class="mt-6">
-                        <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Record Payment</button>
-                    </div>
-                </form>
-            </div>
+            @if (!Auth::user()->isAdmin())   
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Record a Payment</h3>
+                    <form action="{{ route('admin.creditors.record-payment', $creditor) }}" method="POST">
+                        @csrf
+                        <div>
+                            <label for="amount" class="block text-sm font-medium text-gray-700">Amount Paid</label>
+                            <input type="number" id="amount" name="amount" step="0.01" min="0.01" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                        </div>
+                        <div class="mt-4">
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <input type="text" id="description" name="description" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div class="mt-6">
+                            <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md">Record Payment</button>
+                        </div>
+                    </form>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -99,6 +115,9 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sold By</th>
+                            <th scope="col" class="relative px-6 py-3">
+                                <span class="sr-only">Print</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -109,6 +128,9 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $sale->quantity }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₦{{ number_format($sale->total_amount, 2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $sale->user->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{{ route('sales.print-receipt', $sale) }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">Print</a>
+                                </td>
                             </tr>
                         @empty
                             <tr>

@@ -85,6 +85,24 @@ class CreditorController extends Controller
         return back()->with('success', 'Payment recorded successfully.');
     }
 
+    public function printTransaction(\App\Models\CreditorTransaction $transaction)
+    {
+        $this->authorize('view', $transaction->creditor);
+        return view('admin.creditors.print-transaction', compact('transaction'));
+    }
+
+    public function print(\App\Models\Creditor $creditor)
+    {
+        $this->authorize('view', $creditor);
+        $transactions = $creditor->transactions()->latest()->get();
+        $sales = $creditor->sales()->with('purchase.product', 'user')->latest()->get();
+
+        $total_credit = $creditor->transactions()->where('type', 'debit')->sum('amount');
+        $total_paid = $creditor->transactions()->where('type', 'credit')->sum('amount');
+
+        return view('admin.creditors.print', compact('creditor', 'transactions', 'sales', 'total_credit', 'total_paid'));
+    }
+
     public function getBusinessId()
     {
         return auth()->user()->business_id;

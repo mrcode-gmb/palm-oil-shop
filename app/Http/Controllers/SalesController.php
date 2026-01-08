@@ -269,7 +269,7 @@ class SalesController extends Controller
         $user = auth()->user();
         
         $business = $this->getBusiness();
-        $creditors = $business->creditors()->get();
+        $creditors = $business->creditors()->where("user_id", auth()->user()->id)->get();
         // return $creditors;
         
         if ($user->isAdmin()) {

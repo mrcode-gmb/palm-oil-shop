@@ -4,9 +4,11 @@
             Creditors
         </h2>
     </x-slot>
-    <div class="flex justify-end mb-4">
-        <a href="{{ route('admin.creditors.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded-md">Add Creditor</a>
-    </div>
+    @if (!Auth::user()->isAdmin())
+        <div class="flex justify-end mb-4">
+            <a href="{{ route('admin.creditors.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded-md">Add Creditor</a>
+        </div>
+    @endif
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">

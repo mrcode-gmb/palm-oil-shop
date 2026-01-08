@@ -166,6 +166,8 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('admin')->group(fu
     // Creditor Management
     Route::resource('creditors', \App\Http\Controllers\Admin\CreditorController::class)->names('admin.creditors');
     Route::post('creditors/{creditor}/record-payment', [\App\Http\Controllers\Admin\CreditorController::class, 'recordPayment'])->name('admin.creditors.record-payment');
+    Route::get('creditors/{creditor}/print', [\App\Http\Controllers\Admin\CreditorController::class, 'print'])->name('admin.creditors.print');
+    Route::get('creditors/transactions/{transaction}/print', [\App\Http\Controllers\Admin\CreditorController::class, 'printTransaction'])->name('admin.creditors.print-transaction');
 });
 
 // Admin and Salesperson shared sales routes
