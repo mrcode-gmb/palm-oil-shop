@@ -26,6 +26,9 @@ class SuperAdminController extends Controller
         $total_profit = Sale::sum('profit');
         $net_profit = $total_profit - $total_expenses - $total_commission;
         $total_business_capital = \App\Models\BusinessCapital::sum('balance');
+        $totalcostInventory = Purchase::get()->sum(function($purchase){
+            return $purchase->quantity * $purchase->purchase_price;
+        });
 
         $stats = [
             'total_businesses' => Business::count(),
@@ -76,7 +79,8 @@ class SuperAdminController extends Controller
             'recentBusinesses',
             'topBusinesses',
             'monthlyRevenue',
-            'recentSales'
+            'recentSales',
+            'totalcostInventory',
         ));
     }
 

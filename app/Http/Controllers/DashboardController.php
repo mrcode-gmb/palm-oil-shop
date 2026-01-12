@@ -28,6 +28,9 @@ class DashboardController extends Controller
         // Get statistics - scoped to business
         $totalProducts = $this->scopeToCurrentBusiness(Product::class)->count();
         $totalStock = $this->scopeToCurrentBusiness(Purchase::class)->sum('quantity');
+        $totalcostInventory = $this->scopeToCurrentBusiness(Purchase::class)->get()->sum(function($purchase){
+            return $purchase->quantity * $purchase->purchase_price;
+        });
         $lowStockProducts = $this->scopeToCurrentBusiness(Purchase::class)
             ->with("product")
             ->where('quantity', '<', 10)
@@ -101,6 +104,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'totalProducts',
             'totalStock',
+            'totalcostInventory',
             'todaySellerProfitPerUnit',
             'todayExpenses',
             'lowStockProducts',

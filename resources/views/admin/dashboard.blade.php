@@ -50,7 +50,7 @@
                 </div>
             </div>
 
-            <!-- Today's Profit -->
+            {{-- <!-- Today's Profit -->
             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
@@ -71,7 +71,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Sellers Commission -->
             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
@@ -124,7 +124,7 @@
             </div>
 
 
-            <!-- Today's Net Profit -->
+            {{-- <!-- Today's Net Profit -->
             <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center">
@@ -148,7 +148,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
 
 
@@ -169,6 +169,29 @@
                             <dl>
                                 <dt class="text-sm font-medium text-gray-500 truncate">Total Stock</dt>
                                 <dd class="text-lg font-medium text-gray-900">{{ number_format($totalStock, 1) }} units
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Total Stock -->
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div class="p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Cost Of Inventory</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ number_format($totalcostInventory, 1) }} units
                                 </dd>
                             </dl>
                         </div>
@@ -240,18 +263,18 @@
                             <p class="text-sm text-gray-500">Monthly Sales</p>
                             <p class="text-2xl font-bold text-green-600">₦{{ number_format($monthlySales, 2) }}</p>
                         </div>
-                        <div>
+                        {{-- <div>
                             <p class="text-sm text-gray-500">Monthly Profit</p>
                             <p class="text-2xl font-bold text-blue-600">₦{{ number_format($monthlyProfit, 2) }}</p>
-                        </div>
+                        </div> --}}
                         <div>
                             <p class="text-sm text-gray-500">Yearly Sales</p>
                             <p class="text-2xl font-bold text-green-500">₦{{ number_format($yearlySales, 2) }}</p>
                         </div>
-                        <div>
+                        {{-- <div>
                             <p class="text-sm text-gray-500">Yearly Profit</p>
                             <p class="text-2xl font-bold text-blue-500">₦{{ number_format($yearlyProfit, 2) }}</p>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
