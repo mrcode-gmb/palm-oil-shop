@@ -206,7 +206,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Current Inventory Value</p>
-                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['current_inventory_value']  ?? 0, 2) }}</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($ ?? 0, 2) }}</p>
                     </div>
                     <div class="bg-blue-100 rounded-full p-2">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +222,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Remaining Product Assignment</p>
-                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($productAssignment ?? 0, 2) }}</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['current_inventory_value'] productAssignment ?? 0, 2) }}</p>
                     </div>
                     <div class="bg-blue-100 rounded-full p-2">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
