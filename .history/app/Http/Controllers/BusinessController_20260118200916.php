@@ -185,7 +185,7 @@ class BusinessController extends Controller
             return $products * $assignment->purchase->purchase_price;
         });
 
-        return $productAssignment;
+        return $[]
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
         $totalCreditorPaid =  $business->creditorTransactions->where("type","credit")->sum("amount");
@@ -209,7 +209,7 @@ class BusinessController extends Controller
         // - $totalCreditorBalance;
 
 
-        return number_format($balance, 2);
+        return number_format($netProfit, 2);
 
         // return $business->sales->sum(function($sale){
         //     return $sale->seller_profit_per_unit * $sale->quantity;
