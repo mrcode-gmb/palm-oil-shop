@@ -200,12 +200,12 @@ class BusinessController extends Controller
         // $netProfit = $balance - $businessWalletBalance->balance;
 
         $actualWalletBalance =
-        $businessWalletBalance->balance
+        $businessWalletBalance->
         + $totalSales
         + $totalCreditorPaid
         - $historyPurchaseInventory
-        - $expenses;
-        // - $totalCreditorBalance;
+        - $expenses
+        - $totalCreditorPaid;
 
         return number_format($actualWalletBalance, 2);
 

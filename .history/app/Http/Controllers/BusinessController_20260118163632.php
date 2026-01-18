@@ -189,25 +189,25 @@ class BusinessController extends Controller
 
         $totalCreditorPaid =  $business->creditorTransactions->where("type","credit")->sum("amount");
 
-        // $balance = ($businessWalletBalance->balance ?? 0)
-        //  + ($totalSales ?? 0)
-        //  + ($currentPurchaseInventory ?? 0)
-        //  - ($historyPurchaseInventory ?? 0)
-        //  - ($expenses ?? 0)
-        //  + ($productAssignment ?? 0)
-        //  + ($totalCreditorBalance ?? 0)
-        //  + ($totalCreditorPaid ?? 0);
-        // $netProfit = $balance - $businessWalletBalance->balance;
+        $balance = ($businessWalletBalance->balance ?? 0)
+         + ($totalSales ?? 0)
+         + ($currentPurchaseInventory ?? 0)
+         - ($historyPurchaseInventory ?? 0)
+         - ($expenses ?? 0)
+         + ($productAssignment ?? 0)
+         + ($totalCreditorBalance ?? 0)
+         + ($totalCreditorPaid ?? 0);
+        $netProfit = $balance - $businessWalletBalance->balance;
 
         $actualWalletBalance =
-        $businessWalletBalance->balance
-        + $totalSales
-        + $totalCreditorPaid
-        - $historyPurchaseInventory
-        - $expenses;
-        // - $totalCreditorBalance;
+    $openingBalance
+    + $totalSales
+    + $totalCreditorPaid
+    - $totalPurchases
+    - $expenses
+    - $creditorPayments;
 
-        return number_format($actualWalletBalance, 2);
+return number_format($actualWalletBalance, 2);
 
         return number_format($netProfit, 2);
 

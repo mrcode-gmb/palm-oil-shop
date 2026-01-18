@@ -204,8 +204,8 @@ class BusinessController extends Controller
         + $totalSales
         + $totalCreditorPaid
         - $historyPurchaseInventory
-        - $expenses;
-        // - $totalCreditorBalance;
+        - $expenses
+        - $totalCreditorBalance;
 
         return number_format($actualWalletBalance, 2);
 
