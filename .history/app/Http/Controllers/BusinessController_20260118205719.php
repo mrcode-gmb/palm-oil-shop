@@ -201,6 +201,7 @@ class BusinessController extends Controller
 
         $actualWalletBalance =
         $businessWalletBalance->balance
+        + $totalCreditorPaid
         + $totalCreditorBalance
         + $productAssignment
         + $currentPurchaseInventory;
