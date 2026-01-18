@@ -144,7 +144,7 @@ class BusinessController extends Controller
         });
         $productAssignmentQuantity = $business->productAssignments->sum(function($assignment){
             $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-            return $products;
+            return $products ;
         });
         $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
 
@@ -158,7 +158,6 @@ class BusinessController extends Controller
             'total_commission',
             'net_profit',
             'productAssignment',
-            'productAssignmentQuantity'
         ));
     }
     public function balanceWallet(Business $business)

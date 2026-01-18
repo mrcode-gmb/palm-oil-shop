@@ -214,7 +214,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ $stats['current_stock_quantity'] ?? 0 }} items in stock</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $productAssignmentQuantity ?? 0 }} items in stock</p>
             </div>
 
             <!-- Total Inventory Value -->
@@ -230,7 +230,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ $productAssignmentQuantity ?? 0 }} items in stock</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $stats['current_stock_quantity'] ?? 0 }} items in stock</p>
             </div>
 
             <!-- Total Purchases -->

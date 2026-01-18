@@ -167,7 +167,7 @@
             </div>
         </div>
 
-        {{-- <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Remaining Product Assignment</p>
@@ -179,7 +179,7 @@
                     </svg>
                 </div>
             </div>
-        </div> --}}
+        </div>
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
@@ -206,7 +206,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Current Inventory Value</p>
-                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($productAssignment ?? 0, 2) }}</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($stats['current_inventory_value'] ?? 0, 2) }}</p>
                     </div>
                     <div class="bg-blue-100 rounded-full p-2">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +230,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ $productAssignmentQuantity ?? 0 }} items in stock</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $stats['current_stock_quantity'] ?? 0 }} items in stock</p>
             </div>
 
             <!-- Total Purchases -->

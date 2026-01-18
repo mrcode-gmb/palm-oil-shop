@@ -167,7 +167,7 @@
             </div>
         </div>
 
-        {{-- <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Remaining Product Assignment</p>
@@ -179,7 +179,7 @@
                     </svg>
                 </div>
             </div>
-        </div> --}}
+        </div>
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
@@ -230,7 +230,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ $productAssignmentQuantity ?? 0 }} items in stock</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $stats['current_stock_quantity'] ?? 0 }} items in stock</p>
             </div>
 
             <!-- Total Purchases -->
