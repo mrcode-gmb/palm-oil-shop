@@ -170,7 +170,7 @@ class BusinessController extends Controller
         });
 
         $currentPurchaseInventory = $business->purchases->sum(function($purchases){
-            return $purchases->quantity * $purchases->purchase_price;
+            return $purchases->purchase_price;
         });
 
 
