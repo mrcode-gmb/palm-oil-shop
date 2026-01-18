@@ -35,6 +35,8 @@ class BusinessCapital extends Model
         }
 
         $this->balance -= $amount;
+
+        $this->business->wallet->debit($amount, $description, [], $this->business_id);
         $this->save();
 
         // You might want to log this transaction in a separate table in the future
