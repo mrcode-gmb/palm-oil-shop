@@ -185,31 +185,33 @@ class BusinessController extends Controller
             return $products * $assignment->purchase->purchase_price;
         });
 
-        return $productAssignment;
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
         $totalCreditorPaid =  $business->creditorTransactions->where("type","credit")->sum("amount");
 
-        $balance = ($businessWalletBalance->balance ?? 0)
-         + ($totalSales ?? 0)
-         + ($currentPurchaseInventory ?? 0)
-         - ($historyPurchaseInventory ?? 0)
-         - ($expenses ?? 0)
-         + ($productAssignment ?? 0)
-         + ($totalCreditorBalance ?? 0)
-         + ($totalCreditorPaid ?? 0);
-        $netProfit = $balance - $businessWalletBalance->balance;
+        // $balance = ($businessWalletBalance->balance ?? 0)
+        //  + ($totalSales ?? 0)
+        //  + ($currentPurchaseInventory ?? 0)
+        //  - ($historyPurchaseInventory ?? 0)
+        //  - ($expenses ?? 0)
+        //  + ($productAssignment ?? 0)
+        //  + ($totalCreditorBalance ?? 0)
+        //  + ($totalCreditorPaid ?? 0);
+        // $netProfit = $balance - $businessWalletBalance->balance;
 
-        // $actualWalletBalance =
-        // $businessWalletBalance->balance
-        // + $totalSales
-        // + $totalCreditorPaid
-        // - $historyPurchaseInventory
-        // - $expenses;
+        $actualWalletBalance =
+        $businessWalletBalance->balance
+        + $totalSales
+        + $totalCreditorPaid
+        + $totalCreditorBalance
+        + $productAssignment
+        + $currentPurchaseInventory
+        - $expenses;
         // - $totalCreditorBalance;
 
+        return number_format($actualWalletBalance, 2);
 
-        return number_format($balance, 2);
+        return number_format($netProfit, 2);
 
         // return $business->sales->sum(function($sale){
         //     return $sale->seller_profit_per_unit * $sale->quantity;
