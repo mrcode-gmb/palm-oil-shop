@@ -207,6 +207,7 @@ class BusinessController extends Controller
         // - $expenses;
         // - $totalCreditorBalance;
 
+        return number_format($actualWalletBalance, 2);
 
         return number_format($netProfit, 2);
 
