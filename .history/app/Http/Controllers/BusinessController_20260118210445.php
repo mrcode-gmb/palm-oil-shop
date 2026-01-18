@@ -189,7 +189,8 @@ class BusinessController extends Controller
             $purchasePrice = $assignment->purchase->purchase_price ?? 0;
         
             return $remainingQuantity * $purchasePrice;
-        });        
+        });
+        
         
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
@@ -212,7 +213,8 @@ class BusinessController extends Controller
         + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
-        return number_format($productAssignment, 2);
+
+        return number_format($actualWalletBalance, 2);
 
         return number_format($netProfit, 2);
 
