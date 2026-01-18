@@ -180,7 +180,7 @@ class BusinessController extends Controller
 
         $expenses = $business->expenses->sum("amount");
       
-        $productAssignment = $business->productAssignments->where("status", "!=" , "completed")->sum(function ($assignment) {
+        $productAssignment = $business->productAssignments->where("status", "")->sum(function ($assignment) {
             $remainingQuantity =
                 $assignment->assigned_quantity
                 - $assignment->sold_quantity
@@ -212,7 +212,7 @@ class BusinessController extends Controller
         + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
-        return number_format($actualWalletBalance, 2);
+        return number_format($productAssignment, 2);
 
         return number_format($netProfit, 2);
 
