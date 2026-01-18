@@ -125,8 +125,8 @@ class BusinessController extends Controller
             'total_products' => $allPurchases->count(),
             'total_sales' => $totalSales,
             'total_profit' => $business->sales()->sum('profit'),
-            'total_purchases' => $business->purchaseHistory->sum('total_cost'),
-            'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
+            'total_purchases' => $allPurchases->sum('total_cost'),
+            'total_purchase_quantity' => $allPurchases->sum('quantity'), // This is historical total, not current stock
             'total_expenses' => $business->expenses()->sum('amount'),
             'current_inventory_value' => $allPurchases->sum(function($item) { 
                 return $item->purchase_price * $item->quantity; 
@@ -204,8 +204,8 @@ class BusinessController extends Controller
         + $totalSales
         + $totalCreditorPaid
         - $historyPurchaseInventory
-        - $expenses;
-        // - $totalCreditorBalance;
+        - $expenses
+        - $totalCreditorBalance;
 
         return number_format($actualWalletBalance, 2);
 
