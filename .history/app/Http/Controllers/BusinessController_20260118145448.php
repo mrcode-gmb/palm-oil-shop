@@ -152,8 +152,7 @@ class BusinessController extends Controller
             'expenses',
             'creditorTransactions',
             'total_commission',
-            'net_profit',
-            'productAssignment',
+            'net_profit'
         ));
     }
     public function balanceWallet(Business $business)

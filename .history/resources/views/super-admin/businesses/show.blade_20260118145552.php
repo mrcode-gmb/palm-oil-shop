@@ -170,8 +170,8 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Remaining Product Assignment</p>
-                    <p class="text-3xl font-bold text-gray-900">₦{{ number_format($productAssignment, 2) }}</p>
+                    <p class="text-sm font-medium text-gray-600">Net Profit</p>
+                    <p class="text-3xl font-bold text-gray-900">₦{{ number_format($net_profit, 2) }}</p>
                 </div>
                 <div class="bg-green-100 rounded-full p-3">
                     <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
