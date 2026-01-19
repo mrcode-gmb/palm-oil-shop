@@ -218,7 +218,7 @@ class BusinessController extends Controller
         + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
-        return $productAssignment;
+        return $actualWalletBalance;
 
         return number_format($netProfit, 2);
 
