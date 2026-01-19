@@ -147,10 +147,44 @@ class BusinessController extends Controller
             return $products;
         });
         $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
+
+
+        $businessWalletBalance = $business->wallet;
+
+        $totalSales = $business->sales->sum(callback: function($sale){
+            return $sale->selling_price_per_unit * $sale->quantity;
+        });
+
+        $currentPurchaseInventory = $business->purchases->sum(function($purchases){
+            return $purchases->quantity * $purchases->purchase_price;
+        });
+
+
+        $historyPurchaseInventory = $business->purchaseHistory->sum(function($purchases){
+            return $purchases->purchase_price * $purchases->quantity;
+        });
+
+        $expenses = $business->expenses->sum("amount");
+      
+        $productAssignment = $business->productAssignments->where("status", "!=" , "completed")->sum(function ($assignment) {
+            $remainingQuantity =
+                $assignment->assigned_quantity
+                - $assignment->sold_quantity
+                - $assignment->returned_quantity;
+        
+            $purchasePrice = $assignment->purchase->purchase_price ?? 0;
+        
+            return $remainingQuantity * $purchasePrice;
+        });        
         
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
-        $actualWalletBalance =  $this->balanceWallet($business);
+        $totalCreditorPaid =  $business->creditorTransactions->where("type","credit")->sum("amount");
+        $actualWalletBalance =
+        $businessWalletBalance->balance
+        + $totalCreditorBalance
+        + $productAssignment
+        + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
         return view('super-admin.businesses.show', compact(
@@ -163,8 +197,7 @@ class BusinessController extends Controller
             'total_commission',
             'net_profit',
             'productAssignment',
-            'productAssignmentQuantity',
-            'actualWalletBalance',
+            'productAssignmentQuantity'
         ));
     }
     public function balanceWallet(Business $business)
@@ -218,7 +251,7 @@ class BusinessController extends Controller
         + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
-        return $actualWalletBalance;
+        return number_format($actualWalletBalance, 2);
 
         return number_format($netProfit, 2);
 

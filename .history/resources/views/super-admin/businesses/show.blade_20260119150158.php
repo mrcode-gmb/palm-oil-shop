@@ -68,8 +68,6 @@
             <div>
                 <p class="text-sm font-medium text-gray-600">Total Capital</p>
                 <p class="text-3xl font-bold text-gray-900">₦{{ number_format($business->businessCapital->balance, 2) }}</p>
-                <p class="text-3xl font-bold text-gray-900">₦{{ number_format($actualWalletBalance, 2) }}</p>
-                
             </div>
             <div class="flex items-center space-x-3">
                 <a href="{{ route('super-admin.capital.create', ['business' => $business, 'type' => 'deposit']) }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Add Capital</a>
@@ -78,7 +76,7 @@
         </div>
     </div>
     <!-- Wallet Manager -->
-    @livewire('wallet-manager', ['wallet' => $business->wallet])
+    @livewire('wallet-manager', [,'wallet' => $business->wallet])
 
     
 
