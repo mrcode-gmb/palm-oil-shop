@@ -143,7 +143,7 @@ class BusinessController extends Controller
             return $products * $assignment->purchase->purchase_price;
         });
         $productAssignmentQuantity = $business->productAssignments->sum(function($assignment){
-            $products = $assignment->assigned_quantity;
+            $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
             return $products;
         });
         $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;

@@ -146,6 +146,7 @@ class BusinessController extends Controller
             $products = $assignment->assigned_quantity;
             return $products;
         });
+        return $productAssignmentQuantity;
         $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
         
         $totalCreditorBalance =  $business->creditors->sum("balance");
