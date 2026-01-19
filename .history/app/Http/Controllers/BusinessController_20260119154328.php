@@ -187,7 +187,8 @@ class BusinessController extends Controller
         $expenses = $business->expenses->sum("amount");
       
         $productAssignment = $business->productAssignments->where("status", "!=" , "completed")->sum(function ($assignment) {
-            $remainingQuantity = $assignment->assigned_quantity;
+            $remainingQuantity =
+                $assignment->assigned_quantity;
         
             $purchasePrice = $assignment->purchase->purchase_price ?? 0;
         
