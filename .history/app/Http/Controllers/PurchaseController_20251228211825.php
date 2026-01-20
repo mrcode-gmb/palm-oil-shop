@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Product;
-use App\Models\Purchase;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Traits\BusinessScoped;
+use App\Models\Purchase;
 use App\Models\PurchaseHistory;
+use App\Models\Product;
+use App\Traits\BusinessScoped;
 use App\Models\ProductAssignment;
+use Carbon\Carbon;
 
 class PurchaseController extends Controller
 {
@@ -110,7 +109,7 @@ class PurchaseController extends Controller
             'business_id'=> auth()->user()->business->id,
             'amount' => $totalCost,
             'type' => "debit",
-            'reference' => 'PURCHASE-' . strtoupper(Str::random(10)),
+            'reference' => 'PURCHASE-' . strtoupper(\Str::random(10)),
             'description' => "Purchase product history",
             'status' => 'completed',
             'metadata' => $data

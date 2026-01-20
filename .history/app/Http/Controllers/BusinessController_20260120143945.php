@@ -244,23 +244,7 @@ class BusinessController extends Controller
             return $purchase;
         });
 
-        foreach ($actualPurchase as $purchase) {
-            // PurchaseHistory::create([
-            //     'business_id' => $purchase->business_id,
-            //     'product_id' => $purchase->product_id,
-            //     'user_id' => $purchase->user_id,
-            //     'supplier_name' => $purchase->supplier_name,
-            //     'supplier_phone' => $purchase->supplier_phone,
-            //     'quantity' => $purchase->quantity,
-            //     'purchase_price' => $purchase->purchase_price,
-            //     "total_cost" => $purchase->total_cost,
-            //     'selling_price' => $purchase->selling_price,
-            //     'seller_profit' => $purchase->seller_profit,
-            //     'purchase_date' => $purchase->purchase_date,
-            //     'notes' => $purchase->notes,
-            // ]);
-        }
-        return $actualPurchase;
+        return $ac
     }
 
     /**

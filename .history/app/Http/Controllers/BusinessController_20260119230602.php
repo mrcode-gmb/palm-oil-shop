@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Business;
-use Illuminate\Support\Str;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\PurchaseHistory;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 class BusinessController extends Controller
@@ -44,7 +43,7 @@ class BusinessController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'status' => 'required|in:active,inactive',
-
+            
             // Admin user details
             'admin_name' => 'required|string|max:255',
             'admin_email' => 'required|email|unique:users,email',
@@ -83,7 +82,7 @@ class BusinessController extends Controller
     public function show(Business $business)
     {
         $business->load(['users', 'products', 'sales', 'purchases', 'expenses', 'wallet', 'businessCapital']);
-
+        
         // Ensure wallet exists
         if (!$business->wallet) {
             $business->wallet()->create([
@@ -102,7 +101,7 @@ class BusinessController extends Controller
             ]);
             $business->load('businessCapital'); // Reload the relationship
         }
-
+        
         // Get statistics
         // Calculate sales from non-credit transactions
         $nonCreditSales = $business->sales()->where('payment_type', '!=', 'credit')->sum('total_amount');
@@ -129,8 +128,8 @@ class BusinessController extends Controller
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
             'total_expenses' => $business->expenses()->sum('amount'),
-            'current_inventory_value' => $allPurchases->sum(function ($item) {
-                return $item->purchase_price * $item->quantity;
+            'current_inventory_value' => $allPurchases->sum(function($item) { 
+                return $item->purchase_price * $item->quantity; 
             }),
             'current_stock_quantity' => $allPurchases->sum('quantity'),
         ];
@@ -139,20 +138,20 @@ class BusinessController extends Controller
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
         $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
         $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
-        $productAssignment = $business->productAssignments->sum(function ($assignment) {
+        $productAssignment = $business->productAssignments->sum(function($assignment){
             $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
             return $products * $assignment->purchase->purchase_price;
         });
-        $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
+        $productAssignmentQuantity = $business->productAssignments->sum(function($assignment){
             $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
             return $products;
         });
         $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
-
+        
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
         $actualWalletBalance =  $this->balanceWallet($business);
-        return $this->createPurchaseHistory($business);
+        return $this->createPurchaseHistory
         // - $expenses;
         // - $totalCreditorBalance;
         return view('super-admin.businesses.show', compact(
@@ -173,35 +172,35 @@ class BusinessController extends Controller
     {
         $businessWalletBalance = $business->wallet;
 
-        $totalSales = $business->sales->sum(callback: function ($sale) {
+        $totalSales = $business->sales->sum(callback: function($sale){
             return $sale->selling_price_per_unit * $sale->quantity;
         });
 
-        $currentPurchaseInventory = $business->purchases->sum(function ($purchases) {
+        $currentPurchaseInventory = $business->purchases->sum(function($purchases){
             return $purchases->quantity * $purchases->purchase_price;
         });
 
 
-        $historyPurchaseInventory = $business->purchaseHistory->sum(function ($purchases) {
+        $historyPurchaseInventory = $business->purchaseHistory->sum(function($purchases){
             return $purchases->purchase_price * $purchases->quantity;
         });
 
         $expenses = $business->expenses->sum("amount");
-
-        $productAssignment = $business->productAssignments->where("status", "!=", "completed")->sum(function ($assignment) {
+      
+        $productAssignment = $business->productAssignments->where("status", "!=" , "completed")->sum(function ($assignment) {
             $remainingQuantity =
                 $assignment->assigned_quantity
                 - $assignment->sold_quantity
                 - $assignment->returned_quantity;
-
+        
             $purchasePrice = $assignment->purchase->purchase_price ?? 0;
-
+        
             return $remainingQuantity * $purchasePrice;
-        });
-
+        });        
+        
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
-        $totalCreditorPaid =  $business->creditorTransactions->where("type", "credit")->sum("amount");
+        $totalCreditorPaid =  $business->creditorTransactions->where("type","credit")->sum("amount");
 
         // $balance = ($businessWalletBalance->balance ?? 0)
         //  + ($totalSales ?? 0)
@@ -214,10 +213,10 @@ class BusinessController extends Controller
         // $netProfit = $balance - $businessWalletBalance->balance;
 
         $actualWalletBalance =
-            $businessWalletBalance->balance
-            + $totalCreditorBalance
-            + $productAssignment
-            + $currentPurchaseInventory;
+        $businessWalletBalance->balance
+        + $totalCreditorBalance
+        + $productAssignment
+        + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
         return $actualWalletBalance;
@@ -230,39 +229,10 @@ class BusinessController extends Controller
 
     }
 
-    
     private function createPurchaseHistory(Business $business)
     {
-        $actualPurchase = $business->purchases->map(function($purchase){
-            $inventoryRemain = (int) $purchase->quantity;
-            $assignedInventory = $purchase->assignProduct->sum(function($assignment){
-                return (int)$assignment->assigned_quantity - (int)$assignment->returned_quantity;
-            });
-            $actualPurchaseQuantity = $inventoryRemain + $assignedInventory;
-            $purchase->quantity = $actualPurchaseQuantity;
-
-            return $purchase;
-        });
-
-        foreach ($actualPurchase as $purchase) {
-            // PurchaseHistory::create([
-            //     'business_id' => $purchase->business_id,
-            //     'product_id' => $purchase->product_id,
-            //     'user_id' => $purchase->user_id,
-            //     'supplier_name' => $purchase->supplier_name,
-            //     'supplier_phone' => $purchase->supplier_phone,
-            //     'quantity' => $purchase->quantity,
-            //     'purchase_price' => $purchase->purchase_price,
-            //     "total_cost" => $purchase->total_cost,
-            //     'selling_price' => $purchase->selling_price,
-            //     'seller_profit' => $purchase->seller_profit,
-            //     'purchase_date' => $purchase->purchase_date,
-            //     'notes' => $purchase->notes,
-            // ]);
-        }
-        return $actualPurchase;
+        return $business;
     }
-
     /**
      * Show the form for editing the specified business
      */
@@ -331,7 +301,7 @@ class BusinessController extends Controller
     public function users(Business $business)
     {
         $users = $business->users()->paginate(15);
-
+        
         return view('super-admin.businesses.users', compact('business', 'users'));
     }
 

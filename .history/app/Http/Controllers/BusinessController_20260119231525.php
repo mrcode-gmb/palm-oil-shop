@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Business;
-use Illuminate\Support\Str;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\PurchaseHistory;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 class BusinessController extends Controller
@@ -230,37 +229,23 @@ class BusinessController extends Controller
 
     }
 
-    
     private function createPurchaseHistory(Business $business)
     {
-        $actualPurchase = $business->purchases->map(function($purchase){
-            $inventoryRemain = (int) $purchase->quantity;
-            $assignedInventory = $purchase->assignProduct->sum(function($assignment){
-                return (int)$assignment->assigned_quantity - (int)$assignment->returned_quantity;
+        return $business->purchases->map(function ($product) {
+
+            $totalPurchased = $product->sum('quantity');
+            $totalAssigned  = $product->assignProduct->sum(function($assignment){
+                return $assignment->assigned_quantity - $assignment;
             });
-            $actualPurchaseQuantity = $inventoryRemain + $assignedInventory;
-            $purchase->quantity = $actualPurchaseQuantity;
 
-            return $purchase;
+            return [
+                'product_id'       => $product->id,
+                'product_name'     => $product->name,
+                'total_purchased'  => $totalPurchased,
+                'total_assigned'   => $totalAssigned,
+                'available_stock'  => $totalPurchased + $totalAssigned,
+            ];
         });
-
-        foreach ($actualPurchase as $purchase) {
-            // PurchaseHistory::create([
-            //     'business_id' => $purchase->business_id,
-            //     'product_id' => $purchase->product_id,
-            //     'user_id' => $purchase->user_id,
-            //     'supplier_name' => $purchase->supplier_name,
-            //     'supplier_phone' => $purchase->supplier_phone,
-            //     'quantity' => $purchase->quantity,
-            //     'purchase_price' => $purchase->purchase_price,
-            //     "total_cost" => $purchase->total_cost,
-            //     'selling_price' => $purchase->selling_price,
-            //     'seller_profit' => $purchase->seller_profit,
-            //     'purchase_date' => $purchase->purchase_date,
-            //     'notes' => $purchase->notes,
-            // ]);
-        }
-        return $actualPurchase;
     }
 
     /**

@@ -233,34 +233,18 @@ class BusinessController extends Controller
     
     private function createPurchaseHistory(Business $business)
     {
-        $actualPurchase = $business->purchases->map(function($purchase){
+        return $business->purchases->map(function($purchase){
             $inventoryRemain = (int) $purchase->quantity;
             $assignedInventory = $purchase->assignProduct->sum(function($assignment){
                 return (int)$assignment->assigned_quantity - (int)$assignment->returned_quantity;
             });
             $actualPurchaseQuantity = $inventoryRemain + $assignedInventory;
             $purchase->quantity = $actualPurchaseQuantity;
-
+            PurchaseHistory::create([
+                
+            ]);
             return $purchase;
         });
-
-        foreach ($actualPurchase as $purchase) {
-            // PurchaseHistory::create([
-            //     'business_id' => $purchase->business_id,
-            //     'product_id' => $purchase->product_id,
-            //     'user_id' => $purchase->user_id,
-            //     'supplier_name' => $purchase->supplier_name,
-            //     'supplier_phone' => $purchase->supplier_phone,
-            //     'quantity' => $purchase->quantity,
-            //     'purchase_price' => $purchase->purchase_price,
-            //     "total_cost" => $purchase->total_cost,
-            //     'selling_price' => $purchase->selling_price,
-            //     'seller_profit' => $purchase->seller_profit,
-            //     'purchase_date' => $purchase->purchase_date,
-            //     'notes' => $purchase->notes,
-            // ]);
-        }
-        return $actualPurchase;
     }
 
     /**
