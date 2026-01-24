@@ -124,9 +124,7 @@ class BusinessController extends Controller
             'total_admins' => $business->users()->where('role', 'admin')->count(),
             'total_salespeople' => $business->users()->where('role', 'salesperson')->count(),
             'total_products' => $allPurchases->count(),
-            'total_sales' => $business->sales->sum(function($sale){
-                return $sale->selling_price_per_unit * $sale->quantity;
-            }),
+            'total_sales' => $totalSales,
             'total_profit' => $business->sales()->sum('profit'),
             'total_quantity_sold' => $business->sales()->sum('quantity'),
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
@@ -159,6 +157,9 @@ class BusinessController extends Controller
         });
         $actualProfit = $actualWalletBalance - $business->businessCapital->balance;
 
+        return $business->sales->sum(function($sale){
+            
+        });
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',
