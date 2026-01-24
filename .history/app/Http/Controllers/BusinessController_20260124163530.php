@@ -152,9 +152,7 @@ class BusinessController extends Controller
 
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
-        $actualWalletBalance =  $business->wallet->balance + $productAssignment + $business->purchases->sum(function ($purchases) {
-            return $purchases->quantity * $purchases->purchase_price;
-        });
+        $actualWalletBalance =  $business->wallet->balance;
         // return $actualWalletBalance;
         // return $this->createPurchaseHistory($business);
         // - $expenses;
@@ -317,7 +315,7 @@ class BusinessController extends Controller
     public function destroy(Business $business)
     {
         $businessName = $business->name;
-        $business->delete();
+        $business-> delete();
 
         return redirect()->route('super-admin.businesses.index')
             ->with('success', "Business '{$businessName}' deleted successfully!");
