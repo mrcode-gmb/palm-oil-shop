@@ -152,7 +152,7 @@ class BusinessController extends Controller
         $totalCreditorBalance =  $business->creditors->sum("balance");
 
         $actualWalletBalance =  $this->balanceWallet($business);
-        return $actualWalletBalance;
+        return $totalCreditorBalance;
         return $this->createPurchaseHistory($business);
         // - $expenses;
         // - $totalCreditorBalance;
@@ -222,7 +222,8 @@ class BusinessController extends Controller
         - $expenses;
         - $totalCreditorBalance;
         // return $actualWalletBalance;
-        return number_format($balance, 2);
+        return "hee";
+        return number_format($actualWalletBalance, 2);
 
         // return $business->sales->sum(function($sale){
         //     return $sale->seller_profit_per_unit * $sale->quantity;
