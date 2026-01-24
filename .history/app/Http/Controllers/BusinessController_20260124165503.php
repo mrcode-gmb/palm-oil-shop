@@ -155,7 +155,7 @@ class BusinessController extends Controller
         $actualWalletBalance =  $business->wallet->balance + $productAssignment + $business->purchases->sum(function ($purchases) {
             return $purchases->quantity * $purchases->purchase_price;
         });
-        $actualProfit = $actualWalletBalance - $business->businessCapital->balance;
+        $actualProfit = $actualWalletBalance - $business->businessC;
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',
@@ -168,7 +168,6 @@ class BusinessController extends Controller
             'productAssignment',
             'productAssignmentQuantity',
             'actualWalletBalance',
-            'actualProfit',
         ));
     }
     public function balanceWallet(Business $business)

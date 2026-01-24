@@ -168,7 +168,7 @@ class BusinessController extends Controller
             'productAssignment',
             'productAssignmentQuantity',
             'actualWalletBalance',
-            'actualProfit',
+            'actualProfit'
         ));
     }
     public function balanceWallet(Business $business)
