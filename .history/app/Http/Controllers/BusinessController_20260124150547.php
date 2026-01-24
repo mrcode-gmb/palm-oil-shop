@@ -126,7 +126,8 @@ class BusinessController extends Controller
             'total_products' => $allPurchases->count(),
             'total_sales' => $totalSales,
             'total_profit' => $business->sales()->sum('profit'),
-            'total_quantity_sold' => $business->sales()->sum('quantity'),
+            'total_quantity_sold' => $business->sales()->sum('profit'),
+            
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
             'total_expenses' => $business->expenses()->sum('amount'),

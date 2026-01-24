@@ -126,7 +126,6 @@ class BusinessController extends Controller
             'total_products' => $allPurchases->count(),
             'total_sales' => $totalSales,
             'total_profit' => $business->sales()->sum('profit'),
-            'total_quantity_sold' => $business->sales()->sum('quantity'),
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
             'total_expenses' => $business->expenses()->sum('amount'),
@@ -230,7 +229,7 @@ class BusinessController extends Controller
             - ($historyPurchaseInventory ?? 0)
             - ($expenses ?? 0);
 
-        return $balance;
+        return $actualWalletBalance;
 
         // return $business->sales->sum(function($sale){
         //     return $sale->seller_profit_per_unit * $sale->quantity;
