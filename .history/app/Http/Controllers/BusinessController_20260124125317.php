@@ -206,15 +206,15 @@ class BusinessController extends Controller
 
         $balance = ($businessWalletBalance->balance ?? 0)
          + ($totalSales ?? 0)
-        //  + ($currentPurchaseInventory ?? 0)
+         + ($currentPurchaseInventory ?? 0)
          - ($historyPurchaseInventory ?? 0)
          - ($expenses ?? 0)
-        //  + ($productAssignment ?? 0)
-        //  + ($totalCreditorBalance ?? 0)
+         + ($productAssignment ?? 0)
+         + ($totalCreditorBalance ?? 0)
          + ($totalCreditorPaid ?? 0);
         $netProfit = $balance - $businessWalletBalance->balance;
 
-        $actualWalletBalance =
+        $balance =
             $businessWalletBalance->balance
             + $totalCreditorBalance
             + $productAssignment

@@ -209,8 +209,8 @@ class BusinessController extends Controller
         //  + ($currentPurchaseInventory ?? 0)
          - ($historyPurchaseInventory ?? 0)
          - ($expenses ?? 0)
-        //  + ($productAssignment ?? 0)
-        //  + ($totalCreditorBalance ?? 0)
+         + ($productAssignment ?? 0)
+         + ($totalCreditorBalance ?? 0)
          + ($totalCreditorPaid ?? 0);
         $netProfit = $balance - $businessWalletBalance->balance;
 
