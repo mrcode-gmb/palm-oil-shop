@@ -69,7 +69,7 @@
                 <p class="text-sm font-medium text-gray-600">Total Capital</p>
                 <p class="text-3xl font-bold text-gray-900">₦{{ number_format($business->businessCapital->balance, 2) }}</p>
                 <p class="text-sm ">Expected revenue - Business Capital = Actual Profit</p>
-                <p class="text-gray-900">Actual profit: <b>₦{{ number_format($actualWalletBalance - $business->businessCapital->balance, 2) }}</b></p>
+                <p class="text-gray-900">Actual profit: ₦{{ number_format($actualWalletBalance - $business->businessCapital->balance, 2) }}</p>
                 
             </div>
             <div class="flex items-center space-x-3">
