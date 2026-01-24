@@ -125,7 +125,7 @@ class BusinessController extends Controller
             'total_salespeople' => $business->users()->where('role', 'salesperson')->count(),
             'total_products' => $allPurchases->count(),
             'total_sales' => $totalSales,
-            'total_profit' => $business->sales()->sum('profit'),
+            'total_profit' => $business->sales(->sum('profit'),
             'total_quantity_sold' => $business->sales()->sum('quantity'),
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
@@ -156,8 +156,6 @@ class BusinessController extends Controller
             return $purchases->quantity * $purchases->purchase_price;
         });
         $actualProfit = $actualWalletBalance - $business->businessCapital->balance;
-
-        return $business->sales->sum("total_amount");
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',

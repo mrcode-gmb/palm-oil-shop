@@ -156,8 +156,6 @@ class BusinessController extends Controller
             return $purchases->quantity * $purchases->purchase_price;
         });
         $actualProfit = $actualWalletBalance - $business->businessCapital->balance;
-
-        return $business->sales->sum("total_amount");
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',
