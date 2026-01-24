@@ -229,7 +229,7 @@ class BusinessController extends Controller
     - ($historyPurchaseInventory ?? 0)
     - ($expenses ?? 0);
 
-        return number_format($actualWalletBalance, 2);
+        return number_format($balance, 2);
 
         // return $business->sales->sum(function($sale){
         //     return $sale->seller_profit_per_unit * $sale->quantity;
