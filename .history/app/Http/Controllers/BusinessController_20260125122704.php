@@ -142,7 +142,7 @@ class BusinessController extends Controller
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
         $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
         $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
-        $productAssignment = $business->productAssignments->where("status", "!=", "completed")->sum(function ($assignment) {
+        $productAssignment = $business->productAssignments->where("status", "!=", "compl")->sum(function ($assignment) {
             $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
             return $products * $assignment->purchase->purchase_price;
         });
