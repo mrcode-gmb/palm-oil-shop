@@ -138,10 +138,7 @@ class BusinessController extends Controller
             'current_stock_quantity' => $allPurchases->sum('quantity'),
         ];
 
-        $assignment = $business->productAssignments->map(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-        });
-        // return $business->sales->sum("quantity") + $business->purchases->sum("quantity") + $assignment->sum();
+        return $business->sales->sum("quantity") + $business->purchases->sum("quantity") + $business->productAssignments->;
         // Fetch transaction histories with pagination
         $sales = $business->sales()->with('user', 'purchase.product')->latest()->paginate(10, ['*'], 'sales');
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');

@@ -102,6 +102,14 @@ class ProductAssignment extends Model
     }
 
     /**
+     * Get the sale prices for this assignment
+     */
+    public function salePrices()
+    {
+        return $this->hasMany(SalePrice::class);
+    }
+
+    /**
      * Get total collected quantity from all collections
      */
     public function getTotalCollectedQuantityAttribute()

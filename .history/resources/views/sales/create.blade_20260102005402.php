@@ -43,7 +43,7 @@
                         <!-- Product Row Template -->
                         <div class="product-row grid grid-cols-12 gap-4 items-center p-3 bg-gray-50 rounded-lg" data-row-id="0">
                             <!-- Product/Assignment Select -->
-                            <div class="col-span-12 md:col-span-3">
+                            <div class="col-span-12 md:col-span-4">
                                 <label class="block text-sm font-medium text-gray-700">Product</label>
                                 @if(auth()->user()->isAdmin())
                                     <select name="products[0][product_id]" class="product-select mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
@@ -57,11 +57,7 @@
                                         <option value="">Select assigned product</option>
                                         @foreach($assignments as $assignment)
                                              @if($assignment->assigned_quantity - $assignment->sold_quantity > 0)
-                                                <option value="{{ $assignment->id }}" 
-                                                    data-product-id="{{ $assignment->purchase_id }}" 
-                                                    data-price="{{ $assignment->expected_selling_price }}" 
-                                                    data-stock="{{ $assignment->assigned_quantity - $assignment->sold_quantity }}"
-                                                    data-sale-prices="{{ json_encode($assignment->salePrices->map(function($sp) { return ['type' => $sp->customer_type, 'price' => $sp->sale_price]; })) }}">
+                                                <option value="{{ $assignment->id }}" data-product-id="{{ $assignment->purchase_id }}" data-price="{{ $assignment->expected_selling_price }}" data-stock="{{ $assignment->assigned_quantity - $assignment->sold_quantity }}">
                                                     {{ $assignment->purchase->product->name }} (Available: {{ $assignment->assigned_quantity - $assignment->sold_quantity }})
                                                 </option>
                                             @endif
@@ -71,16 +67,6 @@
                                 @endif
                             </div>
 
-                            <!-- Customer Type (for salespeople only) -->
-                            @if(auth()->user()->isSalesperson())
-                            <div class="col-span-6 md:col-span-2 customer-type-container" style="display: none;">
-                                <label class="block text-sm font-medium text-gray-700">Customer Type</label>
-                                <select name="products[0][customer_type]" class="customer-type-select mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">Select Type</option>
-                                </select>
-                            </div>
-                            @endif
-
                             <!-- Selling Price -->
                             <div class="col-span-6 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700">Price (₦)</label>
@@ -89,8 +75,8 @@
 
                             <!-- Quantity -->
                             <div class="col-span-6 md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700">Quantitys</label>
-                                <input type="number" name="products[0][quantity]"  required class="quantity-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                                <input type="number" name="products[0][quantity]" step="0.01" min="0.01" required class="quantity-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                             </div>
 
                             <!-- Subtotal -->
@@ -225,8 +211,6 @@
             const quantityInput = row.querySelector('.quantity-input');
             const subtotalEl = row.querySelector('.subtotal-text');
             const removeBtn = row.querySelector('.remove-product-btn');
-            const customerTypeContainer = row.querySelector('.customer-type-container');
-            const customerTypeSelect = row.querySelector('.customer-type-select');
 
             function updateRow() {
                 const selectedOption = productSelect.options[productSelect.selectedIndex];
@@ -256,58 +240,13 @@
                 priceInput.value = selectedOption.dataset.price || '';
                 if (productSelect.classList.contains('assignment-select')) {
                     row.querySelector('.product-id-hidden').value = selectedOption.dataset.productId;
-                    
-                    // Handle sale prices for customer types
-                    const salePricesData = selectedOption.dataset.salePrices;
-                    if (salePricesData && customerTypeSelect) {
-                        try {
-                            const salePrices = JSON.parse(salePricesData);
-                            
-                            // Clear and populate customer type dropdown
-                            customerTypeSelect.innerHTML = '<option value="">Select Type</option>';
-                            
-                            if (salePrices && salePrices.length > 0) {
-                                salePrices.forEach(sp => {
-                                    const option = document.createElement('option');
-                                    option.value = sp.type;
-                                    option.textContent = sp.type;
-                                    option.dataset.price = sp.price;
-                                    customerTypeSelect.appendChild(option);
-                                });
-                                
-                                // Show customer type container
-                                if (customerTypeContainer) {
-                                    customerTypeContainer.style.display = 'block';
-                                }
-                            } else {
-                                // Hide customer type container if no sale prices
-                                if (customerTypeContainer) {
-                                    customerTypeContainer.style.display = 'none';
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error parsing sale prices:', e);
-                        }
-                    }
                 }
                 updateRow();
-            }
-
-            function onCustomerTypeSelect() {
-                const selectedOption = customerTypeSelect.options[customerTypeSelect.selectedIndex];
-                if (selectedOption && selectedOption.value && selectedOption.dataset.price) {
-                    priceInput.value = selectedOption.dataset.price;
-                    updateRow();
-                }
             }
 
             productSelect.addEventListener('change', onProductSelect);
             priceInput.addEventListener('input', updateRow);
             quantityInput.addEventListener('input', updateRow);
-            
-            if (customerTypeSelect) {
-                customerTypeSelect.addEventListener('change', onCustomerTypeSelect);
-            }
 
             removeBtn.addEventListener('click', () => {
                 row.remove();

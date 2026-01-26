@@ -93,47 +93,14 @@
                             <label for="commission_rate" class="block text-sm font-medium text-gray-700">Commission
                                 Fee ₦ (Optional)</label>
                             <input type="number" name="commission_rate" id="commission_rate"
-                                value="{{ old('commission_rate') ?? 0 }}"
+                                value="
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             @error('commission_rate')
                                 <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- Sale Prices -->
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Sale Prices by Customer Type</label>
-                            <div id="salePricesContainer" class="space-y-3">
-                                <div class="sale-price-row flex gap-3 items-end">
-                                    <div class="flex-1">
-                                        <label class="block text-xs font-medium text-gray-600">Customer Type</label>
-                                        <select name="customer_types[]" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                            <option value="">Select Type</option>
-                                            <option value="Dealer">Dealer</option>
-                                            <option value="Wholesaler 1">Wholesaler 1</option>
-                                            <option value="Wholesaler 2">Wholesaler 2</option>
-                                            <option value="Wholesaler 3">Wholesaler 3</option>
-                                            <option value="Consumer">Consumer</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex-1">
-                                        <label class="block text-xs font-medium text-gray-600">Price (₦)</label>
-                                        <input type="number" step="0.01" min="0.01" name="sale_prices[]" placeholder="0.00"
-                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                    <div>
-                                        <button type="button" onclick="removeSalePriceRow(this)"
-                                            class="mt-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 hidden remove-btn">
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" onclick="addSalePriceRow()"
-                                class="mt-3 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm">
-                                + Add Another Price
-                            </button>
-                        </div>
+                       
 
                         <!-- Notes -->
                         <div>
@@ -229,58 +196,5 @@
         // Add event listeners for real-time calculation
         document.getElementById('assigned_quantity').addEventListener('input', calculateProfit);
         document.getElementById('expected_selling_price').addEventListener('input', calculateProfit);
-
-        function addSalePriceRow() {
-            const container = document.getElementById('salePricesContainer');
-            const rows = container.querySelectorAll('.sale-price-row');
-            const rowCount = rows.length;
-
-            // Show remove button on all rows if there are more than 1
-            if (rowCount >= 1) {
-                rows.forEach(row => {
-                    row.querySelector('.remove-btn').classList.remove('hidden');
-                });
-            }
-
-            const newRow = document.createElement('div');
-            newRow.className = 'sale-price-row flex gap-3 items-end';
-            newRow.innerHTML = `
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-600">Customer Type</label>
-                    <select name="customer_types[]" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Select Type</option>
-                        <option value="Dealer">Dealer</option>
-                        <option value="Wholesaler 1">Wholesaler 1</option>
-                        <option value="Wholesaler 2">Wholesaler 2</option>
-                        <option value="Wholesaler 3">Wholesaler 3</option>
-                        <option value="Consumer">Consumer</option>
-                    </select>
-                </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-600">Price (₦)</label>
-                    <input type="number" step="0.01" min="0.01" name="sale_prices[]" placeholder="0.00"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <div>
-                    <button type="button" onclick="removeSalePriceRow(this)"
-                        class="mt-1 px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 remove-btn">
-                        Remove
-                    </button>
-                </div>
-            `;
-
-            container.appendChild(newRow);
-        }
-
-        function removeSalePriceRow(button) {
-            const container = document.getElementById('salePricesContainer');
-            const row = button.closest('.sale-price-row');
-            row.remove();
-
-            const remainingRows = container.querySelectorAll('.sale-price-row');
-            if (remainingRows.length === 1) {
-                remainingRows[0].querySelector('.remove-btn').classList.add('hidden');
-            }
-        }
     </script>
 </x-shop-layout>

@@ -14,7 +14,7 @@
                 @endif
                 <a href="{{ route('admin.assignments.index') }}"
                     class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                    Back to Assignments
+                    Back to Assignments 
                 </a>
             </div>
         </div>
@@ -77,85 +77,126 @@
                         <label class="block text-sm font-medium text-gray-700">Commission Rate</label>
                         <p class="mt-1 text-sm text-gray-900">{{ number_format($assignment->commission_rate, 2) }}%
                         </p>
-                        <!-- Quantity & Financial Summary -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Quantity Summary -->
-                            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                                <div class="p-6">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quantity Summary</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                                    <div class="space-y-4">
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Assigned
-                                                Quantity:</span>
-                                            <span class="text-sm text-gray-900">{{ $assignment->assigned_quantity }}
-                                                units</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Sold Quantity:</span>
-                                            <span class="text-sm text-gray-900">{{ $assignment->sold_quantity }}
-                                                units</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Returned
-                                                Quantity:</span>
-                                            <span class="text-sm text-gray-900">{{ $assignment->returned_quantity }}
-                                                units</span>
-                                        </div>
-                                        <div class="flex justify-between border-t pt-2">
-                                            <span class="text-sm font-medium text-gray-700">Remaining
-                                                Quantity:</span>
-                                            <span
-                                                class="text-sm font-semibold text-gray-900">{{ $assignment->remaining_quantity }}
-                                                units</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- Sale Prices by Customer Type -->
+        @if($assignment->salePrices && $assignment->salePrices->count() > 0)
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+            <div class="p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Sale Prices by Customer Type</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Customer Type
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Sale Price
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($assignment->salePrices as $salePrice)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {{ $salePrice->customer_type }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ₦{{ number_format($salePrice->sale_price, 2) }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
 
-                            <!-- Financial Summary -->
-                            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                                <div class="p-6">
-                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Financial Summary</h3>
+        <!-- Quantity & Financial Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Quantity Summary -->
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quantity Summary</h3>
 
-                                    <div class="space-y-4">
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Expected Selling
-                                                Price:</span>
-                                            <span
-                                                class="text-sm text-gray-900">₦{{ number_format($assignment->expected_selling_price, 2) }}/unit</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Expected Revenue:</span>
-                                            <span
-                                                class="text-sm text-gray-900">₦{{ number_format($assignment->expected_selling_price * $assignment->assigned_quantity, 2) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Actual Sales:</span>
-                                            <span
-                                                class="text-sm text-gray-900">₦{{ number_format($assignment->actual_total_sales, 2) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Expected Profit:</span>
-                                            <span
-                                                class="text-sm text-gray-900">₦{{ number_format($assignment->expected_profit, 2) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-sm font-medium text-gray-700">Actual Profit:</span>
-                                            <span
-                                                class="text-sm text-gray-900">₦{{ number_format($assignment->actual_profit, 2) }}</span>
-                                        </div>
-                                        <div class="flex justify-between border-t pt-2">
-                                            <span class="text-sm font-medium text-gray-700">Profit Collected:</span>
-                                            <span
-                                                class="text-sm font-semibold text-green-600">₦{{ number_format($assignment->profit_collected, 2) }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Assigned
+                                Quantity:</span>
+                            <span class="text-sm text-gray-900">{{ $assignment->assigned_quantity }}
+                                units</span>
                         </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Sold Quantity:</span>
+                            <span class="text-sm text-gray-900">{{ $assignment->sold_quantity }}
+                                units</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Returned
+                                Quantity:</span>
+                            <span class="text-sm text-gray-900">{{ $assignment->returned_quantity }}
+                                units</span>
+                        </div>
+                        <div class="flex justify-between border-t pt-2">
+                            <span class="text-sm font-medium text-gray-700">Remaining
+                                Quantity:</span>
+                            <span
+                                class="text-sm font-semibold text-gray-900">{{ $assignment->remaining_quantity }}
+                                units</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- Sales History -->
+            <!-- Financial Summary -->
+            <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Financial Summary</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Expected Selling
+                                Price:</span>
+                            <span
+                                class="text-sm text-gray-900">₦{{ number_format($assignment->expected_selling_price, 2) }}/unit</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Expected Revenue:</span>
+                            <span
+                                class="text-sm text-gray-900">₦{{ number_format($assignment->expected_selling_price * $assignment->assigned_quantity, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Actual Sales:</span>
+                            <span
+                                class="text-sm text-gray-900">₦{{ number_format($assignment->actual_total_sales, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Expected Profit:</span>
+                            <span
+                                class="text-sm text-gray-900">₦{{ number_format($assignment->expected_profit, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm font-medium text-gray-700">Actual Profit:</span>
+                            <span
+                                class="text-sm text-gray-900">₦{{ number_format($assignment->actual_profit, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between border-t pt-2">
+                            <span class="text-sm font-medium text-gray-700">Profit Collected:</span>
+                            <span
+                                class="text-sm font-semibold text-green-600">₦{{ number_format($assignment->profit_collected, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales History -->
                         <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                             <div class="p-6">
                                 <h3 class="text-lg font-medium text-gray-900 mb-4">Sales History</h3>

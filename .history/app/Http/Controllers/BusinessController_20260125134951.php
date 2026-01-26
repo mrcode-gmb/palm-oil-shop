@@ -127,7 +127,7 @@ class BusinessController extends Controller
             'total_sales' => $business->sales->sum(function($sale){
                 return $sale->selling_price_per_unit * $sale->quantity;
             }),
-            'total_profit' => $business->sales->sum('profit'),
+            'total_profit' => $business->()->sum('profit'),
             'total_quantity_sold' => $business->sales->sum('quantity'),
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
@@ -137,11 +137,6 @@ class BusinessController extends Controller
             }),
             'current_stock_quantity' => $allPurchases->sum('quantity'),
         ];
-
-        $assignment = $business->productAssignments->map(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-        });
-        // return $business->sales->sum("quantity") + $business->purchases->sum("quantity") + $assignment->sum();
         // Fetch transaction histories with pagination
         $sales = $business->sales()->with('user', 'purchase.product')->latest()->paginate(10, ['*'], 'sales');
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
@@ -150,11 +145,11 @@ class BusinessController extends Controller
         $productAssignment = $business->productAssignments->sum(function ($assignment) {
             $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
             return $products * $assignment->purchase->purchase_price;
-        })+$business->creditors->sum("amount");
+        });
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
             $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
             return $products;
-        });
+        }) + $business->creditors->sum("amount");
         $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
 
         $totalCreditorBalance =  $business->creditors->sum("balance");

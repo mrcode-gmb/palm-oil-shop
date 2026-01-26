@@ -7,6 +7,7 @@ use App\Models\ProductAssignment;
 use App\Models\CollectHistory;
 use App\Models\User;
 use App\Models\Purchase;
+use App\Models\SalePrice;
 use App\Traits\BusinessScoped;
 use Carbon\Carbon;
 
@@ -19,7 +20,7 @@ class ProductAssignmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories']);
+        $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories', 'salePrices']);
 
         // Apply filters
         if ($request->filled('user_id')) {
@@ -111,7 +112,27 @@ class ProductAssignmentController extends Controller
             'commission_rate' => 'nullable|numeric|min:0',
             'due_date' => 'nullable|date|after:today',
             'notes' => 'nullable|string|max:1000',
+            'customer_types' => 'nullable|array',
+            'customer_types.*' => 'required|string|in:Dealer,Wholesaler 1,Wholesaler 2,Wholesaler 3,Consumer',
+            'sale_prices' => 'nullable|array',
+            'sale_prices.*' => 'required|numeric|min:0.01',
         ]);
+
+        // Validate that both arrays have the same length and no empty combinations
+        if ($request->customer_types && $request->sale_prices) {
+            if (count($request->customer_types) !== count($request->sale_prices)) {
+                return back()->withErrors(['sale_prices' => 'Customer types and prices must match.']);
+            }
+
+            foreach ($request->customer_types as $index => $type) {
+                if (empty($type) && !empty($request->sale_prices[$index])) {
+                    return back()->withErrors(['customer_types' => 'Please select customer type for all price entries.']);
+                }
+                if (!empty($type) && empty($request->sale_prices[$index])) {
+                    return back()->withErrors(['sale_prices' => 'Please enter price for all customer types.']);
+                }
+            }
+        }
 
         // Check if enough quantity is available in the purchase
         $purchase = $this->scopeToCurrentBusiness(Purchase::class)->findOrFail($request->purchase_id);
@@ -148,6 +169,26 @@ class ProductAssignmentController extends Controller
         
         $assignment = ProductAssignment::create($data);
 
+        // Create sale prices if provided
+        if ($request->customer_types && $request->sale_prices) {
+            $salePrices = [];
+            foreach ($request->customer_types as $index => $customerType) {
+                if (!empty($customerType) && !empty($request->sale_prices[$index])) {
+                    $salePrices[] = [
+                        'product_assignment_id' => $assignment->id,
+                        'customer_type' => $customerType,
+                        'sale_price' => $request->sale_prices[$index],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+
+            if (!empty($salePrices)) {
+                \App\Models\SalePrice::insert($salePrices);
+            }
+        }
+
         // Update inventory
         $purchase->decrement('quantity', $request->assigned_quantity);
         $purchase->product->decrement('current_stock', $request->assigned_quantity);
@@ -157,7 +198,7 @@ class ProductAssignmentController extends Controller
     }
     public function show(ProductAssignment $assignment)
     {
-        $assignment->load(['user', 'purchase.product', 'sales', 'collectionHistories.collectedBy']);
+        $assignment->load(['user', 'purchase.product', 'sales', 'collectionHistories.collectedBy', 'salePrices']);
         return view('assignments.show', compact('assignment'));
     }
 
@@ -167,7 +208,7 @@ class ProductAssignmentController extends Controller
     public function myAssignments()
     {
         $user = auth()->user();
-        $assignments = $user->assignments()->with(['purchase.product', 'sales'])
+        $assignments = $user->assignments()->with(['purchase.product', 'sales', 'salePrices'])
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -278,7 +278,7 @@ class SalesController extends Controller
             $assignments = collect(); // Empty collection for admin
         } else {
             // Staff can only sell from their assigned products
-            $assignments = $user->activeAssignments()->with(['purchase.product'])->get();
+            $assignments = $user->activeAssignments()->with(['purchase.product', 'salePrices'])->get();
             $products = collect(); // Empty collection for staff
         }
         
