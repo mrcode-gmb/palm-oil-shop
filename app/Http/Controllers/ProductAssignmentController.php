@@ -86,6 +86,11 @@ class ProductAssignmentController extends Controller
         $totalExpectedProfit = $assignments->sum('expected_profit');
         $totalActualProfit = $assignments->sum('actual_profit');
         
+        // Calculate total cost of assigned products (purchase price * assigned quantity)
+        $totalCost = $assignments->sum(function($assignment) {
+            return $assignment->purchase->purchase_price * $assignment->assigned_quantity;
+        });
+        
         // Get users for filter dropdown - only from current business
         $users = $this->scopeToCurrentBusiness(User::class)
             ->where('role', 'salesperson')
@@ -114,7 +119,8 @@ class ProductAssignmentController extends Controller
             'totalExpectedRevenue',
             'totalActualSales',
             'totalExpectedProfit',
-            'totalActualProfit'
+            'totalActualProfit',
+            'totalCost'
         ));
     }
 

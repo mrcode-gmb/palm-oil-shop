@@ -139,6 +139,10 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Financial Summary</h3>
                     <div class="space-y-3">
                         <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Total Cost:</span>
+                            <span class="text-sm font-semibold text-red-600">₦{{ number_format($totalCost, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
                             <span class="text-sm text-gray-600">Expected Revenue:</span>
                             <span class="text-sm font-semibold text-gray-900">₦{{ number_format($totalExpectedRevenue, 2) }}</span>
                         </div>
