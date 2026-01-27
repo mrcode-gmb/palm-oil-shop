@@ -66,6 +66,26 @@ class ProductAssignmentController extends Controller
 
         $assignments = $query->orderBy('created_at', 'desc')->get();
         
+        // Calculate summary statistics
+        $totalAssignments = $assignments->count();
+        $activeAssignments = $assignments->where('status', 'assigned')->count() + $assignments->where('status', 'in_progress')->count();
+        $completedAssignments = $assignments->where('status', 'completed')->count();
+        $overdueAssignments = $assignments->filter(function($assignment) {
+            return $assignment->isOverdue();
+        })->count();
+        
+        $totalAssignedQty = $assignments->sum('assigned_quantity');
+        $totalSoldQty = $assignments->sum('sold_quantity');
+        $totalCollectedQty = $assignments->sum('total_collected_quantity');
+        $totalRemainingQty = $assignments->sum('remaining_quantity');
+        
+        $totalExpectedRevenue = $assignments->sum(function($assignment) {
+            return $assignment->expected_selling_price * $assignment->assigned_quantity;
+        });
+        $totalActualSales = $assignments->sum('actual_total_sales');
+        $totalExpectedProfit = $assignments->sum('expected_profit');
+        $totalActualProfit = $assignments->sum('actual_profit');
+        
         // Get users for filter dropdown - only from current business
         $users = $this->scopeToCurrentBusiness(User::class)
             ->where('role', 'salesperson')
@@ -79,7 +99,23 @@ class ProductAssignmentController extends Controller
             ['export' => 'pdf']
         ));
 
-        return view('assignments.index', compact('assignments', 'users', 'exportUrl'));
+        return view('assignments.index', compact(
+            'assignments', 
+            'users', 
+            'exportUrl',
+            'totalAssignments',
+            'activeAssignments',
+            'completedAssignments',
+            'overdueAssignments',
+            'totalAssignedQty',
+            'totalSoldQty',
+            'totalCollectedQty',
+            'totalRemainingQty',
+            'totalExpectedRevenue',
+            'totalActualSales',
+            'totalExpectedProfit',
+            'totalActualProfit'
+        ));
     }
 
     /**
