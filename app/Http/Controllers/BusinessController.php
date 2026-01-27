@@ -138,31 +138,86 @@ class BusinessController extends Controller
             'current_stock_quantity' => $allPurchases->sum('quantity'),
         ];
 
-        $assignment = $business->productAssignments->map(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-        });
-        // return $business->sales->sum("quantity") + $business->purchases->sum("quantity") + $assignment->sum();
         // Fetch transaction histories with pagination
         $sales = $business->sales()->with('user', 'purchase.product')->latest()->paginate(10, ['*'], 'sales');
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
         $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
         $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
-        $productAssignment = $business->productAssignments->sum(function ($assignment) {
-            $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-            return $products * $assignment->purchase->purchase_price;
-        })+$business->creditors->sum("amount");
-        $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-            return $products;
+        
+        // Calculate cost of remaining products in assignments (unsold inventory with staff)
+        // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
+        $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
+            return $assignment->remaining_quantity * $assignment->purchase->purchase_price;
         });
-        $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
-
-        $totalCreditorBalance =  $business->creditors->sum("balance");
-
-        $actualWalletBalance =  $business->wallet->balance + $productAssignment + $business->purchases->sum(function ($purchases) {
+        
+        $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
+            return $assignment->remaining_quantity;
+        });
+        
+        // Calculate cost of inventory in warehouse (actual remaining stock in purchases table)
+        // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)
+        $warehouseInventoryCost = $business->purchases->sum(function ($purchases) {
             return $purchases->quantity * $purchases->purchase_price;
-        }) + $business->creditors->sum("balance");
-        $actualProfit = $actualWalletBalance - $business->businessCapital->balance;
+        });
+        
+        // Total inventory cost = warehouse stock + assigned stock (both are separate physical locations)
+        // Warehouse: What's physically in the warehouse (purchases.quantity)
+        // Assigned: What's physically with staff (assigned - sold - returned)
+        $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost;
+        
+        // Calculate net profit with detailed breakdown
+        $totalSalesProfit = $stats['total_profit'];
+        $totalExpenses = $stats['total_expenses'];
+        $totalCommission = $total_commission;
+        
+        $net_profit = $totalSalesProfit - $totalExpenses - $totalCommission;
+
+        // Money owed to the business by creditors (receivables)
+        $totalCreditorBalance = $business->creditors->sum("balance");
+
+        // Actual Profit = Net Profit (operating profit from sales)
+        // This is the real profit earned: Sales Profit - Expenses - Commission
+        $actualProfit = $net_profit;
+        
+        // Debug information for discrepancy checking
+        $profitBreakdown = [
+            'sales_profit' => $totalSalesProfit,
+            'expenses' => $totalExpenses,
+            'commission' => $totalCommission,
+            'net_profit' => $net_profit,
+        ];
+        
+        // Detailed diagnostic data for checking database inconsistencies
+        $diagnostics = [
+            // Product Assignments Check
+            'total_assignments' => $business->productAssignments->count(),
+            'assignments_with_commission' => $business->productAssignments->where('commission_amount', '>', 0)->count(),
+            'total_commission_from_db' => $business->productAssignments->sum('commission_amount'),
+            'commission_used_in_calc' => $total_commission,
+            
+            // Purchases Check
+            'total_purchase_records' => $business->purchases->count(),
+            'warehouse_qty' => $business->purchases->sum('quantity'),
+            'warehouse_cost' => $warehouseInventoryCost,
+            
+            // Assignment Inventory Check
+            'assigned_qty' => $productAssignmentQuantity,
+            'assigned_cost' => $productAssignmentCost,
+            
+            // Sales Check
+            'total_sales_count' => $business->sales->count(),
+            'sales_profit_sum' => $business->sales->sum('profit'),
+            'sales_profit_in_stats' => $stats['total_profit'],
+            
+            // Expenses Check
+            'expenses_count' => $business->expenses->count(),
+            'expenses_sum' => $business->expenses->sum('amount'),
+            'expenses_in_stats' => $stats['total_expenses'],
+        ];
+        
+        // Actual Wallet Balance = Cash + Receivables + Inventory Value
+        // This shows total business value (liquid + non-liquid assets)
+        $actualWalletBalance = $business->wallet->balance + $totalCreditorBalance + $totalInventoryCost;
 
         return view('super-admin.businesses.show', compact(
             'business',
@@ -173,10 +228,15 @@ class BusinessController extends Controller
             'creditorTransactions',
             'total_commission',
             'net_profit',
-            'productAssignment',
+            'productAssignmentCost',
             'productAssignmentQuantity',
+            'warehouseInventoryCost',
+            'totalInventoryCost',
+            'totalCreditorBalance',
             'actualWalletBalance',
             'actualProfit',
+            'profitBreakdown',
+            'diagnostics',
         ));
     }
     public function balanceWallet(Business $business)

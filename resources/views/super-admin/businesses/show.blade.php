@@ -220,12 +220,12 @@
                 <p class="text-xs text-gray-500 mt-1">{{ $stats['current_stock_quantity'] ?? 0 }} items in stock</p>
             </div>
 
-            <!-- Total Inventory Value -->
+            <!-- Product Assignment Cost -->
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Remaining Product Assignment</p>
-                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($productAssignment ?? 0, 2) }}</p>
+                        <p class="text-sm font-medium text-gray-600">Assignment Inventory Cost</p>
+                        <p class="text-2xl font-bold text-gray-900">₦{{ number_format($productAssignmentCost ?? 0, 2) }}</p>
                     </div>
                     <div class="bg-blue-100 rounded-full p-2">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ $productAssignmentQuantity ?? 0 }} items in stock</p>
+                <p class="text-xs text-gray-500 mt-1">{{ $productAssignmentQuantity ?? 0 }} items with staff</p>
             </div>
 
             <!-- Total Purchases -->
@@ -511,6 +511,139 @@
         </div>
         <div class="mt-4">
             {{ $creditorTransactions->links() }}
+        </div>
+    </div>
+
+    <!-- Database Diagnostics Section (for debugging) -->
+    <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-xl font-bold text-yellow-900 mb-4">🔍 Database Diagnostics (Debug Mode)</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Product Assignments Check -->
+            <div class="bg-white p-4 rounded-lg border border-yellow-200">
+                <h4 class="font-semibold text-gray-900 mb-3">Product Assignments</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Assignments:</span>
+                        <span class="font-semibold">{{ $diagnostics['total_assignments'] }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">With Commission:</span>
+                        <span class="font-semibold">{{ $diagnostics['assignments_with_commission'] }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Commission (DB):</span>
+                        <span class="font-semibold text-blue-600">₦{{ number_format($diagnostics['total_commission_from_db'], 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Commission Used:</span>
+                        <span class="font-semibold text-green-600">₦{{ number_format($diagnostics['commission_used_in_calc'], 2) }}</span>
+                    </div>
+                    @if($diagnostics['total_commission_from_db'] != $diagnostics['commission_used_in_calc'])
+                        <div class="mt-2 p-2 bg-red-100 border border-red-300 rounded">
+                            <span class="text-red-700 font-semibold">⚠️ MISMATCH!</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Sales Check -->
+            <div class="bg-white p-4 rounded-lg border border-yellow-200">
+                <h4 class="font-semibold text-gray-900 mb-3">Sales Records</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Sales:</span>
+                        <span class="font-semibold">{{ $diagnostics['total_sales_count'] }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Profit Sum (DB):</span>
+                        <span class="font-semibold text-blue-600">₦{{ number_format($diagnostics['sales_profit_sum'], 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Profit in Stats:</span>
+                        <span class="font-semibold text-green-600">₦{{ number_format($diagnostics['sales_profit_in_stats'], 2) }}</span>
+                    </div>
+                    @if($diagnostics['sales_profit_sum'] != $diagnostics['sales_profit_in_stats'])
+                        <div class="mt-2 p-2 bg-red-100 border border-red-300 rounded">
+                            <span class="text-red-700 font-semibold">⚠️ MISMATCH!</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Expenses Check -->
+            <div class="bg-white p-4 rounded-lg border border-yellow-200">
+                <h4 class="font-semibold text-gray-900 mb-3">Expenses Records</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Expenses:</span>
+                        <span class="font-semibold">{{ $diagnostics['expenses_count'] }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Expenses Sum (DB):</span>
+                        <span class="font-semibold text-blue-600">₦{{ number_format($diagnostics['expenses_sum'], 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Expenses in Stats:</span>
+                        <span class="font-semibold text-green-600">₦{{ number_format($diagnostics['expenses_in_stats'], 2) }}</span>
+                    </div>
+                    @if($diagnostics['expenses_sum'] != $diagnostics['expenses_in_stats'])
+                        <div class="mt-2 p-2 bg-red-100 border border-red-300 rounded">
+                            <span class="text-red-700 font-semibold">⚠️ MISMATCH!</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Inventory Check -->
+            <div class="bg-white p-4 rounded-lg border border-yellow-200">
+                <h4 class="font-semibold text-gray-900 mb-3">Inventory Status</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Purchase Records:</span>
+                        <span class="font-semibold">{{ $diagnostics['total_purchase_records'] }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Warehouse Qty:</span>
+                        <span class="font-semibold">{{ $diagnostics['warehouse_qty'] }} units</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Warehouse Cost:</span>
+                        <span class="font-semibold">₦{{ number_format($diagnostics['warehouse_cost'], 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Assigned Qty:</span>
+                        <span class="font-semibold">{{ $diagnostics['assigned_qty'] }} units</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Assigned Cost:</span>
+                        <span class="font-semibold">₦{{ number_format($diagnostics['assigned_cost'], 2) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Calculation Breakdown -->
+        <div class="mt-6 bg-white p-4 rounded-lg border border-yellow-200">
+            <h4 class="font-semibold text-gray-900 mb-3">Profit Calculation Breakdown</h4>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Sales Profit:</span>
+                    <span class="font-semibold text-green-600">₦{{ number_format($profitBreakdown['sales_profit'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">- Expenses:</span>
+                    <span class="font-semibold text-red-600">₦{{ number_format($profitBreakdown['expenses'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">- Commission:</span>
+                    <span class="font-semibold text-red-600">₦{{ number_format($profitBreakdown['commission'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t-2 border-gray-300">
+                    <span class="text-gray-900 font-bold">= Net Profit:</span>
+                    <span class="font-bold text-blue-600 text-lg">₦{{ number_format($profitBreakdown['net_profit'], 2) }}</span>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
