@@ -147,11 +147,11 @@ class BusinessController extends Controller
         // Calculate cost of remaining products in assignments (unsold inventory with staff)
         // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->remaining_quantity * $assignment->purchase->purchase_price;
+            return ($assignment->sold_quantity) * $assignment->purchase->purchase_price;
         });
-        
+        // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->remaining_quantity;
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
         });
         
         // Calculate cost of inventory in warehouse (actual remaining stock in purchases table)
@@ -163,8 +163,11 @@ class BusinessController extends Controller
         // Total inventory cost = warehouse stock + assigned stock (both are separate physical locations)
         // Warehouse: What's physically in the warehouse (purchases.quantity)
         // Assigned: What's physically with staff (assigned - sold - returned)
-        $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost;
-        
+        return [number_format($productAssignmentCost), number_format($business->sales->sum(function($sale){
+            return $sale->purchase->purchase_price * $sale->quantity;
+        }))];
+        $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost + $business->sales->sum('total_amount');
+        return number_format($totalInventoryCost, 2);
         // Calculate net profit with detailed breakdown
         $totalSalesProfit = $stats['total_profit'];
         $totalExpenses = $stats['total_expenses'];
@@ -218,6 +221,7 @@ class BusinessController extends Controller
         // Actual Wallet Balance = Cash + Receivables + Inventory Value
         // This shows total business value (liquid + non-liquid assets)
         $actualWalletBalance = $business->wallet->balance + $totalCreditorBalance + $totalInventoryCost;
+        // return number_format($actualWalletBalance, 2);
 
         return view('super-admin.businesses.show', compact(
             'business',
