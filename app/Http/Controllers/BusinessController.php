@@ -163,9 +163,9 @@ class BusinessController extends Controller
         // Total inventory cost = warehouse stock + assigned stock (both are separate physical locations)
         // Warehouse: What's physically in the warehouse (purchases.quantity)
         // Assigned: What's physically with staff (assigned - sold - returned)
-        return [number_format($productAssignmentCost), number_format($business->sales->sum(function($sale){
-            return $sale->purchase->purchase_price * $sale->quantity;
-        }))];
+        // return [number_format($productAssignmentCost), number_format($business->sales->sum(function($sale){
+        //     return $sale->purchase->purchase_price * $sale->quantity;
+        // }))];
         $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost;
         
         // Calculate net profit with detailed breakdown
