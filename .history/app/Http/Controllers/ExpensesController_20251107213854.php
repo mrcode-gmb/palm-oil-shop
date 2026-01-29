@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use PDF;
 use Carbon\Carbon;
 use App\Models\Sale;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Expenses;
 use App\Models\Purchase;
-use Illuminate\Http\Request;
-use App\Traits\BusinessScoped;
-use App\Models\ProductAssignment;
 use App\Exports\ExpensesPdfExport;
+use App\Traits\BusinessScoped;
+use Illuminate\Http\Request;
+use PDF;
 
 class ExpensesController extends Controller
 {
     use BusinessScoped;
-
+    
     /**
      * Display a listing of the resource.
      */
@@ -28,33 +27,7 @@ class ExpensesController extends Controller
             ->when($request->end_date, fn($q) => $q->whereDate('created_at', '<=', $request->end_date))
             ->when($request->supplier, fn($q) => $q->where('name', 'like', '%' . $request->supplier . '%'))
             ->latest();
-        $query2 = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories', 'salePrices']);
-        $quantities = $query2->where("status", "!=", "completed")->get()->map(function ($assignment) {
-            return [
-                'id' => $assignment->id,
-                'user_id' => $assignment->user_id,
-                'user_name' => $assignment->user->name,
-                'product_id' => $assignment->product_id,
-                'product_name' => $assignment->purchase->product->name,
-                'assigned_quantity' => $assignment->assigned_quantity,
-                'sold_quantity' => $assignment->sold_quantity,
-                'returned_quantity' => $assignment->returned_quantity,
-                'quantity' => $assignment->assigned_quantity - $assignment->returned_quantity - $assignment->sold_quantity,
-                'expected_selling_price' => $assignment->expected_selling_price,
-                'commission_rate' => $assignment->commission_rate,
-                'due_date' => $assignment->due_date,
-                'status' => $assignment->status
 
-            ];
-        });
-        foreach ($quantities as $quantity) {
-            if ($quantity['status'] != 'completed' && $quantity['quantity'] == 0) {
-                // $quantity['status'] = 'completed';
-                ProductAssignment::where("id", $quantity['id'])->update([
-                    'status' => 'completed'
-                ]);
-            }
-        }
         // Handle PDF export
         if ($request->has('export') && $request->export === 'pdf') {
             $filters = [
@@ -62,19 +35,19 @@ class ExpensesController extends Controller
                 'end_date' => $request->end_date,
                 'supplier' => $request->supplier
             ];
-
+            
             $expenses = $query->get();
-
+            
             $pdf = PDF::loadView('exports.expenses-pdf', [
                 'expenses' => $expenses,
                 'filters' => $filters
             ])->setPaper('a4', 'portrait');
-
+            
             return $pdf->download('expenses-report-' . now()->format('Y-m-d') . '.pdf');
         }
 
         $expenses = $query->paginate(10);
-
+        
         // Get the current URL with all query parameters for export
         $exportUrl = url()->current() . '?' . http_build_query(array_merge(
             $request->query(),
@@ -116,7 +89,7 @@ class ExpensesController extends Controller
         $todayProfit = $this->scopeToCurrentBusiness(Sale::class)
             ->whereDate('sale_date', $today)
             ->sum('net_profit_per_unit');
-
+        
         // Create expense with business_id
         $data = $this->addBusinessId([
             'user_id' => $user_id,
@@ -127,7 +100,7 @@ class ExpensesController extends Controller
             'date' => $request->date,
             'notes' => $request->notes,
         ]);
-
+        
         Expenses::create($data);
 
         return redirect()->route('expenses.index')->with('success', 'Expense recorded successfully.');
@@ -170,7 +143,7 @@ class ExpensesController extends Controller
         ]);
 
         return redirect()->route('expenses.index')
-            ->with('success', 'Expense updated successfully');
+                        ->with('success', 'Expense updated successfully');
     }
 
     /**
@@ -181,6 +154,6 @@ class ExpensesController extends Controller
         $expense->delete();
 
         return redirect()->route('expenses.index')
-            ->with('success', 'Expense deleted successfully');
+                        ->with('success', 'Expense deleted successfully');
     }
 }

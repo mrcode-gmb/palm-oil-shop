@@ -21,7 +21,7 @@ class ProductAssignmentController extends Controller
     public function index(Request $request)
     {
         $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories', 'salePrices']);
-        
+        return $query->where()->get();
         // Apply filters
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);

@@ -21,7 +21,18 @@ class ProductAssignmentController extends Controller
     public function index(Request $request)
     {
         $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories', 'salePrices']);
-        
+        return $query->where("status", "!=", "completed")->map(function ($assignment) {
+            return [
+                'id' => $assignment->id,
+                'user_id' => $assignment->user_id,
+                'user_name' => $assignment->user->name,
+                'product_id' => $assignment->product_id,
+                'product_name' => $assignment->purchase->product->name,
+                'assigned_quantity' => $assignment->assigned_quantity,
+                'remaining_quantity' => $assignment->remaining_quantity,
+                'expected_selling_price' => $assignment->expected_selling_price,
+            ]
+        });
         // Apply filters
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
