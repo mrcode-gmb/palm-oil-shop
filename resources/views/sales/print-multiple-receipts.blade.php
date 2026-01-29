@@ -6,18 +6,18 @@
     <title>Sales Receipt</title>
     <style>
         @page {
-            size: 80mm 297mm;
+            size: 80mm auto;
             margin: 0;
-            padding: 0;
         }
 
         body {
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            width: 75mm;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.35;
+            width: 72mm;
             margin: 0 auto;
             padding: 2mm;
-            line-height: 1.1;
+            -webkit-print-color-adjust: exact;
         }
 
         .text-center {
@@ -28,9 +28,6 @@
             text-align: right;
         }
 
-        .text-bold {
-            font-weight: bold;
-        }
 
         .text-large {
             font-size: 12px;
@@ -41,7 +38,11 @@
         }
 
         .text-small {
-            font-size: 9px;
+            font-size: 11px;
+        }
+
+        .text-bold {
+            font-weight: 700;
         }
 
         .divider {
