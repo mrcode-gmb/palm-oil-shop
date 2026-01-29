@@ -187,8 +187,8 @@ class ProductAssignmentController extends Controller
             
         // $availableQuantity = $purchase->quantity - $assignedQuantity;
         
-        if ($request->assigned_quantity > $purchase->quantity) {
-            return back()->withErrors(['assigned_quantity' => 'Not enough quantity available. Available: ' .  $purchase->quantity]);
+        if ($request->pu > $availableQuantity) {
+            return back()->withErrors(['assigned_quantity' => 'Not enough quantity available. Available: ' . $availableQuantity]);
         }
 
         // Calculate commission amount

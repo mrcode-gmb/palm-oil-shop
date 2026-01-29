@@ -185,10 +185,10 @@ class ProductAssignmentController extends Controller
             ->whereIn('status', ['assigned', 'in_progress'])
             ->sum('assigned_quantity');
             
-        // $availableQuantity = $purchase->quantity - $assignedQuantity;
+        $availableQuantity = $purchase->quantity - $assignedQuantity;
         
-        if ($request->assigned_quantity > $purchase->quantity) {
-            return back()->withErrors(['assigned_quantity' => 'Not enough quantity available. Available: ' .  $purchase->quantity]);
+        if ($request->assigned_quantity > $availableQuantity) {
+            return back()->withErrors(['assigned_quantity' => 'Not enough quantity available. Available: ' . $availableQuantity]);
         }
 
         // Calculate commission amount
