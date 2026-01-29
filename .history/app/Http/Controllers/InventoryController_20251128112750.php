@@ -21,7 +21,7 @@ class InventoryController extends Controller
         
         if ($user->isAdmin()) {
             // Admin sees inventory from their business only
-            $query = $this->scopeToCurrentBusiness(Purchase::class)->with('product')->where("quantity", ">", 0);
+            $query = $this->scopeToCurrentBusiness(Purchase::class)->with('product');
 
             // Filter by unit type
             if ($request->filled('unit_type')) {
