@@ -11,7 +11,7 @@
         }
 
         body {
-            font-family: monospace;
+            font-family: sans-serif;
             font-size: 12px;
             line-height: 1.35;
             width: 72mm;
