@@ -126,28 +126,29 @@ class PurchaseController extends Controller
 
         return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully!');
     }
-    public function storeRestock(Request $request)
+    public function store(Request $request)
     {
 
         // return $request;
         $request->validate([
-            'purchase_id' => 'required|exists:purchases,id',
+            'product_id' => 'required|exists:products,id',
             'supplier_name' => 'required|string|max:255',
             'supplier_phone' => 'nullable|string|max:20',
             'quantity' => 'required|numeric|min:0.01',
             'buying_price_per_unit' => 'required|numeric|min:0',
+            // 'selling_price' => 'required|numeric|min:0',
             'selling_profit_per_unit' => 'nullable|numeric|min:0',
             'purchase_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
+
         $totalCost = $request->quantity * $request->buying_price_per_unit;
 
 
-        $purchase = Purchase::where("id", $request->purchase_id)->first();
 
         // Create the purchase with business_id
         $data = $this->addBusinessId([
-            'product_id' => $purchase->product_id,
+            'product_id' => $request->product_id,
             'user_id' => auth()->id(),
             'supplier_name' => $request->supplier_name,
             'supplier_phone' => $request->supplier_phone,
@@ -159,13 +160,12 @@ class PurchaseController extends Controller
             'purchase_date' => $request->purchase_date,
             'notes' => $request->notes,
         ]);
-        $purchase->quantity += $request->quantity;
-        $purchase->total_cost += $totalCost;
-        $purchase->save();
+
+        $purchase = Purchase::create($data);
         $purchaseHistories = PurchaseHistory::create($data);
 
         // Update product stock
-        $product = Product::findOrFail($purchase->product_id);
+        $product = Product::findOrFail($request->product_id);
         $product->addStock($request->quantity);
 
         $businessWallet = auth()->user()->business->wallet;
@@ -186,6 +186,7 @@ class PurchaseController extends Controller
         return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully!');
     }
 
+    storeRestock
     /**
      * Display the specified purchase
      */

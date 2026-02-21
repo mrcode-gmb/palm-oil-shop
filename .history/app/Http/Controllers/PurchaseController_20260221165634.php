@@ -143,29 +143,27 @@ class PurchaseController extends Controller
         $totalCost = $request->quantity * $request->buying_price_per_unit;
 
 
-        $purchase = Purchase::where("id", $request->purchase_id)->first();
 
         // Create the purchase with business_id
-        $data = $this->addBusinessId([
-            'product_id' => $purchase->product_id,
-            'user_id' => auth()->id(),
-            'supplier_name' => $request->supplier_name,
-            'supplier_phone' => $request->supplier_phone,
-            'quantity' => $request->quantity,
-            'purchase_price' => $request->buying_price_per_unit,
-            'total_cost' => $totalCost,
-            'selling_price' => 0,
-            'seller_profit' => $request->selling_profit_per_unit,
-            'purchase_date' => $request->purchase_date,
-            'notes' => $request->notes,
-        ]);
-        $purchase->quantity += $request->quantity;
-        $purchase->total_cost += $totalCost;
-        $purchase->save();
+        // $data = $this->addBusinessId([
+        //     'product_id' => $request->purchase_id,
+        //     'user_id' => auth()->id(),
+        //     'supplier_name' => $request->supplier_name,
+        //     'supplier_phone' => $request->supplier_phone,
+        //     'quantity' => $request->quantity,
+        //     'purchase_price' => $request->buying_price_per_unit,
+        //     'total_cost' => $totalCost,
+        //     'selling_price' => 0,
+        //     'seller_profit' => $request->selling_profit_per_unit,
+        //     'purchase_date' => $request->purchase_date,
+        //     'notes' => $request->notes,
+        // ]);
+        $purchase = Purchase::where("id", $request->purchase_id)->first();
+        $purchase->quantity += $request->quantity
         $purchaseHistories = PurchaseHistory::create($data);
 
         // Update product stock
-        $product = Product::findOrFail($purchase->product_id);
+        $product = Product::findOrFail($request->product_id);
         $product->addStock($request->quantity);
 
         $businessWallet = auth()->user()->business->wallet;

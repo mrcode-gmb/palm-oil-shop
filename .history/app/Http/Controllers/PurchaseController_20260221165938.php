@@ -144,7 +144,7 @@ class PurchaseController extends Controller
 
 
         $purchase = Purchase::where("id", $request->purchase_id)->first();
-
+        return ;
         // Create the purchase with business_id
         $data = $this->addBusinessId([
             'product_id' => $purchase->product_id,
@@ -159,13 +159,14 @@ class PurchaseController extends Controller
             'purchase_date' => $request->purchase_date,
             'notes' => $request->notes,
         ]);
+
         $purchase->quantity += $request->quantity;
         $purchase->total_cost += $totalCost;
         $purchase->save();
         $purchaseHistories = PurchaseHistory::create($data);
 
         // Update product stock
-        $product = Product::findOrFail($purchase->product_id);
+        $product = Product::findOrFail($request->product_id);
         $product->addStock($request->quantity);
 
         $businessWallet = auth()->user()->business->wallet;

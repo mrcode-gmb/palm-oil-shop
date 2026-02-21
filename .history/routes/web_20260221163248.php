@@ -117,8 +117,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     // Replace the single resource route with explicit routes
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::get('/purchases/restock/{purchase}', [PurchaseController::class, 'restock'])->name('purchases.restock');
-    Route::post('/purchases/restock/store', [PurchaseController::class, 'storeRestock'])->name('purchases.storeRestock');
+    Route::get('/purchases/restock', [PurchaseController::class, 'restock'])->name('purchases.restock');
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
     Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
     Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');

@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Purchase;
-use App\Models\PurchaseHistory;
-use App\Models\Product;
-use App\Traits\BusinessScoped;
-use App\Models\ProductAssignment;
 use Carbon\Carbon;
+use App\Models\Product;
+use App\Models\Purchase;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Traits\BusinessScoped;
+use App\Models\PurchaseHistory;
+use App\Models\ProductAssignment;
 
 class PurchaseController extends Controller
 {
     use BusinessScoped;
-    
+
     /**
      * Display a listing of purchases
      */
@@ -42,7 +43,7 @@ class PurchaseController extends Controller
         $purchases = $query->orderBy('created_at', 'desc')->get();
         $products = $this->scopeToCurrentBusiness(Product::class)->get();
 
-        // return $purchases; 
+        // return $purchases;
         return view('purchases.index', compact('purchases', 'products'));
     }
 
@@ -55,12 +56,20 @@ class PurchaseController extends Controller
         return view('purchases.create', compact('products'));
     }
 
+    public function restock($purchase)
+    {
+
+        $purchase = $this->scopeToCurrentBusiness(Purchase::class)->with('product')->where("quantity", ">", 0)->where("id", $purchase)->first();
+
+
+        return view('purchases.restock', compact('purchase'));
+    }
     /**
      * Store a newly created purchase
      */
     public function store(Request $request)
     {
-        
+
         // return $request;
         $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -73,11 +82,11 @@ class PurchaseController extends Controller
             'purchase_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
-        
+
         $totalCost = $request->quantity * $request->buying_price_per_unit;
-        
-        
-        
+
+
+
         // Create the purchase with business_id
         $data = $this->addBusinessId([
             'product_id' => $request->product_id,
@@ -92,12 +101,72 @@ class PurchaseController extends Controller
             'purchase_date' => $request->purchase_date,
             'notes' => $request->notes,
         ]);
-        
+
         $purchase = Purchase::create($data);
         $purchaseHistories = PurchaseHistory::create($data);
 
         // Update product stock
         $product = Product::findOrFail($request->product_id);
+        $product->addStock($request->quantity);
+
+        $businessWallet = auth()->user()->business->wallet;
+        $businessWallet->balance -= $totalCost;
+        $businessWallet->save();
+
+        $transaction = $businessWallet->transactions()->create([
+            'wallet_id' => $businessWallet->id,
+            'business_id'=> auth()->user()->business->id,
+            'amount' => $totalCost,
+            'type' => "debit",
+            'reference' => 'PURCHASE-' . strtoupper(Str::random(10)),
+            'description' => "Purchase product history",
+            'status' => 'completed',
+            'metadata' => $data
+        ]);
+
+        return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully!');
+    }
+    public function storeRestock(Request $request)
+    {
+
+        // return $request;
+        $request->validate([
+            'purchase_id' => 'required|exists:purchases,id',
+            'supplier_name' => 'required|string|max:255',
+            'supplier_phone' => 'nullable|string|max:20',
+            'quantity' => 'required|numeric|min:0.01',
+            'buying_price_per_unit' => 'required|numeric|min:0',
+            'selling_profit_per_unit' => 'nullable|numeric|min:0',
+            'purchase_date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+        $totalCost = $request->quantity * $request->buying_price_per_unit;
+
+
+        $purchase = Purchase::where("id", $request->purchase_id)->first();
+
+        // Create the purchase with business_id
+        $data = $this->addBusinessId([
+            'product_id' => $purchase->product_id,
+            'user_id' => auth()->id(),
+            'supplier_name' => $request->supplier_name,
+            'supplier_phone' => $request->supplier_phone,
+            'quantity' => $request->quantity,
+            'purchase_price' => $request->buying_price_per_unit,
+            'total_cost' => $totalCost,
+            'selling_price' => 0,
+            'seller_profit' => $request->selling_profit_per_unit,
+            'purchase_date' => $request->purchase_date,
+            'notes' => $request->notes,
+        ]);
+        return "Yes";
+        $purchase->quantity += $request->quantity;
+        $purchase->total_cost += $totalCost;
+        $purchase->save();
+        $purchaseHistories = PurchaseHistory::create($data);
+
+        // Update product stock
+        $product = Product::findOrFail($purchase->product_id);
         $product->addStock($request->quantity);
 
         $businessWallet = auth()->user()->business->wallet;

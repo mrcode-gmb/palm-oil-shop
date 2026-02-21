@@ -17,28 +17,28 @@
                 <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
-                        <input type="date"
-                               id="start_date"
-                               name="start_date"
-                               value="{{ request('start_date') }}"
+                        <input type="date" 
+                               id="start_date" 
+                               name="start_date" 
+                               value="{{ request('start_date') }}" 
                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
                     <div>
                         <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-                        <input type="date"
-                               id="end_date"
-                               name="end_date"
-                               value="{{ request('end_date') }}"
+                        <input type="date" 
+                               id="end_date" 
+                               name="end_date" 
+                               value="{{ request('end_date') }}" 
                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
                     <div>
                         <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier</label>
-                        <input type="text"
-                               id="supplier"
-                               name="supplier"
-                               value="{{ request('supplier') }}"
+                        <input type="text" 
+                               id="supplier" 
+                               name="supplier" 
+                               value="{{ request('supplier') }}" 
                                placeholder="Search by supplier name"
                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>

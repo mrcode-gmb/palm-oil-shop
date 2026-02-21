@@ -47,29 +47,29 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(function () {
     // Dashboard
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('super-admin.dashboard');
-
+    
     // Business Management
     Route::resource('businesses', BusinessController::class)->names('super-admin.businesses');
     Route::patch('/businesses/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])->name('super-admin.businesses.toggle-status');
     Route::get('/businesses/{business}/users', [BusinessController::class, 'users'])->name('super-admin.businesses.users');
     Route::get('/businesses/{business}/balance-wallet', [BusinessController::class, 'balanceWallet'])->name('super-admin.businesses.walletBalance');
     Route::get('/businesses/{business}/analytics', [BusinessController::class, 'analytics'])->name('super-admin.businesses.analytics');
-
+    
     // Global User Management
     Route::get('/users', [SuperAdminController::class, 'allUsers'])->name('super-admin.users.index');
-
+    
     // Global Reports
     Route::get('/reports', [SuperAdminController::class, 'reports'])->name('super-admin.reports');
-
+    
     // System Settings
     Route::get('/settings', [SuperAdminController::class, 'settings'])->name('super-admin.settings');
-
+    
     // Activity Log
     Route::get('/activity-log', [SuperAdminController::class, 'activityLog'])->name('super-admin.activity-log');
 
     // All Documents
     Route::get('/documents', [SuperAdminController::class, 'allDocuments'])->name('super-admin.documents.index');
-
+    
     // Sales Management
     Route::get('/sales', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'index'])->name('super-admin.sales.index');
     Route::get('/sales/export', [\App\Http\Controllers\SuperAdmin\SaleController::class, 'export'])->name('super-admin.sales.export');
@@ -88,20 +88,20 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
-
+    
     // Staff Management
     Route::get('/my-staffs', [DashboardController::class, 'myStaff'])->name('admin.myStaff');
     Route::get('/create/staff-account', [RegisteredUserController::class, 'createUser'])->name('admin.createUser');
     Route::post('/store/staff-account', [RegisteredUserController::class, 'storeUser'])->name('admin.storeUser');
     Route::get('/staff/{user}', [RegisteredUserController::class, 'showUser'])->name('admin.showUser');
     Route::get('/staff/{user}/edit', [RegisteredUserController::class, 'editUser'])->name('admin.editUser');
-
+    
     // Product Assignments Management
     Route::resource('assignments', ProductAssignmentController::class)->names('admin.assignments');
     Route::get('/assignments/{assignment}/complete', [ProductAssignmentController::class, 'markAsComplete'])->name('admin.assignments.complete');
     Route::patch('/staff/{user}', [RegisteredUserController::class, 'updateUser'])->name('admin.updateUser');
     Route::patch('/staff/{user}/toggle-status', [RegisteredUserController::class, 'toggleStatus'])->name('admin.toggleUserStatus');
-
+    
     // Product Assignment Routes (Admin only)
     Route::get('/assignments', [ProductAssignmentController::class, 'index'])->name('admin.assignments.index');
     Route::get('/assignments/create', [ProductAssignmentController::class, 'create'])->name('admin.assignments.create');
@@ -112,22 +112,20 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::resource('inventory', InventoryController::class);
     Route::post('/inventory/{product}/adjust-stock', [InventoryController::class, 'adjustStock'])->name('inventory.adjust-stock');
     Route::get('/inventory/{adjustment}/adjust-stock/delete', [InventoryController::class, 'adjustStockDelete'])->name('inventory.adjustStockDelete');
-
+    
     // Purchase Management (Admin only)
     // Replace the single resource route with explicit routes
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::get('/purchases/restock/{purchase}', [PurchaseController::class, 'restock'])->name('purchases.restock');
-    Route::post('/purchases/restock/store', [PurchaseController::class, 'storeRestock'])->name('purchases.storeRestock');
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
     Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
     Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
     Route::put('/purchases/update/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
     Route::delete('/purchases/destroy/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
-
+    
     // Sales Management (Admin can view/edit all)
     // Route::resource('sales', SalesController::class);
-
+    
     // Reports (Admin only)
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
@@ -135,8 +133,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/reports/inventory', [ReportController::class, 'inventoryReport'])->name('reports.inventory');
     Route::get('/reports/sales/pdf', [ReportController::class, 'exportSalesPDF'])->name('reports.sales.pdf');
     Route::get('/reports/profit/pdf', [ReportController::class, 'exportProfitPDF'])->name('reports.profit.pdf');
-
-
+    
+    
     // Expenses (Admin only)
     Route::get('/expenses', [ExpensesController::class, 'index'])->name('expenses.index');
     Route::get('/expenses/create', [ExpensesController::class, 'create'])->name('expenses.create');
@@ -190,7 +188,7 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
         }
         return app(DashboardController::class)->salesDashboard();
     })->name('sales.dashboard');
-
+    
     // Sales management - accessible by both admin and salesperson
     Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
     Route::get('/sales/my-sales', [SalesController::class, 'mySales'])->name('sales.my-sales');
@@ -207,12 +205,12 @@ Route::middleware(['auth', 'role:admin,salesperson'])->prefix('sales')->group(fu
     // Add this with your other sales routes
     Route::get('/print-multiple-receipts', [SalesController::class, 'printMultipleReceipts'])
         ->name('sales.print-multiple-receipts');
-
-
+    
+    
     // View available inventory (read-only)
     Route::get('/inventory', [InventoryController::class, 'index'])->name('sales.inventory');
     Route::get('/inventory/{product}', [InventoryController::class, 'show'])->name('sales.inventory.show');
-
+    
     // Product Assignments for Staff
     Route::get('/my-assignments', [ProductAssignmentController::class, 'myAssignments'])->name('sales.assignments');
 });

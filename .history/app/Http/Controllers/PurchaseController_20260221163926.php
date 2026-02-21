@@ -14,7 +14,7 @@ use App\Models\ProductAssignment;
 class PurchaseController extends Controller
 {
     use BusinessScoped;
-    
+
     /**
      * Display a listing of purchases
      */
@@ -43,7 +43,7 @@ class PurchaseController extends Controller
         $purchases = $query->orderBy('created_at', 'desc')->get();
         $products = $this->scopeToCurrentBusiness(Product::class)->get();
 
-        // return $purchases; 
+        // return $purchases;
         return view('purchases.index', compact('purchases', 'products'));
     }
 
@@ -56,12 +56,20 @@ class PurchaseController extends Controller
         return view('purchases.create', compact('products'));
     }
 
+    public function restock($purchase)
+    {
+
+        $this->scopeToCurrentBusiness(Purchase::class)->with('product')->where("quantity", ">", 0);
+        return $purchase;
+        $products = $this->scopeToCurrentBusiness(Product::class)->get();
+        return view('purchases.restock', compact('products'));
+    }
     /**
      * Store a newly created purchase
      */
     public function store(Request $request)
     {
-        
+
         // return $request;
         $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -74,11 +82,11 @@ class PurchaseController extends Controller
             'purchase_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
-        
+
         $totalCost = $request->quantity * $request->buying_price_per_unit;
-        
-        
-        
+
+
+
         // Create the purchase with business_id
         $data = $this->addBusinessId([
             'product_id' => $request->product_id,
@@ -93,7 +101,7 @@ class PurchaseController extends Controller
             'purchase_date' => $request->purchase_date,
             'notes' => $request->notes,
         ]);
-        
+
         $purchase = Purchase::create($data);
         $purchaseHistories = PurchaseHistory::create($data);
 

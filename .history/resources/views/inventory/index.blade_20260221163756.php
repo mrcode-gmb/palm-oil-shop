@@ -224,7 +224,7 @@
                             @if (auth()->user()->isAdmin())
                                 <div class="mt-3 pt-3 border-t border-gray-200">
                                     <div class="flex space-x-2 text-sm">
-                                        <a href="{{ route('purchases.restock', $product->id) }}"
+                                        <a href="{{ route('purchases.restock') }}"
                                             class="text-green-600 hover:text-green-500">
                                             Restock
                                         </a>
