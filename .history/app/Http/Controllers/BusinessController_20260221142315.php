@@ -23,7 +23,7 @@ class BusinessController extends Controller
         return view('super-admin.businesses.index', compact('businesses'));
     }
 
-    /**
+/**
      * Show the form for creating a new business
      */
     public function create()
@@ -124,8 +124,11 @@ class BusinessController extends Controller
             'total_admins' => $business->users()->where('role', 'admin')->count(),
             'total_salespeople' => $business->users()->where('role', 'salesperson')->count(),
             'total_products' => $allPurchases->count(),
-            'total_sales' => $totalSales,
-            'total_profit' => $business->sales()->sum('profit'),
+            'total_sales' => $business->sales->sum(function($sale){
+                return $sale->selling_price_per_unit * $sale->quantity;
+            }),
+            'total_profit' => $business->sales->sum('profit'),
+            'total_quantity_sold' => $business->sales->sum('quantity'),
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
             'total_expenses' => $business->expenses()->sum('amount'),
@@ -134,27 +137,92 @@ class BusinessController extends Controller
             }),
             'current_stock_quantity' => $allPurchases->sum('quantity'),
         ];
+
         // Fetch transaction histories with pagination
         $sales = $business->sales()->with('user', 'purchase.product')->latest()->paginate(10, ['*'], 'sales');
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
         $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
         $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
-        $productAssignment = $business->productAssignments->sum(function ($assignment) {
-            $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-            return $products * $assignment->purchase->purchase_price;
+
+        // Calculate cost of remaining products in assignments (unsold inventory with staff)
+        // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
+        $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
+            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
         });
+        // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            $products = $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
-            return $products;
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
         });
-        $net_profit = $stats['total_profit'] - $stats['total_expenses'] - $total_commission;
 
-        $totalCreditorBalance =  $business->creditors->sum("balance");
+        // Calculate cost of inventory in warehouse (actual remaining stock in purchases table)
+        // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)
+        $warehouseInventoryCost = $business->purchases->sum(function ($purchases) {
+            return $purchases->quantity * $purchases->purchase_price;
+        });
 
-        $actualWalletBalance =  $this->balanceWallet($business);
-        return $this->createPurchaseHistory($business);
-        // - $expenses;
-        // - $totalCreditorBalance;
+        // Total inventory cost = warehouse stock + assigned stock (both are separate physical locations)
+        // Warehouse: What's physically in the warehouse (purchases.quantity)
+        // Assigned: What's physically with staff (assigned - sold - returned)
+        // return [number_format($productAssignmentCost), number_format($business->sales->sum(function($sale){
+        //     return $sale->purchase->purchase_price * $sale->quantity;
+        // }))];
+        $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost;
+
+        // Calculate net profit with detailed breakdown
+        $totalSalesProfit = $stats['total_profit'];
+        $totalExpenses = $stats['total_expenses'];
+        $totalCommission = $total_commission;
+
+        $net_profit = $totalSalesProfit - $totalExpenses - $totalCommission;
+
+        // Money owed to the business by creditors (receivables)
+        $totalCreditorBalance = $business->creditors->sum("balance");
+
+        // Actual Profit = Net Profit (operating profit from sales)
+        // This is the real profit earned: Sales Profit - Expenses - Commission
+        $actualProfit = $net_profit;
+
+        // Debug information for discrepancy checking
+        $profitBreakdown = [
+            'sales_profit' => $totalSalesProfit,
+            'expenses' => $totalExpenses,
+            'commission' => $totalCommission,
+            'net_profit' => $net_profit,
+        ];
+
+        // Detailed diagnostic data for checking database inconsistencies
+        $diagnostics = [
+            // Product Assignments Check
+            'total_assignments' => $business->productAssignments->count(),
+            'assignments_with_commission' => $business->productAssignments->where('commission_amount', '>', 0)->count(),
+            'total_commission_from_db' => $business->productAssignments->sum('commission_amount'),
+            'commission_used_in_calc' => $total_commission,
+
+            // Purchases Check
+            'total_purchase_records' => $business->purchases->count(),
+            'warehouse_qty' => $business->purchases->sum('quantity'),
+            'warehouse_cost' => $warehouseInventoryCost,
+
+            // Assignment Inventory Check
+            'assigned_qty' => $productAssignmentQuantity,
+            'assigned_cost' => $productAssignmentCost,
+
+            // Sales Check
+            'total_sales_count' => $business->sales->count(),
+            'sales_profit_sum' => $business->sales->sum('profit'),
+            'sales_profit_in_stats' => $stats['total_profit'],
+
+            // Expenses Check
+            'expenses_count' => $business->expenses->count(),
+            'expenses_sum' => $business->expenses->sum('amount'),
+            'expenses_in_stats' => $stats['total_expenses'],
+        ];
+
+        // Actual Wallet Balance = Cash + Receivables + Inventory Value
+        // This shows total business value (liquid + non-liquid assets)
+        $actualWalletBalance = $business->wallet->balance + $totalCreditorBalance + $totalInventoryCost;
+        // return number_format($actualWalletBalance, 2);
+
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',
@@ -164,9 +232,15 @@ class BusinessController extends Controller
             'creditorTransactions',
             'total_commission',
             'net_profit',
-            'productAssignment',
+            'productAssignmentCost',
             'productAssignmentQuantity',
+            'warehouseInventoryCost',
+            'totalInventoryCost',
+            'totalCreditorBalance',
             'actualWalletBalance',
+            'actualProfit',
+            'profitBreakdown',
+            'diagnostics',
         ));
     }
     public function balanceWallet(Business $business)
@@ -203,26 +277,32 @@ class BusinessController extends Controller
 
         $totalCreditorPaid =  $business->creditorTransactions->where("type", "credit")->sum("amount");
 
-        // $balance = ($businessWalletBalance->balance ?? 0)
+        $balance = ($businessWalletBalance->balance ?? 0)
         //  + ($totalSales ?? 0)
-        //  + ($currentPurchaseInventory ?? 0)
+         + ($currentPurchaseInventory ?? 0)
         //  - ($historyPurchaseInventory ?? 0)
         //  - ($expenses ?? 0)
-        //  + ($productAssignment ?? 0)
-        //  + ($totalCreditorBalance ?? 0)
+         + ($productAssignment ?? 0)
+         + ($totalCreditorBalance ?? 0);
         //  + ($totalCreditorPaid ?? 0);
-        // $netProfit = $balance - $businessWalletBalance->balance;
+        $netProfit = $balance - $businessWalletBalance->balance;
 
         $actualWalletBalance =
-            $businessWalletBalance->balance
+            $balance
             + $totalCreditorBalance
             + $productAssignment
             + $currentPurchaseInventory;
         // - $expenses;
         // - $totalCreditorBalance;
-        return $actualWalletBalance;
+        // return $actualWalletBalance;
+        $actualWalletBalance =
+            ($businessWalletBalance->balance ?? 0)
+            + ($totalSales ?? 0)
+            + ($totalCreditorPaid ?? 0)
+            - ($historyPurchaseInventory ?? 0)
+            - ($expenses ?? 0);
 
-        return number_format($netProfit, 2);
+        return $balance;
 
         // return $business->sales->sum(function($sale){
         //     return $sale->seller_profit_per_unit * $sale->quantity;
@@ -230,7 +310,7 @@ class BusinessController extends Controller
 
     }
 
-    
+
     private function createPurchaseHistory(Business $business)
     {
         $actualPurchase = $business->purchases->map(function($purchase){
@@ -245,20 +325,20 @@ class BusinessController extends Controller
         });
 
         foreach ($actualPurchase as $purchase) {
-            PurchaseHistory::create([
-                'business_id' => $purchase->business_id,
-                'product_id' => $purchase->product_id,
-                'purchase_price' => $purchase->purchase_price,
-                'quantity' => $purchase->quantity,
-                'user_id' => $purchase->user_id,
-                'supplier_name' => $purchase->supplier_name,
-                'supplier_phone' => $purchase->supplier_phone,
-                'selling_price' => $purchase->selling_price,
-                'purchase_date' => $purchase->purchase_date,
-                'notes' => $purchase->notes,
-                "total_cost" => $purchase->total_cost,
-                "seller_profit",
-            ]);
+            // PurchaseHistory::create([
+            //     'business_id' => $purchase->business_id,
+            //     'product_id' => $purchase->product_id,
+            //     'user_id' => $purchase->user_id,
+            //     'supplier_name' => $purchase->supplier_name,
+            //     'supplier_phone' => $purchase->supplier_phone,
+            //     'quantity' => $purchase->quantity,
+            //     'purchase_price' => $purchase->purchase_price,
+            //     "total_cost" => $purchase->total_cost,
+            //     'selling_price' => $purchase->selling_price,
+            //     'seller_profit' => $purchase->seller_profit,
+            //     'purchase_date' => $purchase->purchase_date,
+            //     'notes' => $purchase->notes,
+            // ]);
         }
         return $actualPurchase;
     }

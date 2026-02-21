@@ -23,7 +23,7 @@ class BusinessController extends Controller
         return view('super-admin.businesses.index', compact('businesses'));
     }
 
-    /**
+/**
      * Show the form for creating a new business
      */
     public function create()
@@ -143,23 +143,23 @@ class BusinessController extends Controller
         $purchases = $business->purchases()->with('product', 'user')->latest()->paginate(10, ['*'], 'purchases');
         $expenses = $business->expenses()->with('user')->latest()->paginate(10, ['*'], 'expenses');
         $creditorTransactions = $business->creditorTransactions()->with('creditor')->latest()->paginate(10, ['*'], 'creditor_transactions');
-        
+
         // Calculate cost of remaining products in assignments (unsold inventory with staff)
         // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
             return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
-        }) - 825877.49;
+        });
         // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
             return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
         });
-        
+
         // Calculate cost of inventory in warehouse (actual remaining stock in purchases table)
         // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)
         $warehouseInventoryCost = $business->purchases->sum(function ($purchases) {
             return $purchases->quantity * $purchases->purchase_price;
         });
-        
+
         // Total inventory cost = warehouse stock + assigned stock (both are separate physical locations)
         // Warehouse: What's physically in the warehouse (purchases.quantity)
         // Assigned: What's physically with staff (assigned - sold - returned)
@@ -167,12 +167,12 @@ class BusinessController extends Controller
         //     return $sale->purchase->purchase_price * $sale->quantity;
         // }))];
         $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost;
-        
+
         // Calculate net profit with detailed breakdown
         $totalSalesProfit = $stats['total_profit'];
         $totalExpenses = $stats['total_expenses'];
         $totalCommission = $total_commission;
-        
+
         $net_profit = $totalSalesProfit - $totalExpenses - $totalCommission;
 
         // Money owed to the business by creditors (receivables)
@@ -189,7 +189,7 @@ class BusinessController extends Controller
             'commission' => $totalCommission,
             'net_profit' => $net_profit,
         ];
-        
+
         // Detailed diagnostic data for checking database inconsistencies
         $diagnostics = [
             // Product Assignments Check
@@ -197,27 +197,27 @@ class BusinessController extends Controller
             'assignments_with_commission' => $business->productAssignments->where('commission_amount', '>', 0)->count(),
             'total_commission_from_db' => $business->productAssignments->sum('commission_amount'),
             'commission_used_in_calc' => $total_commission,
-            
+
             // Purchases Check
             'total_purchase_records' => $business->purchases->count(),
             'warehouse_qty' => $business->purchases->sum('quantity'),
             'warehouse_cost' => $warehouseInventoryCost,
-            
+
             // Assignment Inventory Check
             'assigned_qty' => $productAssignmentQuantity,
             'assigned_cost' => $productAssignmentCost,
-            
+
             // Sales Check
             'total_sales_count' => $business->sales->count(),
             'sales_profit_sum' => $business->sales->sum('profit'),
             'sales_profit_in_stats' => $stats['total_profit'],
-            
+
             // Expenses Check
             'expenses_count' => $business->expenses->count(),
             'expenses_sum' => $business->expenses->sum('amount'),
             'expenses_in_stats' => $stats['total_expenses'],
         ];
-        
+
         // Actual Wallet Balance = Cash + Receivables + Inventory Value
         // This shows total business value (liquid + non-liquid assets)
         $actualWalletBalance = $business->wallet->balance + $totalCreditorBalance + $totalInventoryCost;
@@ -310,7 +310,7 @@ class BusinessController extends Controller
 
     }
 
-    
+
     private function createPurchaseHistory(Business $business)
     {
         $actualPurchase = $business->purchases->map(function($purchase){
