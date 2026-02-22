@@ -13,6 +13,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductAssignmentController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\Admin\RebateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,6 +125,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
     Route::put('/purchases/update/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
     Route::delete('/purchases/destroy/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
+
+    // Rebate Management (Admin only)
+    Route::resource('rebates', RebateController::class)->only([
+        'index',
+        'create',
+        'store',
+        'show',
+        'destroy',
+    ])->names('rebates');
 
     // Sales Management (Admin can view/edit all)
     // Route::resource('sales', SalesController::class);

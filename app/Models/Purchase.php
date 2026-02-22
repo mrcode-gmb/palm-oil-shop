@@ -80,6 +80,11 @@ class Purchase extends Model
         return $this->hasMany(ProductAssignment::class);
     }
 
+    public function rebates()
+    {
+        return $this->hasMany(Rebate::class);
+    }
+
 
     public function expenses()
     {

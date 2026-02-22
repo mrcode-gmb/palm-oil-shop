@@ -107,6 +107,11 @@ class User extends Authenticatable
         return $this->hasMany(PurchaseHistory::class);
     }
 
+    public function rebatesCreated()
+    {
+        return $this->hasMany(Rebate::class, 'created_by');
+    }
+
     public function expenses()
     {
         return $this->hasMany(Expenses::class);

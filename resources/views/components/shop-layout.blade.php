@@ -97,6 +97,16 @@
                         Purchases
                     </a>
 
+                    <a href="{{ route('rebates.index') }}"
+                        class="sidebar-link flex py-3 px-5 {{ request()->routeIs('rebates.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-2.21 0-4 1.343-4 3s1.79 3 4 3 4 1.343 4 3-1.79 3-4 3m0-15V4m0 4v3m0 3v3">
+                            </path>
+                        </svg>
+                        Rebates
+                    </a>
+
                     <a href="{{ route('admin.assignments.index') }}"
                         class="sidebar-link flex py-3 px-5 {{ request()->routeIs('purchases.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
