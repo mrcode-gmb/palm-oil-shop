@@ -61,7 +61,7 @@
         <div class="bg-white overflow-hidden shadow-sm rounded-lg">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">My Product Assignments</h3>
-
+                
                 @if($assignments->count() > 0)
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">

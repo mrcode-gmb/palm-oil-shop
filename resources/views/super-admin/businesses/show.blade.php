@@ -11,7 +11,7 @@
             Back to Businesses
         </a>
     </div>
-    
+
     <!-- Business Header -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
@@ -70,7 +70,7 @@
                 <p class="text-3xl font-bold text-gray-900">₦{{ number_format($business->businessCapital->balance, 2) }}</p>
                 <p class="text-sm ">Expected revenue - Business Capital = Actual Profit</p>
                 <p class="text-gray-900">Actual profit: <b>₦{{ number_format(($business->wallet->balance + $business->creditors->sum("balance") + $stats['current_inventory_value'] + $productAssignmentCost) - $business->businessCapital->balance, 2) }}</b></p>
-                
+
             </div>
             <div class="flex items-center space-x-3">
                 <a href="{{ route('super-admin.capital.create', ['business' => $business, 'type' => 'deposit']) }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Add Capital</a>
@@ -81,7 +81,7 @@
     <!-- Wallet Manager -->
     @livewire('wallet-manager', ['wallet' => $business->wallet])
 
-    
+
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -197,7 +197,7 @@
             </div>
         </div>
 
-        
+
     </div>
 
     <!-- Inventory & Sales Summary -->
@@ -293,7 +293,7 @@
                 <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ min(100, $stats['inventory_turnover']) }}%"></div>
             </div>
             <p class="text-xs text-gray-500 mt-1">
-                {{ number_format($stats['inventory_turnover'] ?? 0, 2) }}x - 
+                {{ number_format($stats['inventory_turnover'] ?? 0, 2) }}x -
                 @if(($stats['inventory_turnover'] ?? 0) > 5)
                     <span class="text-green-600">High Turnover</span>
                 @elseif(($stats['inventory_turnover'] ?? 0) > 2)
@@ -517,7 +517,7 @@
     <!-- Database Diagnostics Section (for debugging) -->
     {{-- <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg shadow-md p-6 mb-6">
         <h3 class="text-xl font-bold text-yellow-900 mb-4">🔍 Database Diagnostics (Debug Mode)</h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Product Assignments Check -->
             <div class="bg-white p-4 rounded-lg border border-yellow-200">
