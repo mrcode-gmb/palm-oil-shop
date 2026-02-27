@@ -171,8 +171,8 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Profit On Credit</p>
-                    <p class="text-3xl font-bold text-gray-900">₦{{ number_format($stats['total_profit_on_credit'], 2) }}</p>
+                    <p class="text-sm font-medium text-gray-600">Total Profit</p>
+                    <p class="text-3xl font-bold text-gray-900">₦{{ number_format($stats['total_profit'], 2) }}</p>
                 </div>
                 <div class="bg-yellow-100 rounded-full p-3">
                     <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +181,7 @@
                 </div>
             </div>
         </div>
-
+        total_profit_on_credit
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>

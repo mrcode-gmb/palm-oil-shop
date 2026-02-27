@@ -130,8 +130,7 @@ class BusinessController extends Controller
             'total_credit_sales' => $business->sales->where("payment_type", "=", "credit")->sum(function($sale){
                 return $sale->selling_price_per_unit * $sale->quantity;
             }),
-            'total_profit' => $business->sales->where("payment_type", "=", "credit")->sum('profit'),
-            'total_profit_on_credit' => $business->sales->where("payment_type", "!=", "credit")->sum('profit'),
+            'total_profit' => $business->sales->where("payment_type", "!=", "credit")->sum('profit'),
             'total_quantity_sold' => $business->sales->sum('quantity'),
             'total_purchases' => $business->purchaseHistory->sum('total_cost'),
             'total_purchase_quantity' => $business->purchaseHistory->sum('quantity'), // This is historical total, not current stock
@@ -213,6 +212,7 @@ class BusinessController extends Controller
 
             // Sales Check
             'total_sales_count' => $business->sales->count(),
+            'sales_profit_sum' => $business->sales->sum('profit'),
             'sales_profit_sum' => $business->sales->sum('profit'),
             'sales_profit_in_stats' => $stats['total_profit'],
 
