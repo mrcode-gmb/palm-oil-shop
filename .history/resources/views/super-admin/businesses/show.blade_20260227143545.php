@@ -130,7 +130,7 @@
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Total Sales On Credit</p>
+                    <p class="text-sm font-medium text-gray-600">Total Sales</p>
                     <p class="text-3xl font-bold text-gray-900">₦{{ number_format($stats['total_credit_sales'], 2) }}</p>
                 </div>
                 <div class="bg-green-100 rounded-full p-3">

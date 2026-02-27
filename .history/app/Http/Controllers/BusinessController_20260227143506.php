@@ -127,7 +127,7 @@ class BusinessController extends Controller
             'total_sales' => $business->sales->where("payment_type", "!=", "credit")->sum(function($sale){
                 return $sale->selling_price_per_unit * $sale->quantity;
             }),
-            'total_credit_sales' => $business->sales->where("payment_type", "=", "credit")->sum(function($sale){
+            'total_credit_sales' => $business->sales->where("payment_type", "!=", "credit")->sum(function($sale){
                 return $sale->selling_price_per_unit * $sale->quantity;
             }),
             'total_profit' => $business->sales->where("payment_type", "!=", "credit")->sum('profit'),
