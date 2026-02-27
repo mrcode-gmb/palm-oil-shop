@@ -124,7 +124,7 @@ class BusinessController extends Controller
             'total_admins' => $business->users()->where('role', 'admin')->count(),
             'total_salespeople' => $business->users()->where('role', 'salesperson')->count(),
             'total_products' => $allPurchases->count(),
-            'total_sales' => $business->sales->where("payment_type", "!=", "credit")->sum(function($sale){
+            'total_sales' => $business->sales->->sum(function($sale){
                 return $sale->selling_price_per_unit * $sale->quantity;
             }),
             'total_profit' => $business->sales->sum('profit'),
