@@ -71,13 +71,19 @@ class CreditorController extends Controller
         if($creditor->balance < $request->amount){
             return back()->withErrors('The amount is not grater than the current balance.');
         }
-        // $creditor->balance -= $request->amount;
-        // $creditor->save();
+        $creditor->balance -= $request->amount;
+        $creditor->save();
         // Handle wallet and creditor logic outside the loop
         $business = $this->getBusiness();
-        $business->wallet->balance += $request->amount;
-        $business->wallet->save();
-        $business->wallet->credit($request->amount, 'Creditor payment');
+        $business->wallet += 
+        return $business;
+
+        $business->wallet->credit($request->amount, 'Partial payment for multiple credit sales');
+
+
+
+
+        return $request;
 
         $creditor->transactions()->create([
             'type' => 'credit',

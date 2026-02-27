@@ -71,13 +71,27 @@ class CreditorController extends Controller
         if($creditor->balance < $request->amount){
             return back()->withErrors('The amount is not grater than the current balance.');
         }
-        // $creditor->balance -= $request->amount;
-        // $creditor->save();
+        $creditor->balance -= $request->amount;
+        $creditor->save();
         // Handle wallet and creditor logic outside the loop
         $business = $this->getBusiness();
-        $business->wallet->balance += $request->amount;
-        $business->wallet->save();
-        $business->wallet->credit($request->amount, 'Creditor payment');
+
+
+            $business->wallet->credit($request->amount, 'Partial payment for multiple credit sales');
+            $creditor = \App\Models\Creditor::find($validated['creditor_id']);
+            $creditAmount = $totalSaleAmount - ($validated['amount_paid'] ?? 0);
+            if ($creditAmount > 0) {
+                $creditor->balance += $creditAmount;
+                $creditor->save();
+                $creditor->transactions()->create([
+                    'type' => 'debit',
+                    'amount' => $creditAmount,
+                    'description' => 'Multiple sales on credit',
+                    'running_balance' => $creditor->balance,
+                ]);
+            }
+
+        return $request;
 
         $creditor->transactions()->create([
             'type' => 'credit',
@@ -88,22 +102,7 @@ class CreditorController extends Controller
 
         return back()->with('success', 'Payment recorded successfully.');
     }
-    public function getBusiness()
-    {
-        $user = auth()->user();
-        if (!$user) {
-            // This case should ideally be handled by auth middleware
-            abort(401, 'Unauthenticated.');
-        }
 
-        $business = $user->business;
-        if (!$business) {
-            // This user is not associated with any business
-            abort(403, 'No business is associated with your account.');
-        }
-
-        return $business;
-    }
     public function printTransaction(\App\Models\CreditorTransaction $transaction)
     {
         $this->authorize('view', $transaction->creditor);

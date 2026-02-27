@@ -77,7 +77,7 @@ class CreditorController extends Controller
         $business = $this->getBusiness();
         $business->wallet->balance += $request->amount;
         $business->wallet->save();
-        $business->wallet->credit($request->amount, 'Creditor payment');
+        $business->wallet->credit($request->amount, 'Partial payment for multiple credit sales');
 
         $creditor->transactions()->create([
             'type' => 'credit',
