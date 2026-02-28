@@ -245,7 +245,6 @@ class BusinessController extends Controller
             'actualProfit',
             'profitBreakdown',
             'diagnostics',
-            'creditPaid',
         ));
     }
     public function balanceWallet(Business $business)

@@ -226,7 +226,7 @@ class BusinessController extends Controller
         // This shows total business value (liquid + non-liquid assets)
         $actualWalletBalance = $business->wallet->balance + $totalCreditorBalance + $totalInventoryCost;
         // return number_format($actualWalletBalance, 2);
-        $creditPaid = $business->creditorTransactions()->where('type', 'credit')->sum('amount');
+        
         return view('super-admin.businesses.show', compact(
             'business',
             'stats',
@@ -245,7 +245,6 @@ class BusinessController extends Controller
             'actualProfit',
             'profitBreakdown',
             'diagnostics',
-            'creditPaid',
         ));
     }
     public function balanceWallet(Business $business)
