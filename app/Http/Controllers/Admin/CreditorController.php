@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Business;
+use App\Models\CreditorTransaction;
 use Illuminate\Http\Request;
 
 use App\Traits\BusinessScoped;
@@ -15,15 +17,29 @@ class CreditorController extends Controller
     {
         $user = auth()->user();
         $businessId = $this->getBusinessId();
-        $business = \App\Models\Business::findOrFail($businessId);
+        $business = Business::findOrFail($businessId);
 
+        $creditorsQuery = $business->creditors();
         if ($user->isSalesperson()) {
-            $creditors = $business->creditors()->where('user_id', $user->id)->paginate(10);
-        } else {
-            $creditors = $business->creditors()->paginate(10);
+            $creditorsQuery->where('user_id', $user->id);
         }
-        // return $creditors;
-        return view('admin.creditors.index', compact('creditors'));
+
+        $creditorIdsSubquery = (clone $creditorsQuery)->select('id');
+
+        $summary = [
+            'total_creditors' => (clone $creditorsQuery)->count(),
+            'total_balance' => (clone $creditorsQuery)->sum('balance'),
+            'total_credit' => CreditorTransaction::whereIn('creditor_id', $creditorIdsSubquery)
+                ->where('type', 'debit')
+                ->sum('amount'),
+            'total_paid' => CreditorTransaction::whereIn('creditor_id', (clone $creditorsQuery)->select('id'))
+                ->where('type', 'credit')
+                ->sum('amount'),
+        ];
+
+        $creditors = $creditorsQuery->latest()->paginate(10);
+
+        return view('admin.creditors.index', compact('creditors', 'summary'));
     }
 
     public function create()

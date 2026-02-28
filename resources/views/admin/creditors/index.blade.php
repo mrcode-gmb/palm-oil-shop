@@ -10,6 +10,25 @@
         </div>
     @endif
 
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-sm font-medium text-gray-500">Total Creditors</h3>
+            <p class="mt-2 text-2xl font-bold text-gray-900">{{ number_format($summary['total_creditors']) }}</p>
+        </div>
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-sm font-medium text-gray-500">Total Credit</h3>
+            <p class="mt-2 text-2xl font-bold text-red-600">₦{{ number_format($summary['total_credit'], 2) }}</p>
+        </div>
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-sm font-medium text-gray-500">Total Paid</h3>
+            <p class="mt-2 text-2xl font-bold text-green-600">₦{{ number_format($summary['total_paid'], 2) }}</p>
+        </div>
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-sm font-medium text-gray-500">Outstanding Balance</h3>
+            <p class="mt-2 text-2xl font-bold text-blue-600">₦{{ number_format($summary['total_balance'], 2) }}</p>
+        </div>
+    </div>
+
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -47,4 +66,3 @@
         {{ $creditors->links() }}
     </div>
 </x-shop-layout>
-
