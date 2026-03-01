@@ -108,7 +108,7 @@ class CreditorController extends Controller
                 'description' => $request->description ?? 'Payment received',
                 'running_balance' => $creditor->balance,
             ]);
-        });
+        ]);
 
         return back()->with('success', 'Payment recorded successfully.');
     }

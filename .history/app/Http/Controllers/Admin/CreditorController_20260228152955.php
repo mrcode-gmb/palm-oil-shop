@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\CreditorTransaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 use App\Traits\BusinessScoped;
 
@@ -85,30 +84,23 @@ class CreditorController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'description' => 'nullable|string|max:255',
         ]);
-
-        if ($creditor->balance < $request->amount) {
+        if($creditor->balance < $request->amount){
             return back()->withErrors('The amount is not grater than the current balance.');
         }
+        $creditor->balance -= $request->amount;
+        $creditor->save();
+        // Handle wallet and creditor logic outside the loop
+        $business = $this->getBusiness();
+        $business->wallet->balance += $request->amount;
+        $business->wallet->save();
+        $business->wallet->credit($request->amount, 'Creditor payment');
 
-        DB::transaction(function () use ($request, $creditor) {
-            $creditor->balance -= $request->amount;
-            $creditor->save();
-
-            // Credit wallet once; this also logs wallet transaction.
-            $business = $this->getBusiness();
-            $business->wallet->credit(
-                $request->amount,
-                $request->description ?? 'Creditor payment',
-                ['creditor_id' => $creditor->id]
-            );
-
-            $creditor->transactions()->create([
-                'type' => 'credit',
-                'amount' => $request->amount,
-                'description' => $request->description ?? 'Payment received',
-                'running_balance' => $creditor->balance,
-            ]);
-        });
+        $creditor->transactions()->create([
+            'type' => 'credit',
+            'amount' => $request->amount,
+            'description' => $request->description ?? 'Payment received',
+            'running_balance' => $creditor->balance,
+        ]);
 
         return back()->with('success', 'Payment recorded successfully.');
     }

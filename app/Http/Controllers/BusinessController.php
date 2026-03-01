@@ -222,9 +222,9 @@ class BusinessController extends Controller
             'expenses_in_stats' => $stats['total_expenses'],
         ];
 
-        // Actual Wallet Balance = Cash + Receivables + Inventory Value
-        // This shows total business value (liquid + non-liquid assets)
+        // Total business assets = Cash + Receivables + Inventory value.
         $actualWalletBalance = $business->wallet->balance + $totalCreditorBalance + $totalInventoryCost;
+        $actualProfitFromAssets = $actualWalletBalance - $business->businessCapital->balance;
         // return number_format($actualWalletBalance, 2);
         $creditPaid = $business->creditorTransactions()->where('type', 'credit')->sum('amount');
         return view('super-admin.businesses.show', compact(
@@ -243,6 +243,7 @@ class BusinessController extends Controller
             'totalCreditorBalance',
             'actualWalletBalance',
             'actualProfit',
+            'actualProfitFromAssets',
             'profitBreakdown',
             'diagnostics',
             'creditPaid',
