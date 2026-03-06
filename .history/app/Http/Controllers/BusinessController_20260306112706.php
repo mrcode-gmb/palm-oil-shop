@@ -154,7 +154,7 @@ class BusinessController extends Controller
         // Calculate cost of remaining products in assignments (unsold inventory with staff)
         // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
-            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity - $assignment->collectionHistories->sum("collected_quantity")) * $assignment->purchase->purchase_price;
+            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity")) * $assignment->purchase->purchase_price;
         });
         // return $business->productAssignments;
         // return $business->productAssignments->sum(function($assignment){
@@ -162,7 +162,7 @@ class BusinessController extends Controller
         // });
         // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity - $assignment->collectionHistories->sum("collected_quantity");
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
         });
 
         // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)
