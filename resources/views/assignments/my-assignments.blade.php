@@ -219,7 +219,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Remaining Quantity</label>
-                            <p class="text-sm text-gray-900">${assignment.assigned_quantity - assignment.sold_quantity - assignment.returned_quantity} units</p>
+                            <p class="text-sm text-gray-900">${assignment.remaining_quantity} units</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Actual Sales Revenue</label>

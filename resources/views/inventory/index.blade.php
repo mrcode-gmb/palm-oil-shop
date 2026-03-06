@@ -143,7 +143,7 @@
                         <div class="p-6 text-center">
                             <p class="text-sm text-gray-500">Remaining</p>
                             <p class="text-2xl font-bold text-orange-600">
-                                {{ $assignments->sum('assigned_quantity') - $assignments->sum('sold_quantity') - $assignments->sum('returned_quantity') }}
+                                {{ $assignments->sum('remaining_quantity') }}
                             </p>
                         </div>
                     </div>

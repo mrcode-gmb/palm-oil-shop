@@ -154,7 +154,7 @@ class BusinessController extends Controller
         // Calculate cost of remaining products in assignments (unsold inventory with staff)
         // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
-            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
+            return $assignment->remaining_quantity * $assignment->purchase->purchase_price;
         });
         // return $productAssignmentCost;
         // return $business->productAssignments;
@@ -164,7 +164,7 @@ class BusinessController extends Controller
         // });
         // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
+            return $assignment->remaining_quantity;
         });
 
         // - $assignment->collectionHistories->sum("collected_quantity")
@@ -272,14 +272,7 @@ class BusinessController extends Controller
         $expenses = $business->expenses->sum("amount");
 
         $productAssignment = $business->productAssignments->where("status", "!=", "completed")->sum(function ($assignment) {
-            $remainingQuantity =
-                $assignment->assigned_quantity
-                - $assignment->sold_quantity
-                - $assignment->returned_quantity;
-
-            $purchasePrice = $assignment->purchase->purchase_price ?? 0;
-
-            return $remainingQuantity * $purchasePrice;
+            return $assignment->remaining_quantity * ($assignment->purchase->purchase_price ?? 0);
         });
 
         $totalCreditorBalance =  $business->creditors->sum("balance");
@@ -325,7 +318,7 @@ class BusinessController extends Controller
         $actualPurchase = $business->purchases->map(function($purchase){
             $inventoryRemain = (int) $purchase->quantity;
             $assignedInventory = $purchase->assignProduct->sum(function($assignment){
-                return (int)$assignment->assigned_quantity - (int)$assignment->returned_quantity;
+                return (int) $assignment->remaining_quantity;
             });
             $actualPurchaseQuantity = $inventoryRemain + $assignedInventory;
             $purchase->quantity = $actualPurchaseQuantity;

@@ -618,70 +618,81 @@ public function printMultipleReceipts(Request $request)
             'notes' => 'nullable|string',
         ]);
 
-        $oldQuantity = $sale->quantity;
-        $purchase = $sale->purchase;
-        $assignment = $sale->assignment;
+        $validatedQuantity = (float) $request->quantity;
 
-        // If this sale was from an assignment (staff sale), restore quantity to assignment
-        if ($assignment) {
-            // Restore the old quantity back to the assignment
-            $assignment->decrement('sold_quantity', $oldQuantity);
-            $assignment->decrement('actual_total_sales', $sale->total_amount);
-            
-            // Add the old quantity back to the purchase stock
-            $purchase->increment('quantity', $oldQuantity);
-        } else {
-            // Admin sale - restore stock to purchase
-            $purchase->increment('quantity', $oldQuantity);
-        }
+        DB::transaction(function () use ($sale, $request, $validatedQuantity) {
+            $lockedSale = $this->scopeToCurrentBusiness(Sale::class)
+                ->whereKey($sale->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Check if enough stock is available for new quantity
-        if ($purchase->quantity < $request->quantity) {
-            // Restore the changes we just made
-            if ($assignment) {
-                $assignment->increment('sold_quantity', $oldQuantity);
-                $assignment->increment('actual_total_sales', $sale->total_amount);
+            $purchase = $this->scopeToCurrentBusiness(Purchase::class)
+                ->whereKey($lockedSale->purchase_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $assignment = null;
+            if ($lockedSale->assignment_id) {
+                $assignment = $this->scopeToCurrentBusiness(ProductAssignment::class)
+                    ->whereKey($lockedSale->assignment_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
             }
-            $purchase->decrement('quantity', $oldQuantity);
-            return back()->withErrors(['quantity' => 'Insufficient stock available.']);
-        }
 
-        // Calculate new totals
-        $sellingPricePerUnit = $sale->selling_price_per_unit;
-        $totalAmount = $sellingPricePerUnit * $request->quantity;
-        $costPricePerUnit = $purchase->purchase_price;
-        $totalCost = $costPricePerUnit * $request->quantity;
-        $profit = $totalAmount - $totalCost;
-        
-        // Calculate seller profit if assignment exists
-        $seller_profit_per_unit = 0;
-        $net_profit_per_unit = $profit;
-        if ($assignment) {
-            $seller_profit_per_unit = $assignment->commission_rate * $request->quantity;
-            $net_profit_per_unit = $profit - $seller_profit_per_unit;
-        }
+            $oldQuantity = (float) $lockedSale->quantity;
+            $sellingPricePerUnit = (float) $lockedSale->selling_price_per_unit;
+            $costPricePerUnit = (float) $purchase->purchase_price;
+            $totalAmount = $sellingPricePerUnit * $validatedQuantity;
+            $totalCost = $costPricePerUnit * $validatedQuantity;
+            $profit = $totalAmount - $totalCost;
 
-        // Update the sale
-        $sale->update([
-            'quantity' => $request->quantity,
-            'selling_price_per_unit' => $sellingPricePerUnit,
-            'cost_price_per_unit' => $costPricePerUnit,
-            'total_amount' => $totalAmount,
-            'total_cost' => $totalCost,
-            'profit' => $profit,
-            'seller_profit_per_unit' => $seller_profit_per_unit,
-            'net_profit_per_unit' => $net_profit_per_unit,
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'notes' => $request->notes,
-        ]);
+            if ($assignment) {
+                $totalCollected = $assignment->collectionHistories()->sum('collected_quantity');
+                $revertedSoldQty = max(0, (float) $assignment->sold_quantity - $oldQuantity);
+                $revertedActualSales = max(0, (float) $assignment->actual_total_sales - (float) $lockedSale->total_amount);
+                $availableAfterRevert = max(
+                    0,
+                    (float) $assignment->assigned_quantity - $revertedSoldQty - (float) $totalCollected
+                );
 
-        // Update assignment and purchase stock with new quantity
-        if ($assignment) {
-            $assignment->increment('sold_quantity', $request->quantity);
-            $assignment->increment('actual_total_sales', $totalAmount);
-        }
-        $purchase->decrement('quantity', $request->quantity);
+                if ($validatedQuantity > $availableAfterRevert) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'quantity' => "Insufficient assignment stock available. Maximum: {$availableAfterRevert}",
+                    ]);
+                }
+
+                $sellerProfit = (float) $assignment->commission_rate * $validatedQuantity;
+                $assignment->update([
+                    'sold_quantity' => $revertedSoldQty + $validatedQuantity,
+                    'actual_total_sales' => $revertedActualSales + $totalAmount,
+                ]);
+            } else {
+                $availableAfterRevert = (float) $purchase->quantity + $oldQuantity;
+                if ($validatedQuantity > $availableAfterRevert) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'quantity' => "Insufficient stock available. Maximum: {$availableAfterRevert}",
+                    ]);
+                }
+
+                $sellerProfit = 0;
+                $purchase->update([
+                    'quantity' => $availableAfterRevert - $validatedQuantity,
+                ]);
+            }
+
+            $lockedSale->update([
+                'quantity' => $validatedQuantity,
+                'cost_price_per_unit' => $costPricePerUnit,
+                'total_amount' => $totalAmount,
+                'total_cost' => $totalCost,
+                'profit' => $profit,
+                'seller_profit_per_unit' => $sellerProfit,
+                'net_profit_per_unit' => $profit - $sellerProfit,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
+                'notes' => $request->notes,
+            ]);
+        });
 
         return redirect()->route('sales.index')->with('success', 'Sale updated successfully!');
     }
@@ -696,20 +707,33 @@ public function printMultipleReceipts(Request $request)
             abort(403, 'Only administrators can delete sales.');
         }
 
-        $purchase = $sale->purchase;
-        $assignment = $sale->assignment;
+        DB::transaction(function () use ($sale) {
+            $lockedSale = $this->scopeToCurrentBusiness(Sale::class)
+                ->whereKey($sale->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // If this sale was from an assignment (staff sale), restore quantity to assignment
-        if ($assignment) {
-            // Restore quantity back to the assignment
-            $assignment->decrement('sold_quantity', $sale->quantity);
-            $assignment->decrement('actual_total_sales', $sale->total_amount);
-        }
-        
-        // Restore stock to purchase
-        $purchase->increment('quantity', $sale->quantity);
+            $purchase = $this->scopeToCurrentBusiness(Purchase::class)
+                ->whereKey($lockedSale->purchase_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $sale->delete();
+            if ($lockedSale->assignment_id) {
+                $assignment = $this->scopeToCurrentBusiness(ProductAssignment::class)
+                    ->whereKey($lockedSale->assignment_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $assignment->update([
+                    'sold_quantity' => max(0, (float) $assignment->sold_quantity - (float) $lockedSale->quantity),
+                    'actual_total_sales' => max(0, (float) $assignment->actual_total_sales - (float) $lockedSale->total_amount),
+                ]);
+            } else {
+                $purchase->increment('quantity', (float) $lockedSale->quantity);
+            }
+
+            $lockedSale->delete();
+        });
 
         return redirect()->route('sales.index')->with('success', 'Sale deleted successfully!');
     }

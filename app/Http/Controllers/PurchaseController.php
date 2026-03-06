@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use App\Traits\BusinessScoped;
 use App\Models\PurchaseHistory;
 use App\Models\ProductAssignment;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseController extends Controller
 {
@@ -19,9 +21,14 @@ class PurchaseController extends Controller
      * Display a listing of purchases
      */
 
-    private function getPurchase($created_at, $user_id)
+    private function getPurchase(PurchaseHistory $history)
     {
-        return Purchase::with(['product', 'user'])->where("created_at", $created_at)->where("user_id", $user_id)->first();
+        return $this->scopeToCurrentBusiness(Purchase::class)
+            ->with(['product', 'user'])
+            ->where('created_at', $history->created_at)
+            ->where('user_id', $history->user_id)
+            ->where('product_id', $history->product_id)
+            ->first();
     }
     public function index(Request $request)
     {
@@ -191,7 +198,7 @@ class PurchaseController extends Controller
      */
     public function show(PurchaseHistory $purchase)
     {
-        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
+        $purchaseReal = $this->getPurchase($purchase);
         $purchase->load(['product', 'user']);
         return view('purchases.show', compact('purchase'));
     }
@@ -204,7 +211,7 @@ class PurchaseController extends Controller
 
         $products = Product::all();
         $purchase->load(['product']);
-        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
+        $purchaseReal = $this->getPurchase($purchase);
         return view('purchases.edit', compact('purchase', 'products'));
     }
 
@@ -222,41 +229,83 @@ class PurchaseController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
-        $product = $purchase->product;
-        $oldQuantity = $purchase->quantity;
+        DB::transaction(function () use ($request, $purchase) {
+            $lockedHistory = $this->scopeToCurrentBusiness(PurchaseHistory::class)
+                ->whereKey($purchase->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Remove old stock quantity
-        $product->reduceStock($oldQuantity);
-        // $purchase->reduceStock($request->quantity);
-        // $purchaseReal->reduceStock($request->quantity);
+            $purchaseReal = $this->getPurchase($lockedHistory);
+            if (!$purchaseReal) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Unable to find matching inventory record for this purchase history row.',
+                ]);
+            }
 
-        $totalCost = $request->quantity * $request->cost_price_per_unit;
+            $lockedPurchase = $this->scopeToCurrentBusiness(Purchase::class)
+                ->whereKey($purchaseReal->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Update the purchase
-        $purchase->update([
-            'supplier_name' => $request->supplier_name,
-            'supplier_phone' => $request->supplier_phone,
-            'quantity' => $request->quantity,
-            'purchase_price' => $request->cost_price_per_unit,
-            'total_cost' => $totalCost,
-            'purchase_date' => $request->purchase_date,
-            'notes' => $request->notes,
-        ]);
-        $purchaseReal->update([
-            'supplier_name' => $request->supplier_name,
-            'supplier_phone' => $request->supplier_phone,
-            'quantity' => $request->quantity,
-            'purchase_price' => $request->cost_price_per_unit,
-            'total_cost' => $totalCost,
-            'purchase_date' => $request->purchase_date,
-            'notes' => $request->notes,
-        ]);
+            $product = $this->scopeToCurrentBusiness(Product::class)
+                ->whereKey($lockedHistory->product_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Add new stock quantity
-        $product->addStock("current_stock");
-        // $purchase->addStock($request->quantity);
-        // $purchaseReal->addStock($request->quantity);
+            $newHistoryQuantity = (float) $request->quantity;
+            $oldHistoryQuantity = (float) $lockedHistory->quantity;
+            $quantityDelta = $newHistoryQuantity - $oldHistoryQuantity;
+            $newPurchasePrice = (float) $request->cost_price_per_unit;
+            $newHistoryTotalCost = $newHistoryQuantity * $newPurchasePrice;
+            $costDelta = $newHistoryTotalCost - (float) $lockedHistory->total_cost;
+            $newPurchaseQuantity = (float) $lockedPurchase->quantity + $quantityDelta;
+            $newPurchaseTotalCost = (float) $lockedPurchase->total_cost + $costDelta;
+            $newStock = (float) $product->current_stock + $quantityDelta;
+
+            if ($newStock < 0 || $newPurchaseQuantity < 0 || $newPurchaseTotalCost < 0) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Stock update would result in negative product stock.',
+                ]);
+            }
+
+            // Keep historical quantity/cost immutable; only metadata remains editable.
+            $lockedHistory->update([
+                'supplier_name' => $request->supplier_name,
+                'supplier_phone' => $request->supplier_phone,
+                'purchase_date' => $request->purchase_date,
+                'notes' => $request->notes,
+            ]);
+
+            $lockedPurchase->update([
+                'supplier_name' => $request->supplier_name,
+                'supplier_phone' => $request->supplier_phone,
+                'quantity' => $newPurchaseQuantity,
+                'purchase_price' => $newPurchaseQuantity > 0 ? $newPurchaseTotalCost / $newPurchaseQuantity : $newPurchasePrice,
+                'total_cost' => $newPurchaseTotalCost,
+                'purchase_date' => $request->purchase_date,
+                'notes' => $request->notes,
+            ]);
+
+            $product->update([
+                'current_stock' => $newStock,
+            ]);
+
+            if ($quantityDelta != 0.0 || $costDelta != 0.0) {
+                PurchaseHistory::create($this->addBusinessId([
+                    'product_id' => $lockedHistory->product_id,
+                    'user_id' => auth()->id(),
+                    'supplier_name' => $request->supplier_name,
+                    'supplier_phone' => $request->supplier_phone,
+                    'quantity' => $quantityDelta,
+                    'purchase_price' => $newPurchasePrice,
+                    'total_cost' => $costDelta,
+                    'selling_price' => $lockedHistory->selling_price ?? 0,
+                    'seller_profit' => $lockedHistory->seller_profit ?? 0,
+                    'purchase_date' => now()->toDateString(),
+                    'notes' => trim('ADJUSTMENT_FROM_EDIT:' . $lockedHistory->id . ' ' . ($request->notes ?? '')),
+                ]));
+            }
+        });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully!');
     }
@@ -268,7 +317,7 @@ class PurchaseController extends Controller
     {
         // Remove stock from product
         $purchase->product->reduceStock($purchase->quantity);
-        $purchaseReal = $this->getPurchase($purchase->created_at, $purchase->user_id);
+        $purchaseReal = $this->getPurchase($purchase);
         // return $purchaseReal->id;
         $purchaseAssignment = ProductAssignment::where("purchase_id", $purchaseReal->id)->count();
         if($purchaseAssignment > 0){

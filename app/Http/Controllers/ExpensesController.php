@@ -39,7 +39,7 @@ class ExpensesController extends Controller
                 'assigned_quantity' => $assignment->assigned_quantity,
                 'sold_quantity' => $assignment->sold_quantity,
                 'returned_quantity' => $assignment->returned_quantity,
-                'quantity' => $assignment->assigned_quantity - $assignment->returned_quantity - $assignment->sold_quantity,
+                'quantity' => $assignment->remaining_quantity,
                 'expected_selling_price' => $assignment->expected_selling_price,
                 'commission_rate' => $assignment->commission_rate,
                 'due_date' => $assignment->due_date,

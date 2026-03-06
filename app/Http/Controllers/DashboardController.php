@@ -199,14 +199,13 @@ class DashboardController extends Controller
                 $assignment->sold_percentage = $assignment->assigned_quantity > 0
                     ? ($assignment->sold_quantity / $assignment->assigned_quantity) * 100
                     : 0;
-                $assignment->remaining_quantity = $assignment->assigned_quantity - $assignment->sold_quantity;
                 return $assignment;
             });
 
         $totalStock = $assignments->sum("assigned_quantity");
         $totalSoldQuantity = $assignments->sum("sold_quantity");
         $commission_rate = $assignments->sum("commission_rate");
-        $totalRemainingQuantityStock = $assignments->sum("assigned_quantity") - $assignments->sum("sold_quantity");
+        $totalRemainingQuantityStock = $assignments->sum("remaining_quantity");
         
         // Available products with stockProductAssigned - scoped to business
         $availableProducts = $this->scopeToCurrentBusiness(ProductAssignment::class)

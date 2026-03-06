@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProductAssignment;
+use App\Models\CollectHistory;
 use App\Models\User;
 use App\Models\Purchase;
 use App\Models\SalePrice;
 use App\Traits\BusinessScoped;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class ProductAssignmentController extends Controller
 {
@@ -263,58 +263,39 @@ class ProductAssignmentController extends Controller
     public function collectReturn(Request $request, ProductAssignment $assignment)
     {
         $request->validate([
-            'returned_quantity' => 'nullable|numeric|min:0.01|required_without:collected_quantity',
-            'collected_quantity' => 'nullable|numeric|min:0.01|required_without:returned_quantity',
+            'returned_quantity' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        $collectedQuantity = (float) ($request->input('returned_quantity') ?? $request->input('collected_quantity'));
-        $lockedAssignment = null;
-        $newRemainingQuantity = 0.0;
+        $remainingQuantity = $assignment->remaining_quantity;
+        $collectedQuantity = $request->returned_quantity;
 
-        DB::transaction(function () use ($assignment, $request, $collectedQuantity, &$lockedAssignment, &$newRemainingQuantity) {
-            $lockedAssignment = $this->scopeToCurrentBusiness(ProductAssignment::class)
-                ->whereKey($assignment->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $lockedPurchase = $this->scopeToCurrentBusiness(Purchase::class)
-                ->whereKey($lockedAssignment->purchase_id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $totalCollected = $lockedAssignment->collectionHistories()->sum('collected_quantity');
-            $remainingQuantity = max(
-                0,
-                (float) $lockedAssignment->assigned_quantity - (float) $lockedAssignment->sold_quantity - (float) $totalCollected
-            );
-
-            if ($collectedQuantity > $remainingQuantity) {
-                throw ValidationException::withMessages([
-                    'returned_quantity' => "Cannot collect more than remaining quantity ({$remainingQuantity})",
-                ]);
-            }
-
-            $newRemainingQuantity = $remainingQuantity - $collectedQuantity;
-
-            $lockedAssignment->collectionHistories()->create([
-                'collected_by' => auth()->id(),
-                'collected_quantity' => $collectedQuantity,
-                'remaining_quantity_before' => $remainingQuantity,
-                'remaining_quantity_after' => $newRemainingQuantity,
-                'notes' => $request->notes,
-                'collected_at' => now(),
+        // Validate that collected quantity doesn't exceed remaining quantity
+        if ($collectedQuantity > $remainingQuantity) {
+            return back()->withErrors([
+                'returned_quantity' => "Cannot collect more than remaining quantity ({$remainingQuantity})"
             ]);
-
-            $lockedPurchase->increment('quantity', $collectedQuantity);
-        });
-
-        if (!$lockedAssignment) {
-            return back()->withErrors(['returned_quantity' => 'Unable to process return quantity.']);
         }
 
+        // Create collection history record
+        $assignment->collectionHistories()->create([
+            'collected_by' => auth()->id(),
+            'collected_quantity' => $collectedQuantity,
+            'remaining_quantity_before' => $remainingQuantity,
+            'remaining_quantity_after' => $remainingQuantity - $collectedQuantity,
+            'notes' => $request->notes,
+            'collected_at' => now(),
+        ]);
+
+        // Update inventory - add collected quantity back to purchase
+        $assignment->purchase->increment('quantity', $collectedQuantity);
+
+        // Check if all remaining quantity has been collected
+        $newRemainingQuantity = $remainingQuantity - $collectedQuantity;
+        $assignment->returned_quantity += $collectedQuantity;
+        $assignment->save();
         if ($newRemainingQuantity <= 0) {
-            $lockedAssignment->update([
+            $assignment->update([
                 'status' => 'completed',
                 'returned_date' => now(),
             ]);
@@ -323,7 +304,7 @@ class ProductAssignmentController extends Controller
             $message = "Collected {$collectedQuantity} units successfully! {$newRemainingQuantity} units remaining.";
         }
 
-        return redirect()->route('admin.assignments.show', $lockedAssignment)
+        return redirect()->route('admin.assignments.show', $assignment)
             ->with('success', $message);
     }
 }

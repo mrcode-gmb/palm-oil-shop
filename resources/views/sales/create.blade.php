@@ -56,13 +56,13 @@
                                     <select name="products[0][assignment_id]" class="assignment-select mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
                                         <option value="">Select assigned product</option>
                                         @foreach($assignments as $assignment)
-                                             @if($assignment->assigned_quantity - $assignment->sold_quantity > 0)
+                                             @if($assignment->remaining_quantity > 0)
                                                 <option value="{{ $assignment->id }}" 
                                                     data-product-id="{{ $assignment->purchase_id }}" 
                                                     data-price="{{ $assignment->expected_selling_price }}" 
-                                                    data-stock="{{ $assignment->assigned_quantity - $assignment->sold_quantity }}"
+                                                    data-stock="{{ $assignment->remaining_quantity }}"
                                                     data-sale-prices="{{ json_encode($assignment->salePrices->map(function($sp) { return ['type' => $sp->customer_type, 'price' => $sp->sale_price]; })) }}">
-                                                    {{ $assignment->purchase->product->name }} (Available: {{ $assignment->assigned_quantity - $assignment->sold_quantity }})
+                                                    {{ $assignment->purchase->product->name }} (Available: {{ $assignment->remaining_quantity }})
                                                 </option>
                                             @endif
                                         @endforeach
@@ -374,4 +374,3 @@
     });
     </script>
 </x-shop-layout>
-

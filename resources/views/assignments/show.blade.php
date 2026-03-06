@@ -140,7 +140,7 @@
                         <div class="flex justify-between">
                             <span class="text-sm font-medium text-gray-700">Returned
                                 Quantity:</span>
-                            <span class="text-sm text-gray-900">{{ $assignment->returned_quantity }}
+                            <span class="text-sm text-gray-900">{{ $assignment->total_collected_quantity }}
                                 units</span>
                         </div>
                         <div class="flex justify-between border-t pt-2">
@@ -359,11 +359,11 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <label for="collected_quantity"
+                                        <label for="returned_quantity"
                                             class="block text-sm font-medium text-gray-700">Collect Quantity (Max:
                                             {{ $assignment->remaining_quantity }})</label>
-                                        <input type="number" step="0.01" name="collected_quantity"
-                                            id="collected_quantity" required
+                                        <input type="number" step="0.01" name="returned_quantity"
+                                            id="returned_quantity" required
                                             max="{{ $assignment->remaining_quantity }}"
                                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                                         <p class="text-xs text-gray-500 mt-1">Remaining quantity: {{ $assignment->remaining_quantity }} units</p>
