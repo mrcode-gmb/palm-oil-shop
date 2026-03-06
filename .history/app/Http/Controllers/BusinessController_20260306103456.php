@@ -85,7 +85,7 @@ class BusinessController extends Controller
      */
     public function show(Business $business)
     {
-        $business->load(['users', 'products', 'sales', 'purchases', 'productAssignments.collectionHistories', 'expenses', 'wallet', 'businessCapital']);
+        $business->load(['users', 'products', 'sales', 'purchases', 'expenses', 'wallet', 'businessCapital']);
 
         // Ensure wallet exists
         if (!$business->wallet) {
@@ -154,17 +154,19 @@ class BusinessController extends Controller
         // Calculate cost of remaining products in assignments (unsold inventory with staff)
         // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
-            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity")) * $assignment->purchase->purchase_price;
+            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
         });
-        // return $business->productAssignments;
-        // return $business->productAssignments->sum(function($assignment){
-        //     return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
-        // });
         // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
+        });
+        $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories', 'salePrices']);
+        $assignment = $query->->get();
+        return $assignment->sum(function($assignment){
+            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
         });
 
+        // Calculate cost of inventory in warehouse (actual remaining stock in purchases table)
         // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)
         $warehouseInventoryCost = $business->purchases->sum(function ($purchases) {
             return $purchases->quantity * $purchases->purchase_price;

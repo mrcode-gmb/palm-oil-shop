@@ -194,7 +194,7 @@
                     <!-- Start Date -->
                     <div>
                         <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
-                        <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
+                        <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}" 
                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                     </div>
 
@@ -202,7 +202,7 @@
                     <div>
                         <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
                         <div class="flex space-x-2">
-                            <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}"
+                            <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}" 
                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap">
                                 Filter
@@ -284,7 +284,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-2">
-                                        <a href="{{ route('admin.assignments.show', $assignment) }}"
+                                        <a href="{{ route('admin.assignments.show', $assignment) }}" 
                                            class="text-blue-600 hover:text-blue-900">View</a>
                                         @if($assignment->status !== 'completed')
                                             <button onclick="showCollectModal({{ $assignment->id }}, '{{ $assignment->user->name }}', '{{ $assignment->purchase->product->name ?? 'N/A' }}')"
@@ -317,30 +317,30 @@
                 <form id="collectForm" method="POST">
                     @csrf
                     @method('PATCH')
-
+                    
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Staff & Product</label>
                         <p id="staffProduct" class="text-sm text-gray-900 mt-1"></p>
                     </div>
-
+                    
                     <div class="mb-4">
                         <label for="returned_quantity" class="block text-sm font-medium text-gray-700">Returned Quantity</label>
                         <input type="number" step="0.01" name="returned_quantity" id="returned_quantity" required
                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
-
-
-
+                    
+                    
+                    
                     <div class="mb-4">
                         <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
                         <textarea name="notes" id="notes" rows="3"
                                   class="mt-1 block w-full px-3 py-2 resize-none border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
                     </div>
-
+                    
                     <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="hideCollectModal()"
+                        <button type="button" onclick="hideCollectModal()" 
                                 class="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded-md">Cancel</button>
-                        <button type="submit"
+                        <button type="submit" 
                                 class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded-md">Collect Return</button>
                     </div>
                 </form>

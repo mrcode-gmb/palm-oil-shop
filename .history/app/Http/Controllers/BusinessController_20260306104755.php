@@ -157,12 +157,12 @@ class BusinessController extends Controller
             return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity")) * $assignment->purchase->purchase_price;
         });
         // return $business->productAssignments;
-        // return $business->productAssignments->sum(function($assignment){
-        //     return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
-        // });
+        return $business->productAssignments->sum(function($assignment){
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
+        });
         // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
         });
 
         // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)

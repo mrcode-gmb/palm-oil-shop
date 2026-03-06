@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Business;
-use App\Models\ProductAssignment;
-use App\Models\PurchaseHistory;
 use App\Models\User;
-use App\Traits\BusinessScoped;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Business;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\PurchaseHistory;
+use Illuminate\Support\Facades\Hash;
 
 class BusinessController extends Controller
 {
-    use BusinessScoped;
     /**
      * Display a listing of all businesses (Super Admin only)
      */
@@ -85,7 +82,7 @@ class BusinessController extends Controller
      */
     public function show(Business $business)
     {
-        $business->load(['users', 'products', 'sales', 'purchases', 'productAssignments.collectionHistories', 'expenses', 'wallet', 'businessCapital']);
+        $business->load(['users', 'products', 'sales', 'purchases', 'expenses', 'wallet', 'businessCapital']);
 
         // Ensure wallet exists
         if (!$business->wallet) {
@@ -154,22 +151,26 @@ class BusinessController extends Controller
         // Calculate cost of remaining products in assignments (unsold inventory with staff)
         // Use the model's remaining_quantity attribute which correctly calculates: assigned - sold - collected
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
-            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity")) * $assignment->purchase->purchase_price;
+            return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
         });
-        // return $business->productAssignments;
-        // return $business->productAssignments->sum(function($assignment){
-        //     return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
-        // });
         // return $productAssignmentCost;
         $productAssignmentQuantity = $business->productAssignments->sum(function ($assignment) {
-            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->collectionHistories->sum("collected_quantity");
+            return $assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity;
         });
+        return $$business->productAssignments;
 
+        // Calculate cost of inventory in warehouse (actual remaining stock in purchases table)
         // purchases.quantity shows actual warehouse stock (reduced when products are assigned/sold)
         $warehouseInventoryCost = $business->purchases->sum(function ($purchases) {
             return $purchases->quantity * $purchases->purchase_price;
         });
 
+        // Total inventory cost = warehouse stock + assigned stock (both are separate physical locations)
+        // Warehouse: What's physically in the warehouse (purchases.quantity)
+        // Assigned: What's physically with staff (assigned - sold - returned)
+        // return [number_format($productAssignmentCost), number_format($business->sales->sum(function($sale){
+        //     return $sale->purchase->purchase_price * $sale->quantity;
+        // }))];
         $totalInventoryCost = $warehouseInventoryCost + $productAssignmentCost;
 
         // Calculate net profit with detailed breakdown

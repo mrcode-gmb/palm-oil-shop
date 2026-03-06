@@ -21,7 +21,7 @@ class ProductAssignmentController extends Controller
     public function index(Request $request)
     {
         $query = $this->scopeToCurrentBusiness(ProductAssignment::class)->with(['user', 'purchase.product', 'collectionHistories', 'salePrices']);
-
+        
         // Apply filters
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
@@ -53,19 +53,19 @@ class ProductAssignmentController extends Controller
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date
             ];
-
+            
             $assignments = $query->get();
-
+            
             $pdf = \PDF::loadView('exports.assignments-pdf', [
                 'assignments' => $assignments,
                 'filters' => $filters
             ])->setPaper('a4', 'landscape');
-
+            
             return $pdf->download('assignments-report-' . now()->format('Y-m-d') . '.pdf');
         }
 
         $assignments = $query->orderBy('created_at', 'desc')->get();
-
+        
         // Calculate summary statistics
         $totalAssignments = $assignments->count();
         $activeAssignments = $assignments->where('status', 'assigned')->count() + $assignments->where('status', 'in_progress')->count();
@@ -73,24 +73,24 @@ class ProductAssignmentController extends Controller
         $overdueAssignments = $assignments->filter(function($assignment) {
             return $assignment->isOverdue();
         })->count();
-
+        
         $totalAssignedQty = $assignments->sum('assigned_quantity');
         $totalSoldQty = $assignments->sum('sold_quantity');
         $totalCollectedQty = $assignments->sum('total_collected_quantity');
         $totalRemainingQty = $assignments->sum('remaining_quantity');
-
+        
         $totalExpectedRevenue = $assignments->sum(function($assignment) {
             return $assignment->expected_selling_price * $assignment->assigned_quantity;
         });
         $totalActualSales = $assignments->sum('actual_total_sales');
         $totalExpectedProfit = $assignments->sum('expected_profit');
         $totalActualProfit = $assignments->sum('actual_profit');
-
+        
         // Calculate total cost of assigned products (purchase price * assigned quantity)
         $totalCost = $assignments->sum(function($assignment) {
             return $assignment->purchase->purchase_price * $assignment->assigned_quantity;
         });
-
+        
         // Get users for filter dropdown - only from current business
         $users = $this->scopeToCurrentBusiness(User::class)
             ->where('role', 'salesperson')
@@ -105,8 +105,8 @@ class ProductAssignmentController extends Controller
         ));
 
         return view('assignments.index', compact(
-            'assignments',
-            'users',
+            'assignments', 
+            'users', 
             'exportUrl',
             'totalAssignments',
             'activeAssignments',
@@ -178,22 +178,22 @@ class ProductAssignmentController extends Controller
 
         // Check if enough quantity is available in the purchase
         $purchase = $this->scopeToCurrentBusiness(Purchase::class)->findOrFail($request->purchase_id);
-
+        
         // Calculate already assigned quantity
         $assignedQuantity = $this->scopeToCurrentBusiness(ProductAssignment::class)
             ->where('purchase_id', $request->purchase_id)
             ->whereIn('status', ['assigned', 'in_progress'])
             ->sum('assigned_quantity');
-
+            
         // $availableQuantity = $purchase->quantity - $assignedQuantity;
-
+        
         if ($request->assigned_quantity > $purchase->quantity) {
             return back()->withErrors(['assigned_quantity' => 'Not enough quantity available. Available: ' .  $purchase->quantity]);
         }
 
         // Calculate commission amount
         $totalExpectedSales = $request->assigned_quantity * $request->expected_selling_price;
-
+        
 
         // Create the assignment with business_id
         $data = $this->addBusinessId([
@@ -208,7 +208,7 @@ class ProductAssignmentController extends Controller
             'status' => 'assigned',
             'notes' => $request->notes,
         ]);
-
+        
         $assignment = ProductAssignment::create($data);
 
         // Create sale prices if provided
@@ -292,8 +292,6 @@ class ProductAssignmentController extends Controller
 
         // Check if all remaining quantity has been collected
         $newRemainingQuantity = $remainingQuantity - $collectedQuantity;
-        $assignment->returned_quantity += $collectedQuantity;
-        $assignment->save();
         if ($newRemainingQuantity <= 0) {
             $assignment->update([
                 'status' => 'completed',
