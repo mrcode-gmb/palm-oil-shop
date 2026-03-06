@@ -156,7 +156,7 @@ class BusinessController extends Controller
         $productAssignmentCost = $business->productAssignments->sum(function ($assignment) {
             return ($assignment->assigned_quantity - $assignment->sold_quantity - $assignment->returned_quantity) * $assignment->purchase->purchase_price;
         });
-        // return $productAssignmentCost;
+        return $productAssignmentCost;
         // return $business->productAssignments;
         return $business->productAssignments->map(function($assignment){
             $assignment->returned_quantity = $assignment->collectionHistories->sum("collected_quantity");

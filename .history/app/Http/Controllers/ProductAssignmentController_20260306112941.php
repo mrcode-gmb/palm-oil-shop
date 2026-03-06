@@ -292,8 +292,8 @@ class ProductAssignmentController extends Controller
 
         // Check if all remaining quantity has been collected
         $newRemainingQuantity = $remainingQuantity - $collectedQuantity;
-        // $assignment->returned_quantity += $collectedQuantity;
-        // $assignment->save();
+        $assignment->returned_quantity += $collectedQuantity;
+        
         if ($newRemainingQuantity <= 0) {
             $assignment->update([
                 'status' => 'completed',
