@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use App\Traits\BusinessScoped;
 use App\Models\PurchaseHistory;
 use App\Models\ProductAssignment;
-use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -221,6 +220,7 @@ class PurchaseController extends Controller
      */
     public function update(Request $request, PurchaseHistory $purchase)
     {
+        return $request;
         $request->validate([
             'supplier_name' => 'required|string|max:255',
             'supplier_phone' => 'nullable|string|max:20',
@@ -230,9 +230,7 @@ class PurchaseController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $walletDelta = 0.0;
-
-        DB::transaction(function () use ($request, $purchase, &$walletDelta) {
+        DB::transaction(function () use ($request, $purchase) {
             $lockedHistory = $this->scopeToCurrentBusiness(PurchaseHistory::class)
                 ->whereKey($purchase->id)
                 ->lockForUpdate()
@@ -255,31 +253,26 @@ class PurchaseController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $newQuantity = (float) $request->quantity;
-            $newUnitCost = (float) $request->cost_price_per_unit;
-            $newTotalCost = $newQuantity * $newUnitCost;
-
-            $oldQuantity = (float) $lockedHistory->quantity;
-            $oldTotalCost = (float) $lockedHistory->total_cost;
-            $quantityDelta = $newQuantity - $oldQuantity;
-            $walletDelta = $newTotalCost - $oldTotalCost;
-
+            $newHistoryQuantity = (float) $request->quantity;
+            $oldHistoryQuantity = (float) $lockedHistory->quantity;
+            $quantityDelta = $newHistoryQuantity - $oldHistoryQuantity;
+            $newPurchasePrice = (float) $request->cost_price_per_unit;
+            $newHistoryTotalCost = $newHistoryQuantity * $newPurchasePrice;
+            $costDelta = $newHistoryTotalCost - (float) $lockedHistory->total_cost;
             $newPurchaseQuantity = (float) $lockedPurchase->quantity + $quantityDelta;
-            $newProductStock = (float) $product->current_stock + $quantityDelta;
+            $newPurchaseTotalCost = (float) $lockedPurchase->total_cost + $costDelta;
+            $newStock = (float) $product->current_stock + $quantityDelta;
 
-            // Only block when user is reducing quantity beyond what current inventory can support.
-            if ($quantityDelta < 0 && ($newPurchaseQuantity < 0 || $newProductStock < 0)) {
+            if ($newStock < 0 || $newPurchaseQuantity < 0 || $newPurchaseTotalCost < 0) {
                 throw ValidationException::withMessages([
-                    'quantity' => 'Quantity update would result in negative inventory.',
+                    'quantity' => 'Stock update would result in negative product stock.',
                 ]);
             }
 
+            // Keep historical quantity/cost immutable; only metadata remains editable.
             $lockedHistory->update([
                 'supplier_name' => $request->supplier_name,
                 'supplier_phone' => $request->supplier_phone,
-                'quantity' => $newQuantity,
-                'purchase_price' => $newUnitCost,
-                'total_cost' => $newTotalCost,
                 'purchase_date' => $request->purchase_date,
                 'notes' => $request->notes,
             ]);
@@ -288,60 +281,34 @@ class PurchaseController extends Controller
                 'supplier_name' => $request->supplier_name,
                 'supplier_phone' => $request->supplier_phone,
                 'quantity' => $newPurchaseQuantity,
-                'purchase_price' => $newUnitCost,
-                'total_cost' => $newTotalCost,
+                'purchase_price' => $newPurchaseQuantity > 0 ? $newPurchaseTotalCost / $newPurchaseQuantity : $newPurchasePrice,
+                'total_cost' => $newPurchaseTotalCost,
                 'purchase_date' => $request->purchase_date,
                 'notes' => $request->notes,
             ]);
 
             $product->update([
-                'current_stock' => $newProductStock,
+                'current_stock' => $newStock,
             ]);
 
-            if ($walletDelta != 0.0) {
-                $wallet = Wallet::where('business_id', $lockedPurchase->business_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($wallet) {
-                    $amount = abs($walletDelta);
-                    $type = $walletDelta > 0 ? 'debit' : 'credit';
-
-                    $wallet->balance += $walletDelta > 0 ? -$amount : $amount;
-                    $wallet->last_transaction_at = now();
-                    $wallet->save();
-
-                    $wallet->transactions()->create([
-                        'wallet_id' => $wallet->id,
-                        'business_id' => $lockedPurchase->business_id,
-                        'amount' => $amount,
-                        'type' => $type,
-                        'reference' => 'PURCHASE-EDIT-' . strtoupper(Str::random(10)),
-                        'description' => $walletDelta > 0
-                            ? 'Purchase edit adjustment (increase)'
-                            : 'Purchase edit adjustment (decrease refund)',
-                        'status' => 'completed',
-                        'metadata' => [
-                            'purchase_id' => $lockedPurchase->id,
-                            'purchase_history_id' => $lockedHistory->id,
-                            'old_quantity' => $oldQuantity,
-                            'new_quantity' => $newQuantity,
-                            'old_total_cost' => $oldTotalCost,
-                            'new_total_cost' => $newTotalCost,
-                            'delta_total_cost' => $walletDelta,
-                        ],
-                    ]);
-                }
+            if ($quantityDelta != 0.0 || $costDelta != 0.0) {
+                PurchaseHistory::create($this->addBusinessId([
+                    'product_id' => $lockedHistory->product_id,
+                    'user_id' => auth()->id(),
+                    'supplier_name' => $request->supplier_name,
+                    'supplier_phone' => $request->supplier_phone,
+                    'quantity' => $quantityDelta,
+                    'purchase_price' => $newPurchasePrice,
+                    'total_cost' => $costDelta,
+                    'selling_price' => $lockedHistory->selling_price ?? 0,
+                    'seller_profit' => $lockedHistory->seller_profit ?? 0,
+                    'purchase_date' => now()->toDateString(),
+                    'notes' => trim('ADJUSTMENT_FROM_EDIT:' . $lockedHistory->id . ' ' . ($request->notes ?? '')),
+                ]));
             }
         });
 
-        $walletMessage = $walletDelta > 0
-            ? ' Wallet debited by ₦' . number_format($walletDelta, 2) . '.'
-            : ($walletDelta < 0
-                ? ' Wallet credited by ₦' . number_format(abs($walletDelta), 2) . '.'
-                : '');
-
-        return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully.' . $walletMessage);
+        return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully!');
     }
 
     /**

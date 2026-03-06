@@ -322,6 +322,57 @@
             }
         }
     </script>
+    <script>
+        document.addEventListener('submit', function(event) {
+            const form = event.target;
+
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            if ((form.getAttribute('method') || 'get').toLowerCase() === 'get') {
+                return;
+            }
+
+            if (form.dataset.noLoader === 'true') {
+                return;
+            }
+
+            if (form.dataset.submitting === '1') {
+                event.preventDefault();
+                return;
+            }
+
+            form.dataset.submitting = '1';
+
+            const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            const submitter = event.submitter || submitButtons[0];
+
+            submitButtons.forEach(function(button) {
+                button.disabled = true;
+                button.classList.add('opacity-60', 'cursor-not-allowed');
+            });
+
+            if (!submitter) {
+                return;
+            }
+
+            const loadingText = submitter.dataset.loadingText || 'Processing...';
+            const spinner = '<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+
+            if (submitter.tagName === 'BUTTON') {
+                if (!submitter.dataset.originalHtml) {
+                    submitter.dataset.originalHtml = submitter.innerHTML;
+                }
+                submitter.innerHTML = '<span class="inline-flex items-center gap-2">' + spinner + '<span>' + loadingText + '</span></span>';
+            } else if (submitter.tagName === 'INPUT') {
+                if (!submitter.dataset.originalValue) {
+                    submitter.dataset.originalValue = submitter.value;
+                }
+                submitter.value = loadingText;
+            }
+        });
+    </script>
 
 
 </body>
