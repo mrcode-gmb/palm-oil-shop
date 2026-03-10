@@ -544,6 +544,7 @@ class BusinessController extends Controller
         $request->validate([
             'search' => 'nullable|string|max:255',
             'type' => 'nullable|in:credit,debit',
+            'source' => 'nullable|in:' . implode(',', array_keys($this->walletTransactionSourceOptions())),
             'status' => 'nullable|in:pending,completed,failed',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
@@ -572,6 +573,10 @@ class BusinessController extends Controller
 
         if ($request->filled('type')) {
             $query->where('type', $request->input('type'));
+        }
+
+        if ($request->filled('source')) {
+            $this->applyWalletTransactionSourceFilter($query, $request->input('source'));
         }
 
         if ($request->filled('status')) {
@@ -616,9 +621,95 @@ class BusinessController extends Controller
         ];
     }
 
+    private function walletTransactionSourceOptions(): array
+    {
+        return [
+            'purchase' => 'Purchase',
+            'sales' => 'Sales',
+            'creditor' => 'Creditor',
+            'capital' => 'Capital',
+            'manual_deposit' => 'Manual Deposit',
+            'manual_withdrawal' => 'Manual Withdrawal',
+            'deposit' => 'Deposit',
+            'withdrawal' => 'Withdrawal',
+            'wallet' => 'Wallet / Other',
+        ];
+    }
+
+    private function applyWalletTransactionSourceFilter($query, string $source): void
+    {
+        switch ($source) {
+            case 'purchase':
+                $query->where(function ($walletQuery) {
+                    $walletQuery->where('description', 'like', '%purchase%')
+                        ->orWhere('metadata', 'like', '%"purchase_id"%')
+                        ->orWhere('metadata', 'like', '%"purchase_history_id"%');
+                });
+                break;
+
+            case 'sales':
+                $query->where('description', 'like', '%sale%');
+                break;
+
+            case 'creditor':
+                $query->where(function ($walletQuery) {
+                    $walletQuery->where('description', 'like', '%creditor%')
+                        ->orWhere('metadata', 'like', '%"creditor_id"%');
+                });
+                break;
+
+            case 'capital':
+                $query->where('description', 'like', '%capital%');
+                break;
+
+            case 'manual_deposit':
+                $query->where('description', 'like', '%manual deposit%');
+                break;
+
+            case 'manual_withdrawal':
+                $query->where('description', 'like', '%manual withdrawal%');
+                break;
+
+            case 'deposit':
+                $query->where('description', 'like', '%deposit%')
+                    ->where('description', 'not like', '%manual deposit%')
+                    ->where('description', 'not like', '%capital%');
+                break;
+
+            case 'withdrawal':
+                $query->where('description', 'like', '%withdraw%')
+                    ->where('description', 'not like', '%manual withdrawal%')
+                    ->where('description', 'not like', '%capital%');
+                break;
+
+            case 'wallet':
+                $query->where(function ($walletQuery) {
+                    $walletQuery->whereNull('description')
+                        ->orWhere(function ($descriptionQuery) {
+                            $descriptionQuery->where('description', 'not like', '%purchase%')
+                                ->where('description', 'not like', '%sale%')
+                                ->where('description', 'not like', '%creditor%')
+                                ->where('description', 'not like', '%capital%')
+                                ->where('description', 'not like', '%manual deposit%')
+                                ->where('description', 'not like', '%manual withdrawal%')
+                                ->where('description', 'not like', '%deposit%')
+                                ->where('description', 'not like', '%withdraw%');
+                        });
+                })->where(function ($walletQuery) {
+                    $walletQuery->whereNull('metadata')
+                        ->orWhere(function ($metadataQuery) {
+                            $metadataQuery->where('metadata', 'not like', '%"creditor_id"%')
+                                ->where('metadata', 'not like', '%"purchase_id"%')
+                                ->where('metadata', 'not like', '%"purchase_history_id"%');
+                        });
+                });
+                break;
+        }
+    }
+
     private function hasWalletTransactionFilters(Request $request): bool
     {
-        foreach (['search', 'type', 'status', 'date_from', 'date_to'] as $filter) {
+        foreach (['search', 'type', 'source', 'status', 'date_from', 'date_to'] as $filter) {
             if ($request->filled($filter)) {
                 return true;
             }

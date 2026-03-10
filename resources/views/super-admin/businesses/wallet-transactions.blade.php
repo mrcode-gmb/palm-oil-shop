@@ -110,13 +110,29 @@
         <div class="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
             <div class="border-b border-gray-100 px-6 py-5">
                 <h3 class="text-lg font-semibold text-gray-900">Filter Transactions</h3>
-                <p class="mt-1 text-sm text-gray-500">Search by reference or description, narrow by type and status, or focus on a date range.</p>
+                <p class="mt-1 text-sm text-gray-500">Search by reference or description, narrow by source, type, status, or focus on a date range.</p>
             </div>
 
-            <form method="GET" action="{{ route('super-admin.businesses.wallet-transactions', $business) }}" class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-6">
+            <form method="GET" action="{{ route('super-admin.businesses.wallet-transactions', $business) }}" class="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-8">
                 <div class="xl:col-span-2">
                     <label for="search" class="mb-2 block text-sm font-medium text-gray-700">Search</label>
                     <input type="text" id="search" name="search" value="{{ request('search') }}" placeholder="Reference or description" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="source" class="mb-2 block text-sm font-medium text-gray-700">Source</label>
+                    <select id="source" name="source" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All sources</option>
+                        <option value="purchase" @selected(request('source') === 'purchase')>Purchase</option>
+                        <option value="sales" @selected(request('source') === 'sales')>Sales</option>
+                        <option value="creditor" @selected(request('source') === 'creditor')>Creditor</option>
+                        <option value="capital" @selected(request('source') === 'capital')>Capital</option>
+                        <option value="manual_deposit" @selected(request('source') === 'manual_deposit')>Manual Deposit</option>
+                        <option value="manual_withdrawal" @selected(request('source') === 'manual_withdrawal')>Manual Withdrawal</option>
+                        <option value="deposit" @selected(request('source') === 'deposit')>Deposit</option>
+                        <option value="withdrawal" @selected(request('source') === 'withdrawal')>Withdrawal</option>
+                        <option value="wallet" @selected(request('source') === 'wallet')>Wallet / Other</option>
+                    </select>
                 </div>
 
                 <div>
@@ -157,7 +173,7 @@
                     </select>
                 </div>
 
-                <div class="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-6">
+                <div class="flex flex-wrap items-end gap-3 md:col-span-2 xl:col-span-8">
                     <button type="submit" class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19l-4 2v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
