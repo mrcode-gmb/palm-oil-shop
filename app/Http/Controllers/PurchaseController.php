@@ -110,27 +110,37 @@ class PurchaseController extends Controller
             'notes' => $request->notes,
         ]);
 
-        $purchase = Purchase::create($data);
-        $purchaseHistories = PurchaseHistory::create($data);
+        DB::transaction(function () use ($request, $data, $totalCost) {
+            $purchase = Purchase::create($data);
+            $purchaseHistory = PurchaseHistory::create($data);
 
-        // Update product stock
-        $product = Product::findOrFail($request->product_id);
-        $product->addStock($request->quantity);
+            $product = Product::whereKey($request->product_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $product->addStock($request->quantity);
 
-        $businessWallet = auth()->user()->business->wallet;
-        $businessWallet->balance -= $totalCost;
-        $businessWallet->save();
+            $businessWallet = Wallet::where('business_id', auth()->user()->business_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $transaction = $businessWallet->transactions()->create([
-            'wallet_id' => $businessWallet->id,
-            'business_id'=> auth()->user()->business->id,
-            'amount' => $totalCost,
-            'type' => "debit",
-            'reference' => 'PURCHASE-' . strtoupper(Str::random(10)),
-            'description' => "Purchase product history",
-            'status' => 'completed',
-            'metadata' => $data
-        ]);
+            $businessWallet->balance -= $totalCost;
+            $businessWallet->last_transaction_at = now();
+            $businessWallet->save();
+
+            $businessWallet->transactions()->create([
+                'wallet_id' => $businessWallet->id,
+                'business_id' => auth()->user()->business_id,
+                'amount' => $totalCost,
+                'type' => 'debit',
+                'reference' => 'PURCHASE-' . strtoupper(Str::random(10)),
+                'description' => 'Purchase product history',
+                'status' => 'completed',
+                'metadata' => array_merge($data, [
+                    'purchase_id' => $purchase->id,
+                    'purchase_history_id' => $purchaseHistory->id,
+                ]),
+            ]);
+        });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully!');
     }
@@ -150,46 +160,58 @@ class PurchaseController extends Controller
         ]);
         $totalCost = $request->quantity * $request->buying_price_per_unit;
 
+        DB::transaction(function () use ($request, $totalCost) {
+            $purchase = Purchase::where('id', $request->purchase_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $purchase = Purchase::where("id", $request->purchase_id)->first();
+            $data = $this->addBusinessId([
+                'product_id' => $purchase->product_id,
+                'user_id' => auth()->id(),
+                'supplier_name' => $request->supplier_name,
+                'supplier_phone' => $request->supplier_phone,
+                'quantity' => $request->quantity,
+                'purchase_price' => $request->buying_price_per_unit,
+                'total_cost' => $totalCost,
+                'selling_price' => 0,
+                'seller_profit' => $request->selling_profit_per_unit,
+                'purchase_date' => $request->purchase_date,
+                'notes' => $request->notes,
+            ]);
 
-        // Create the purchase with business_id
-        $data = $this->addBusinessId([
-            'product_id' => $purchase->product_id,
-            'user_id' => auth()->id(),
-            'supplier_name' => $request->supplier_name,
-            'supplier_phone' => $request->supplier_phone,
-            'quantity' => $request->quantity,
-            'purchase_price' => $request->buying_price_per_unit,
-            'total_cost' => $totalCost,
-            'selling_price' => 0,
-            'seller_profit' => $request->selling_profit_per_unit,
-            'purchase_date' => $request->purchase_date,
-            'notes' => $request->notes,
-        ]);
-        $purchase->quantity += $request->quantity;
-        $purchase->total_cost += $totalCost;
-        $purchase->save();
-        $purchaseHistories = PurchaseHistory::create($data);
+            $purchase->quantity += $request->quantity;
+            $purchase->total_cost += $totalCost;
+            $purchase->save();
 
-        // Update product stock
-        $product = Product::findOrFail($purchase->product_id);
-        $product->addStock($request->quantity);
+            $purchaseHistory = PurchaseHistory::create($data);
 
-        $businessWallet = auth()->user()->business->wallet;
-        $businessWallet->balance -= $totalCost;
-        $businessWallet->save();
+            $product = Product::whereKey($purchase->product_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $product->addStock($request->quantity);
 
-        $transaction = $businessWallet->transactions()->create([
-            'wallet_id' => $businessWallet->id,
-            'business_id'=> auth()->user()->business->id,
-            'amount' => $totalCost,
-            'type' => "debit",
-            'reference' => 'PURCHASE-' . strtoupper(Str::random(10)),
-            'description' => "Purchase product history",
-            'status' => 'completed',
-            'metadata' => $data
-        ]);
+            $businessWallet = Wallet::where('business_id', auth()->user()->business_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $businessWallet->balance -= $totalCost;
+            $businessWallet->last_transaction_at = now();
+            $businessWallet->save();
+
+            $businessWallet->transactions()->create([
+                'wallet_id' => $businessWallet->id,
+                'business_id' => auth()->user()->business_id,
+                'amount' => $totalCost,
+                'type' => 'debit',
+                'reference' => 'PURCHASE-' . strtoupper(Str::random(10)),
+                'description' => 'Purchase product history',
+                'status' => 'completed',
+                'metadata' => array_merge($data, [
+                    'purchase_id' => $purchase->id,
+                    'purchase_history_id' => $purchaseHistory->id,
+                ]),
+            ]);
+        });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase recorded successfully!');
     }
