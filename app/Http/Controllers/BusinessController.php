@@ -6,6 +6,7 @@ use App\Models\Business;
 use App\Models\ProductAssignment;
 use App\Models\PurchaseHistory;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Traits\BusinessScoped;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -417,6 +418,77 @@ class BusinessController extends Controller
         return view('super-admin.businesses.users', compact('business', 'users'));
     }
 
+    public function walletTransactions(Request $request, Business $business)
+    {
+        $this->validateWalletTransactionFilters($request);
+        $this->ensureWalletExists($business);
+
+        $perPage = $this->resolveWalletTransactionPerPage($request);
+        $filteredQuery = $this->walletTransactionsQuery($business, $request);
+
+        $transactions = (clone $filteredQuery)
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $summary = $this->walletTransactionSummary($business, $request);
+        $exportUrl = route(
+            'super-admin.businesses.wallet-transactions.export',
+            array_merge(['business' => $business], $request->query())
+        );
+
+        return view('super-admin.businesses.wallet-transactions', compact(
+            'business',
+            'transactions',
+            'summary',
+            'exportUrl'
+        ));
+    }
+
+    public function exportWalletTransactions(Request $request, Business $business)
+    {
+        $this->validateWalletTransactionFilters($request);
+        $this->ensureWalletExists($business);
+
+        $transactions = $this->walletTransactionsQuery($business, $request)->cursor();
+        $filename = sprintf(
+            '%s-wallet-transactions-%s.csv',
+            Str::slug($business->name),
+            now()->format('Y-m-d-His')
+        );
+
+        return response()->streamDownload(function () use ($transactions) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Date',
+                'Reference',
+                'Source',
+                'Description',
+                'Type',
+                'Status',
+                'Amount',
+                'Metadata',
+            ]);
+
+            foreach ($transactions as $transaction) {
+                fputcsv($handle, [
+                    optional($transaction->created_at)->format('Y-m-d H:i:s'),
+                    $transaction->reference,
+                    $transaction->source_label,
+                    $transaction->description,
+                    strtoupper($transaction->type),
+                    strtoupper($transaction->status),
+                    number_format((float) $transaction->amount, 2, '.', ''),
+                    $transaction->metadata ? json_encode($transaction->metadata) : '',
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     /**
      * Show business analytics
      */
@@ -450,5 +522,108 @@ class BusinessController extends Controller
             ->get();
 
         return view('super-admin.businesses.analytics', compact('business', 'monthlySales', 'topProducts', 'topSalespeople'));
+    }
+
+    private function ensureWalletExists(Business $business): void
+    {
+        $business->loadMissing('wallet');
+
+        if (! $business->wallet) {
+            $business->wallet()->create([
+                'balance' => 0,
+                'currency' => 'NGN',
+                'status' => 'active',
+            ]);
+
+            $business->load('wallet');
+        }
+    }
+
+    private function validateWalletTransactionFilters(Request $request): void
+    {
+        $request->validate([
+            'search' => 'nullable|string|max:255',
+            'type' => 'nullable|in:credit,debit',
+            'status' => 'nullable|in:pending,completed,failed',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+            'per_page' => 'nullable|integer|in:15,25,50,100',
+        ]);
+    }
+
+    private function resolveWalletTransactionPerPage(Request $request): int
+    {
+        $perPage = (int) $request->input('per_page', 15);
+
+        return in_array($perPage, [15, 25, 50, 100], true) ? $perPage : 15;
+    }
+
+    private function walletTransactionsQuery(Business $business, Request $request)
+    {
+        $query = $business->walletTransactions()->latest();
+        $search = trim((string) $request->input('search', ''));
+
+        if ($search !== '') {
+            $query->where(function ($walletQuery) use ($search) {
+                $walletQuery->where('description', 'like', '%' . $search . '%')
+                    ->orWhere('reference', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->input('date_to'));
+        }
+
+        return $query;
+    }
+
+    private function walletTransactionSummary(Business $business, Request $request): array
+    {
+        $filteredQuery = $this->walletTransactionsQuery($business, $request);
+        $filteredCredits = (clone $filteredQuery)
+            ->where('type', WalletTransaction::TYPE_CREDIT)
+            ->sum('amount');
+        $filteredDebits = (clone $filteredQuery)
+            ->where('type', WalletTransaction::TYPE_DEBIT)
+            ->sum('amount');
+        $filteredCount = (clone $filteredQuery)->count();
+        $latestFilteredTransaction = (clone $filteredQuery)->first();
+        $overallQuery = $business->walletTransactions();
+
+        return [
+            'current_balance' => (float) ($business->wallet->balance ?? 0),
+            'currency' => $business->wallet->currency ?? 'NGN',
+            'filtered_credits' => (float) $filteredCredits,
+            'filtered_debits' => (float) $filteredDebits,
+            'filtered_net_flow' => (float) ($filteredCredits - $filteredDebits),
+            'filtered_count' => $filteredCount,
+            'total_count' => (clone $overallQuery)->count(),
+            'has_filters' => $this->hasWalletTransactionFilters($request),
+            'latest_transaction_at' => optional($business->wallet)->last_transaction_at,
+            'latest_filtered_transaction' => $latestFilteredTransaction,
+        ];
+    }
+
+    private function hasWalletTransactionFilters(Request $request): bool
+    {
+        foreach (['search', 'type', 'status', 'date_from', 'date_to'] as $filter) {
+            if ($request->filled($filter)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
