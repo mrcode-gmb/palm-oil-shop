@@ -68,7 +68,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::get('/settings', [SuperAdminController::class, 'settings'])->name('super-admin.settings');
 
     // Activity Log
-    Route::get('/activity-log', [SuperAdminController::class, 'activityLog'])->name('super-admin.activity-log');
+    Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'superAdminIndex'])->name('super-admin.activity-log');
 
     // All Documents
     Route::get('/documents', [SuperAdminController::class, 'allDocuments'])->name('super-admin.documents.index');
@@ -158,6 +158,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::delete('/expenses/{expense}', [ExpensesController::class, 'destroy'])->name('expenses.destroy');
     Route::get('/expenses/inventory', [ExpensesController::class, 'inventoryReport'])->name('expenses.inventory');
     Route::get('/reports/expenses/pdf', [ReportController::class, 'exportExpensesPDF'])->name('reports.expenses.pdf');
+    Route::get('/activity-log', [\App\Http\Controllers\ActivityLogController::class, 'adminIndex'])->name('admin.activity-log');
 
     // app settings (Admin only)
 

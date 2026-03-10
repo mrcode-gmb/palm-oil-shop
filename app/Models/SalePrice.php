@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SalePrice extends Model
+class SalePrice extends BaseModel
 {
     protected $fillable = [
         'product_assignment_id',
