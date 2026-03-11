@@ -277,7 +277,10 @@
                     <span>Recovered: <span class="font-semibold text-blue-700">{{ number_format($creditCollectionPercentage, 1) }}%</span></span>
                 </div>
                 <div class="mt-3 h-3 w-full overflow-hidden rounded-full bg-blue-100">
-                    <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-500" style="width: {{ $creditCollectionPercentage }}%"></div>
+                    <div
+                        class="h-full rounded-full"
+                        style="width: {{ $creditCollectionPercentage }}%; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);"
+                    ></div>
                 </div>
                 <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
                     <span>Paid: ₦{{ number_format($creditPaid, 2) }}</span>

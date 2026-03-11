@@ -58,7 +58,10 @@
 
             <div class="mt-5">
                 <div class="h-4 w-full overflow-hidden rounded-full bg-blue-100">
-                    <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-500" style="width: {{ min(100, $summary['collection_percentage']) }}%"></div>
+                    <div
+                        class="h-full rounded-full"
+                        style="width: {{ min(100, $summary['collection_percentage']) }}%; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);"
+                    ></div>
                 </div>
                 <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
                     <span>Outstanding: ₦{{ number_format($summary['total_balance'], 2) }}</span>
@@ -151,7 +154,10 @@
                                             <span>{{ number_format($collectionPercentage, 1) }}%</span>
                                         </div>
                                         <div class="mt-2 h-3 w-full overflow-hidden rounded-full bg-blue-100">
-                                            <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-500" style="width: {{ min(100, $collectionPercentage) }}%"></div>
+                                            <div
+                                                class="h-full rounded-full"
+                                                style="width: {{ min(100, $collectionPercentage) }}%; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);"
+                                            ></div>
                                         </div>
                                         <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
                                             <span>₦{{ number_format($totalPaid, 2) }} paid</span>
