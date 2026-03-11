@@ -54,6 +54,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::patch('/businesses/{business}/toggle-status', [BusinessController::class, 'toggleStatus'])->name('super-admin.businesses.toggle-status');
     Route::get('/businesses/{business}/users', [BusinessController::class, 'users'])->name('super-admin.businesses.users');
     Route::get('/businesses/{business}/balance-wallet', [BusinessController::class, 'balanceWallet'])->name('super-admin.businesses.walletBalance');
+    Route::get('/businesses/{business}/creditors', [BusinessController::class, 'creditors'])->name('super-admin.businesses.creditors');
     Route::get('/businesses/{business}/wallet-transactions', [BusinessController::class, 'walletTransactions'])->name('super-admin.businesses.wallet-transactions');
     Route::get('/businesses/{business}/wallet-transactions/export', [BusinessController::class, 'exportWalletTransactions'])->name('super-admin.businesses.wallet-transactions.export');
     Route::get('/businesses/{business}/analytics', [BusinessController::class, 'analytics'])->name('super-admin.businesses.analytics');

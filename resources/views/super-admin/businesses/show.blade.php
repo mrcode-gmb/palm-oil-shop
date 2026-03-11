@@ -254,6 +254,44 @@
 
     </div>
 
+    @php
+        $totalCreditIssued = $totalCreditorBalance + $creditPaid;
+        $creditCollectionPercentage = $totalCreditIssued > 0 ? min(100, ($creditPaid / $totalCreditIssued) * 100) : 0;
+    @endphp
+
+    <div class="mb-6 rounded-lg bg-white p-6 shadow-md">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">Creditor Overview</h3>
+                <p class="mt-1 text-sm text-gray-500">Review every creditor in this business and track how much credit has been recovered.</p>
+            </div>
+            <a href="{{ route('super-admin.businesses.creditors', $business) }}" class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+                View Creditor Records
+            </a>
+        </div>
+
+        <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div>
+                <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
+                    <span>Total credit issued: <span class="font-semibold text-gray-900">₦{{ number_format($totalCreditIssued, 2) }}</span></span>
+                    <span>Recovered: <span class="font-semibold text-blue-700">{{ number_format($creditCollectionPercentage, 1) }}%</span></span>
+                </div>
+                <div class="mt-3 h-3 w-full overflow-hidden rounded-full bg-blue-100">
+                    <div class="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-500" style="width: {{ $creditCollectionPercentage }}%"></div>
+                </div>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500">
+                    <span>Paid: ₦{{ number_format($creditPaid, 2) }}</span>
+                    <span>Outstanding: ₦{{ number_format($totalCreditorBalance, 2) }}</span>
+                </div>
+            </div>
+            <div class="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                <p class="text-sm font-medium text-blue-700">Active Creditors</p>
+                <p class="mt-2 text-3xl font-bold text-blue-900">{{ number_format($business->creditors->count()) }}</p>
+                <p class="mt-2 text-sm text-blue-800">Open the creditor page to inspect balances, recovered amounts, and progress for each creditor.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Inventory & Sales Summary -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Inventory & Sales Overview</h3>

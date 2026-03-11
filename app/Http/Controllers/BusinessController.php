@@ -418,6 +418,60 @@ class BusinessController extends Controller
         return view('super-admin.businesses.users', compact('business', 'users'));
     }
 
+    public function creditors(Request $request, Business $business)
+    {
+        $creditorsQuery = $business->creditors()
+            ->withCount('sales')
+            ->withSum([
+                'transactions as total_credit' => function ($query) {
+                    $query->where('type', 'debit');
+                }
+            ], 'amount')
+            ->withSum([
+                'transactions as total_paid' => function ($query) {
+                    $query->where('type', 'credit');
+                }
+            ], 'amount');
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $creditorsQuery->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $creditors = $creditorsQuery->latest()->paginate(10)->withQueryString();
+
+        $creditors->getCollection()->transform(function ($creditor) {
+            $totalCredit = (float) ($creditor->total_credit ?? 0);
+            $totalPaid = (float) ($creditor->total_paid ?? 0);
+
+            $creditor->collection_percentage = $totalCredit > 0
+                ? min(100, round(($totalPaid / $totalCredit) * 100, 1))
+                : 0;
+
+            return $creditor;
+        });
+
+        $totalCredit = (float) $business->creditorTransactions()->where('type', 'debit')->sum('amount');
+        $totalPaid = (float) $business->creditorTransactions()->where('type', 'credit')->sum('amount');
+        $totalBalance = (float) $business->creditors()->sum('balance');
+
+        $summary = [
+            'total_creditors' => (int) $business->creditors()->count(),
+            'total_credit' => $totalCredit,
+            'total_paid' => $totalPaid,
+            'total_balance' => $totalBalance,
+            'collection_percentage' => $totalCredit > 0
+                ? min(100, round(($totalPaid / $totalCredit) * 100, 1))
+                : 0,
+        ];
+
+        return view('super-admin.businesses.creditors', compact('business', 'creditors', 'summary'));
+    }
+
     public function walletTransactions(Request $request, Business $business)
     {
         $this->validateWalletTransactionFilters($request);
