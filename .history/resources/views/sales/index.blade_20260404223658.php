@@ -172,10 +172,10 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 seller Commission</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Amount Paid(Credit)</th>
+                                amount paid</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Net Profit</th>
-
+                                
                             @if (auth()->user()->isAdmin())
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -256,12 +256,9 @@
                                     ₦{{ number_format($sale->seller_profit_per_unit, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    ₦{{ number_format($sale->amount_paid ?? 0, 2) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                     ₦{{ number_format($sale->profit - $sale->seller_profit_per_unit, 2) }}
                                 </td>
-                                
+
                                 @if (auth()->user()->isAdmin())
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {{ $sale->user->name }}

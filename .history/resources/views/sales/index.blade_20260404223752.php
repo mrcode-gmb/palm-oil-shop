@@ -256,7 +256,7 @@
                                     ₦{{ number_format($sale->seller_profit_per_unit, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                                    ₦{{ number_format($sale->amount_paid ?? 0, 2) }}
+                                    ₦{{ number_format($sale->amount_paid, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
                                     ₦{{ number_format($sale->profit - $sale->seller_profit_per_unit, 2) }}
