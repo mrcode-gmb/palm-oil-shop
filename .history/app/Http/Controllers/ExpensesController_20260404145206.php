@@ -9,13 +9,10 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Expenses;
 use App\Models\Purchase;
-use App\Models\Wallet;
 use Illuminate\Http\Request;
 use App\Traits\BusinessScoped;
 use App\Models\ProductAssignment;
 use App\Exports\ExpensesPdfExport;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class ExpensesController extends Controller
 {
@@ -103,8 +100,9 @@ class ExpensesController extends Controller
      */
     public function store(Request $request)
     {
+        //
         $today = Carbon::today();
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
@@ -130,23 +128,7 @@ class ExpensesController extends Controller
             'notes' => $request->notes,
         ]);
 
-        DB::transaction(function () use ($data) {
-            $expense = Expenses::create($data);
-            $wallet = $this->lockBusinessWallet();
-
-            $this->recordWalletMovement(
-                $wallet,
-                (float) $expense->amount,
-                'debit',
-                'Expense recorded: ' . $expense->name,
-                [
-                    'expense_id' => $expense->id,
-                    'expense_name' => $expense->name,
-                    'expense_date' => $expense->date,
-                    'notes' => $expense->notes,
-                ]
-            );
-        });
+        Expenses::create($data);
 
         return redirect()->route('expenses.index')->with('success', 'Expense recorded successfully.');
     }
@@ -172,53 +154,20 @@ class ExpensesController extends Controller
      */
     public function update(Request $request, Expenses $expense)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($request, $expense) {
-            $lockedExpense = $this->scopeToCurrentBusiness(Expenses::class)
-                ->whereKey($expense->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $oldAmount = (float) $lockedExpense->amount;
-            $newAmount = (float) $request->amount;
-            $amountDelta = $newAmount - $oldAmount;
-
-            $lockedExpense->update([
-                'name' => $request->name,
-                'amount' => $newAmount,
-                'today_net_profit' => (float) ($lockedExpense->today_profit ?? 0) - $newAmount,
-                'date' => $request->date,
-                'notes' => $request->notes,
-            ]);
-
-            if ($amountDelta == 0.0) {
-                return;
-            }
-
-            $wallet = $this->lockBusinessWallet();
-
-            $this->recordWalletMovement(
-                $wallet,
-                abs($amountDelta),
-                $amountDelta > 0 ? 'debit' : 'credit',
-                $amountDelta > 0
-                    ? 'Expense update adjustment (increase)'
-                    : 'Expense update adjustment (refund)',
-                [
-                    'expense_id' => $lockedExpense->id,
-                    'expense_name' => $lockedExpense->name,
-                    'old_amount' => $oldAmount,
-                    'new_amount' => $newAmount,
-                    'amount_delta' => $amountDelta,
-                ]
-            );
-        });
+        // Only update the fields that are in the form
+        $expense->update([
+            'name' => $request->name,
+            'amount' => $request->amount,
+            'date' => $request->date,
+            'notes' => $request->notes,
+        ]);
 
         return redirect()->route('expenses.index')
             ->with('success', 'Expense updated successfully');
@@ -229,76 +178,9 @@ class ExpensesController extends Controller
      */
     public function destroy(Expenses $expense)
     {
-        DB::transaction(function () use ($expense) {
-            $lockedExpense = $this->scopeToCurrentBusiness(Expenses::class)
-                ->whereKey($expense->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $wallet = $this->lockBusinessWallet();
-
-            $this->recordWalletMovement(
-                $wallet,
-                (float) $lockedExpense->amount,
-                'credit',
-                'Expense deletion refund',
-                [
-                    'expense_id' => $lockedExpense->id,
-                    'expense_name' => $lockedExpense->name,
-                    'expense_date' => $lockedExpense->date,
-                ]
-            );
-
-            $lockedExpense->delete();
-        });
+        $expense->delete();
 
         return redirect()->route('expenses.index')
             ->with('success', 'Expense deleted successfully');
-    }
-
-    private function lockBusinessWallet(): Wallet
-    {
-        $businessId = $this->getBusinessId();
-
-        $wallet = Wallet::where('business_id', $businessId)
-            ->lockForUpdate()
-            ->first();
-
-        if ($wallet) {
-            return $wallet;
-        }
-
-        $wallet = Wallet::create([
-            'business_id' => $businessId,
-            'balance' => 0,
-            'currency' => 'NGN',
-            'status' => 'active',
-        ]);
-
-        return Wallet::whereKey($wallet->id)
-            ->lockForUpdate()
-            ->firstOrFail();
-    }
-
-    private function recordWalletMovement(Wallet $wallet, float $amount, string $type, string $description, array $metadata = []): void
-    {
-        if ($amount <= 0) {
-            return;
-        }
-
-        $wallet->transactions()->create([
-            'wallet_id' => $wallet->id,
-            'business_id' => $wallet->business_id,
-            'amount' => $amount,
-            'type' => $type,
-            'reference' => 'EXPENSE-' . strtoupper(Str::random(10)),
-            'description' => $description,
-            'status' => 'completed',
-            'metadata' => $metadata,
-        ]);
-
-        $wallet->balance += $type === 'credit' ? $amount : -$amount;
-        $wallet->last_transaction_at = now();
-        $wallet->save();
     }
 }

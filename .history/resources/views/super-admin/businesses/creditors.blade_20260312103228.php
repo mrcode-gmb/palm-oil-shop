@@ -21,6 +21,7 @@
                 <p class="mt-1 text-sm text-blue-100">Recovered from total credit issued.</p>
             </div>
         </div>
+r
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
                 <p class="text-sm font-medium text-gray-500">Total Creditors</p>
